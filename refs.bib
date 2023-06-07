@@ -1,0 +1,110 @@
+@article{Pichler2021,
+author = {Pichler, Maximilian and Hartig, Florian},
+title = {A new joint species distribution model for faster and more accurate inference of species associations from big community data},
+journal = {Methods in Ecology and Evolution},
+volume = {12},
+number = {11},
+pages = {2159-2173},
+keywords = {big data, co-occurrence, machine learning, metacommunity, regularization, statistics},
+doi = {https://doi.org/10.1111/2041-210X.13687},
+url = {https://besjournals.onlinelibrary.wiley.com/doi/abs/10.1111/2041-210X.13687},
+eprint = {https://besjournals.onlinelibrary.wiley.com/doi/pdf/10.1111/2041-210X.13687},
+abstract = {Abstract Joint species distribution models (JSDMs) explain spatial variation in community composition by contributions of the environment, biotic associations and possibly spatially structured residual covariance. They show great promise as a general analytical framework for community ecology and macroecology, but current JSDMs, even when approximated by latent variables, scale poorly on large datasets, limiting their usefulness for currently emerging big (e.g. metabarcoding and metagenomics) community datasets. Here, we present a novel, more scalable JSDM (sjSDM) that circumvents the need to use latent variables by using a Monte Carlo integration of the joint JSDM likelihood together with flexible elastic net regularization on all model components. We implemented sjSDM in PyTorch, a modern machine learning framework, which allows making use of both CPU and GPU calculations. Using simulated communities with known species–species associations and different number of species and sites, we compare sjSDM with state-of-the-art JSDM implementations to determine computational runtimes and accuracy of the inferred species–species and species–environment associations. We find that sjSDM is orders of magnitude faster than existing JSDM algorithms (even when run on the CPU) and can be scaled to very large datasets. Despite the dramatically improved speed, sjSDM produces more accurate estimates of species association structures than alternative JSDM implementations. We demonstrate the applicability of sjSDM to big community data using eDNA case study with thousands of fungi operational taxonomic units (OTU). Our sjSDM approach makes the analysis of JSDMs to large community datasets with hundreds or thousands of species possible, substantially extending the applicability of JSDMs in ecology. We provide our method in an R package to facilitate its applicability for practical data analysis.},
+year = {2021}
+}
+@article{Pollock2014,
+author = {Pollock, Laura J. and Tingley, Reid and Morris, William K. and Golding, Nick and O'Hara, Robert B. and Parris, Kirsten M. and Vesk, Peter A. and McCarthy, Michael A.},
+title = {Understanding co-occurrence by modelling species simultaneously with a Joint Species Distribution Model (JSDM)},
+journal = {Methods in Ecology and Evolution},
+volume = {5},
+number = {5},
+pages = {397-406},
+keywords = {amphibians, biotic interactions, community assembly, correlated residuals, Eucalyptus, frogs, species covariance},
+doi = {https://doi.org/10.1111/2041-210X.12180},
+url = {https://besjournals.onlinelibrary.wiley.com/doi/abs/10.1111/2041-210X.12180},
+eprint = {https://besjournals.onlinelibrary.wiley.com/doi/pdf/10.1111/2041-210X.12180},
+abstract = {Summary A primary goal of ecology is to understand the fundamental processes underlying the geographic distributions of species. Two major strands of ecology – habitat modelling and community ecology – approach this problem differently. Habitat modellers often use species distribution models (SDMs) to quantify the relationship between species’ and their environments without considering potential biotic interactions. Community ecologists, on the other hand, tend to focus on biotic interactions and, in observational studies, use co-occurrence patterns to identify ecological processes. Here, we describe a joint species distribution model (JSDM) that integrates these distinct observational approaches by incorporating species co-occurrence data into a SDM. JSDMs estimate distributions of multiple species simultaneously and allow decomposition of species co-occurrence patterns into components describing shared environmental responses and residual patterns of co-occurrence. We provide a general description of the model, a tutorial and code for fitting the model in R. We demonstrate this modelling approach using two case studies: frogs and eucalypt trees in Victoria, Australia. Overall, shared environmental correlations were stronger than residual correlations for both frogs and eucalypts, but there were cases of strong residual correlation. Frog species generally had positive residual correlations, possibly due to the fact these species occurred in similar habitats that were not fully described by the environmental variables included in the JSDM. Eucalypt species that interbreed had similar environmental responses but had negative residual co-occurrence. One explanation is that interbreeding species may not form stable assemblages despite having similar environmental affinities. Environmental and residual correlations estimated from JSDMs can help indicate whether co-occurrence is driven by shared environmental responses or other ecological or evolutionary process (e.g. biotic interactions), or if important predictor variables are missing. JSDMs take into account the fact that distributions of species might be related to each other and thus overcome a major limitation of modelling species distributions independently.},
+year = {2014}
+}
+@article{Bumpus1898,
+author = {Bumpus, Hermon C},
+journal = {Biological Lectures: Woods Hole Marine Biological Laboratory},
+pages = {209--225},
+title = {{Eleventh lecture. The elimination of the unfit as illustrated by the introduced sparrow, {\it Passer domesticus}. (A fourth contribution to the study of variation.)}},
+year = {1898}
+}
+@book{Darwin1859,
+address = {New York},
+author = {Darwin, Charles},
+pages = {495},
+publisher = {Penguin},
+title = {{The Origin of Species}},
+year = {1859}
+}
+@article{Johnston1972,
+author = {Johnston, R F and Niles, D M and Rohwer, S A},
+journal = {Evolution},
+pages = {20--31},
+title = {{Hermon Bumpus and natural selection in the House Sparrow {\it Passer domesticus} }},
+volume = {26},
+year = {1972}
+}
+@article{Legendre2001,
+  title={Ecologically meaningful transformations for ordination of species data},
+  author={Legendre, Pierre and Gallagher, Eugene D},
+  journal={Oecologia},
+  volume={129},
+  pages={271--280},
+  year={2001},
+  publisher={Springer}
+}
+@article{Mouquet2003,
+author = {Mouquet, Nicolas and Loreau, Michel},
+title = {Community Patterns in Source‐Sink Metacommunities.},
+journal = {The American Naturalist},
+volume = {162},
+number = {5},
+pages = {544-557},
+year = {2003},
+doi = {10.1086/378857},
+    note ={PMID: 14618534},
+
+URL = { 
+    
+        https://doi.org/10.1086/378857
+    
+    
+
+},
+eprint = { 
+    
+        https://doi.org/10.1086/378857
+    
+    
+
+}
+,
+    abstract = { Abstract: We present a model of a source‐sink competitive metacommunity, defined as a regional set of communities in which local diversity is maintained by dispersal. Although the conditions of local and regional coexistence have been well defined in such systems, no study has attempted to provide clear predictions of classical community‐wide patterns. Here we provide predictions for species richness, species relative abundances, and community‐level functional properties (productivity and space occupation) at the local and regional scales as functions of the proportion of dispersal between communities. Local (α) diversity is maximal at an intermediate level of dispersal, whereas between‐community (β) and regional (γ) diversity decline as dispersal increases because of increased homogenization of the metacommunity. The relationships between local and regional species richness and the species rank abundance distributions are strongly affected by the level of dispersal. Local productivity and space occupation tend to decline as dispersal increases, resulting in either a hump‐shaped or a positive relationship between species richness and productivity, depending on the scale considered (local or regional). These effects of dispersal are buffered by decreasing species dispersal success. Our results provide a niche‐based alternative to the recent neutral‐metacommunity model and have important implications for conservation biology and landscape management. }
+}
+@Manual{R2018,
+  title = {R: A Language and Environment for Statistical Computing},
+  author = {{R Core Team}},
+  organization = {R Foundation for Statistical Computing},
+  address = {Vienna, Austria},
+  year = {2018},
+  url = {https://www.R-project.org/},
+}
+@article{Tikhonov2020,
+author = {Tikhonov, Gleb and Opedal, Øystein H. and Abrego, Nerea and Lehikoinen, Aleksi and de Jonge, Melinda M. J. and Oksanen, Jari and Ovaskainen, Otso},
+title = {Joint species distribution modelling with the r-package Hmsc},
+journal = {Methods in Ecology and Evolution},
+volume = {11},
+number = {3},
+pages = {442-447},
+keywords = {community ecology, community modelling, community similarity, hierarchical modelling of species communities, joint species distribution modelling, multivariate data, species distribution modelling},
+doi = {https://doi.org/10.1111/2041-210X.13345},
+url = {https://besjournals.onlinelibrary.wiley.com/doi/abs/10.1111/2041-210X.13345},
+eprint = {https://besjournals.onlinelibrary.wiley.com/doi/pdf/10.1111/2041-210X.13345},
+abstract = {Abstract Joint Species Distribution Modelling (JSDM) is becoming an increasingly popular statistical method for analysing data in community ecology. Hierarchical Modelling of Species Communities (HMSC) is a general and flexible framework for fitting JSDMs. HMSC allows the integration of community ecology data with data on environmental covariates, species traits, phylogenetic relationships and the spatio-temporal context of the study, providing predictive insights into community assembly processes from non-manipulative observational data of species communities. The full range of functionality of HMSC has remained restricted to Matlab users only. To make HMSC accessible to the wider community of ecologists, we introduce Hmsc 3.0, a user-friendly r implementation. We illustrate the use of the package by applying Hmsc 3.0 to a range of case studies on real and simulated data. The real data consist of bird counts in a spatio-temporally structured dataset, environmental covariates, species traits and phylogenetic relationships. Vignettes on simulated data involve single-species models, models of small communities, models of large species communities and models for large spatial data. We demonstrate the estimation of species responses to environmental covariates and how these depend on species traits, as well as the estimation of residual species associations. We demonstrate how to construct and fit models with different types of random effects, how to examine MCMC convergence, how to examine the explanatory and predictive powers of the models, how to assess parameter estimates and how to make predictions. We further demonstrate how Hmsc 3.0 can be applied to normally distributed data, count data and presence–absence data. The package, along with the extended vignettes, makes JSDM fitting and post-processing easily accessible to ecologists familiar with r.},
+year = {2020}
+}
