@@ -3,7 +3,6 @@ title: "Detection of eco-evolutionary dynamics in metacommunities using Joint Sp
 author: "Jelena H. Pantel, Ruben Hermann"
 date: Ecological Modelling, Faculty of Biology, University of Duisburg-Essen, Universitätsstraße 5, 45141 Essen, Germany
 output:
-  pdf_document: default
   bookdown::pdf_document2: default
   html_document: default
   word_document:
