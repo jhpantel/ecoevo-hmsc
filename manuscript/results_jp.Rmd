@@ -1,0 +1,111 @@
+---
+title: "Walk-through of HMSC results"
+author: "Jelena H. Pantel"
+date: "`r file.mtime(knitr::current_input())`"
+output:
+  bookdown::pdf_document2: default
+  html_document: default
+  word_document:
+    reference_docx: docx_template.docx
+---
+
+```{r setup,echo=FALSE,warning=FALSE,message=FALSE}
+library(bookdown)
+library(knitr)
+library(here)
+library(rmarkdown)
+library(Hmsc)
+library(beanplot)
+library(bayesplot)
+library(posterior)
+```
+
+The goal of our analysis is to estimate the relative effects of intrinsic population dynamics, environmental drivers, spatial structure, and trait evolution for driving community composition in the metacommunity. We used HMSC to build a linear Bayesian hierarchical model. The structure of the resulting Hmsc object is as follows:
+
+```{r tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+datapath <- here::here("output")
+result <- "h_01_d_minus3"  # Enter desired simulation conditions here
+res <- load(paste(datapath,"/",result,"_hmsc.RData",sep=""))
+```
+
+For each of the 15 species, we have the following regression coefficient estimates:
+
+* 1. intercept
+* 2-16. the impacts of $N_{j,t-1}$ for $N_{i,t}$, for *j* = 1-15)
+    + e.g. for species 1: 2 is the impact of $N_{1,t-1}$ for $N_{1,t}$
+    + 3. the impact of $N_{2,t-1}$ for $N_{1,t}$
+    + 4. the impact of $N_{3,t-1}$ for $N_{1,t}$
+    + 5. the impact of $N_{4,t-1}$ for $N_{1,t}$
+    + 6. the impact of $N_{5,t-1}$ for $N_{1,t}$
+    + 7. the impact of $N_{6,t-1}$ for $N_{1,t}$
+    + 8. the impact of $N_{7,t-1}$ for $N_{1,t}$
+    + 9. the impact of $N_{8,t-1}$ for $N_{1,t}$
+    + 10. the impact of $N_{9,t-1}$ for $N_{1,t}$
+    + 11. the impact of $N_{10,t-1}$ for $N_{1,t}$
+    + 12. the impact of $N_{11,t-1}$ for $N_{1,t}$
+    + 13. the impact of $N_{12,t-1}$ for $N_{1,t}$
+    + 14. the impact of $N_{13,t-1}$ for $N_{1,t}$
+    + 15. the impact of $N_{14,t-1}$ for $N_{1,t}$
+    + 16. the impact of $N_{15,t-1}$ for $N_{1,t}$
+* 17. The impact of environment (*E*) for $N_{i,t}$
+* 18-32. the impacts of $x_{j,t-1}$ for $N_{i,t}$, for *j* = 1-15)
+    + e.g. for species 1: 18 is the impact of $x_{1,t-1}$ for $N_{1,t}$
+    + 19. the impact of $x_{2,t-1}$ for $N_{1,t}$
+    + 20. the impact of $x_{3,t-1}$ for $N_{1,t}$
+    + 21. the impact of $x_{4,t-1}$ for $N_{1,t}$
+    + 22. the impact of $x_{5,t-1}$ for $N_{1,t}$
+    + 23. the impact of $x_{6,t-1}$ for $N_{1,t}$
+    + 24. the impact of $x_{7,t-1}$ for $N_{1,t}$
+    + 25. the impact of $x_{8,t-1}$ for $N_{1,t}$
+    + 26. the impact of $x_{9,t-1}$ for $N_{1,t}$
+    + 27. the impact of $x_{10,t-1}$ for $N_{1,t}$
+    + 28. the impact of $x_{11,t-1}$ for $N_{1,t}$
+    + 29. the impact of $x_{12,t-1}$ for $N_{1,t}$
+    + 30. the impact of $x_{13,t-1}$ for $N_{1,t}$
+    + 31. the impact of $x_{14,t-1}$ for $N_{1,t}$
+    + 32. the impact of $x_{15,t-1}$ for $N_{1,t}$
+* 33-47. the impacts of $x_{j,t-1} \cdot  N_{j,t-1}$  for $N_{i,t}$, for *j* = 1-15) $x_{1,t-1} \cdot  N_{1,t-1}$ for $N_{1,t}$
+    + e.g. for species 1: 33 is the impact of $x_{1,t-1} \cdot  N_{1,t-1}$ for $N_{1,t}$
+    + 34. the impact of $x_{2,t-1} \cdot  N_{2,t-1}$ for $N_{1,t}$
+    + 35. the impact of $x_{3,t-1} \cdot  N_{3,t-1}$ for $N_{1,t}$
+    + 36. the impact of $x_{4,t-1} \cdot  N_{4,t-1}$ for $N_{1,t}$
+    + 37. the impact of $x_{5,t-1} \cdot  N_{5,t-1}$ for $N_{1,t}$
+    + 38. the impact of $x_{6,t-1} \cdot  N_{6,t-1}$ for $N_{1,t}$
+    + 39. the impact of $x_{7,t-1} \cdot  N_{7,t-1}$ for $N_{1,t}$
+    + 40. the impact of $x_{8,t-1} \cdot  N_{8,t-1}$ for $N_{1,t}$
+    + 41. the impact of $x_{9,t-1} \cdot  N_{9,t-1}$ for $N_{1,t}$
+    + 42. the impact of $x_{10,t-1} \cdot  N_{10,t-1}$ for $N_{1,t}$
+    + 43. the impact of $x_{11,t-1} \cdot  N_{11,t-1}$ for $N_{1,t}$
+    + 44. the impact of $x_{12,t-1} \cdot  N_{12,t-1}$ for $N_{1,t}$
+    + 45. the impact of $x_{13,t-1} \cdot  N_{13,t-1}$ for $N_{1,t}$
+    + 46. the impact of $x_{14,t-1} \cdot  N_{14,t-1}$ for $N_{1,t}$
+    + 47. the impact of $x_{15,t-1} \cdot  N_{15,t-1}$ for $N_{1,t}$
+
+This repeats for all *j* = 15 species, i.e. coefficients 48-94 are for species 2, coefficients 95-141 are for species 3, etc. In order to evaluate results, we combine all iterations across all chains as a dataframe, and the predictor variables are indices of the dataframe columns (according to the numbering above).
+
+```{r tidy=TRUE, tidy.opts=list(width.cutoff=60), figures-3, fig.show="hold", out.width="50%"}
+m.post = Hmsc::convertToCodaObject(m.1)
+m.df <- as.data.frame(rbind(m.post$Beta[[1]],m.post$Beta[[2]]))
+## intercept
+B.I <- m.df[,seq(1,705,by=47)]
+beanplot::beanplot(B.I,log="",names=c("Sp1","Sp2","Sp3","Sp4","Sp5","Sp6","Sp7","Sp8","Sp9","Sp10","Sp11","Sp12","Sp13","Sp14","Sp15"),ylab=expression('N'["i,t"]),main="Intercept")
+
+## Fixed effects: environment
+B.E <- m.df[,seq(17,705,by=47)]
+beanplot::beanplot(B.E,names=c("Sp1","Sp2","Sp3","Sp4","Sp5","Sp6","Sp7","Sp8","Sp9","Sp10","Sp11","Sp12","Sp13","Sp14","Sp15"),ylab=expression('N'["i,t"]),main=expression("Environment: " ~  beta ~ "*" ~ "E"[i]))
+```
+
+```{r tidy=TRUE, tidy.opts=list(width.cutoff=60), figures-3, fig.show="hold", out.width="50%"}
+m.post = Hmsc::convertToCodaObject(m.1)
+m.draw <- posterior::as_draws_array(m.post$Beta)
+# Intercept
+bayesplot::mcmc_trace(m.draw,pars=vars(seq(1,705,by=47)),size=0.1)
+#mcmc_dens(m.draw,pars=vars(seq(17,705,by=47)))
+bayesplot::mcmc_dens_overlay(m.draw,pars=vars(seq(1,705,by=47))) + yaxis_text(TRUE) + ylab("density")
+# Environment
+bayesplot::mcmc_trace(m.draw,pars=vars(seq(17,705,by=47)),size=0.1)
+bayesplot::mcmc_dens_overlay(m.draw,pars=vars(seq(17,705,by=47))) + yaxis_text(TRUE) + ylab("density")
+```
+
+
+
