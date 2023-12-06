@@ -1,21 +1,21 @@
 ---
 title: "Detection of eco-evolutionary dynamics in metacommunities using Joint Species
   Distribution Models"
-author: "Jelena H. Pantel, Ruben J. Hermann"
+author: "Jelena H. Pantel, Ruben Hermann"
 date: "Ecological Modelling, Faculty of Biology, University of Duisburg-Essen, Universitätsstraße
   5, 45141 Essen, Germany"
 output:
-  pdf_document:
-    toc: no
-  bookdown::html_document2: default
   bookdown::pdf_document2:
     toc: no
+    fig_caption: yes
+    latex_engine: xelatex
+  bookdown::html_document2: default
   word_document:
     reference_docx: docx_template.docx
 header-includes:
 - \usepackage{fancyhdr}
 - \pagestyle{fancy}
-- \fancyhead[L]{Pantel, JH}
+- \fancyhead[L]{Pantel and Hermann}
 - \fancyhead[R]{Detection of ecoevo dynamics}
 - \usepackage{lineno}
 - \linenumbers
@@ -53,6 +53,8 @@ library(patchwork)
 ```{r, include=FALSE}
 source("../code/R/rename.R")
 source("../code/R/post_fig.R")
+source("../code/R/get_deltaX.R")
+source("../code/R/get_div.R")
 ```
 ```{r echo=FALSE,eval=TRUE}
 CV <- function(x){
@@ -74,7 +76,7 @@ standard_error <- function(x){
 Abstract
 ===============================================================================
   
-Biodiversity at the metacommunity scale is typically influenced by a number of environmental, spatial, biotic, and stochastic factors. At the same time, populations of individual species are evolving in ways that can be impacted by the same factors, as sites present different selection pressures and site connectivity can impact gene flow and genetic drift. Identifying the relative impacts of environmental, spatial, biotic, and other drivers of community composition across spatial and temporal scales has been greatly facilitated by joint species distribution models, but these models have not yet considered the role that microevolution can play in driving changes in composition. We used Heirarchical Models of Species Communities (HMSC) to analyze data from a simulation model of an evolving metacommunity, to establish whether these models can sufficiently quantify the contribution of phenotypic evolution for metacommunity composition. The models successfully partitioned variance contributed by environmental, spatial, and evolving phenotypic drivers, and also estimated site- and year-specific covariance. We also included estimates for eco-evolutionary interactions, and the model successfully estimated their role as well. The study of eco-evolutionary dynamics may require data that reflects numerous complex, interacting processes and it is necessary to have flexible, generalized statistical models to analyze this data. HMSC models present one promising path for analysis of eco-evolutionary dynamics in multi-species communities.
+Biodiversity at the metacommunity scale is typically influenced by a number of environmental, spatial, biotic, and stochastic factors. At the same time, populations of individual species can evolve and this process can be impacted by the same factors, as sites present different selection pressures and site connectivity can impact gene flow and genetic drift. Identifying the relative impacts of environmental, spatial, biotic, and other drivers of community composition across spatial and temporal scales has been greatly facilitated by joint species distribution models, but these models have not yet considered the role that microevolution can play in driving changes in composition. We used Heirarchical Models of Species Communities (HMSC) to analyze data from a simulation model of an evolving metacommunity, to establish whether these models can sufficiently quantify the contribution of phenotypic evolution for metacommunity composition. The models successfully partitioned variance contributed by environmental, spatial, and evolving phenotypic drivers, and also estimated site- and year-specific covariance. We also included estimates for eco-evolutionary interactions, and the model successfully estimated their role as well. The study of eco-evolutionary dynamics may require data that reflects numerous complex, interacting processes and it is necessary to have flexible, generalized statistical models to analyze this data. HMSC models present one promising path for analysis of eco-evolutionary dynamics in multi-species communities.
 
 Introduction
 ================================================================================
@@ -99,13 +101,13 @@ where $N_i,t$ is the population size of species *i* at time *t*, \( \hat{W} \) i
 
 This model was used in Pantel & Becks (2023) to evaluate the consequences of adaptive evolution for coexistence in a three-species system. To expand this model to a metacommunity, we consider the evolution of multiple species (*S* = 15) in a landscape of patches (*k* = 50). The patches have values of an environmental property *E* (drawn from a uniform distribution ranging from 0 to 1) that determines the local optimum phenotype *E*, i.e. where species experience their absolute fitness $W_{max}$, and patches also have spatial locations *X* and *Y* (both drawn from U(0, 1)). The patches thus have a connectivity matrix **D** (here given by their Euclidean distance), as well as a connectivity matrix **C** that is a Gaussian function of **D** and a species dispersal rate $d_i$.
 
-To simulate phenotypic evolution as well as species growth and competition in the landscape, we used parameter values of \(W_{max}\) = 2, *P* = 1, *w* = 10, $N_c$ = 100, and *p* = 0.001. The simulated metacommunity was initialized in a way that mimics community assembly in small vernal pools that periodically flood (and thus are reset seasonally). In the simulated pool system, local communities are drawn at random from the regional species pool, and thus their initial degree of maladaptation in the pool is random as well. The initial species richness of each site $s_{0k}$ was drawn from a random Poisson distribution, $s_{0k} \sim Pois(0.75)$, the initial population size for all species $N_{0i} \sim Pois(10)$, and the initial degree of maladaptation \(\beta_{i0} \sim Gamma(0.75,1)\). From this \(\beta_{i0}\), the initial distance to the local patch's optimum phenotype was calculated as $d_{i0}=\sqrt{B_{i0}(w+P)}$ and the initial trait value for each species $x_{i0}$ was calculated by subtracting $d_{i0}$ from the local environmental value $E_k$ (Figure \@ref(fig:figS1)).
+To simulate phenotypic evolution as well as species growth and competition in the landscape, we used parameter values of \(W_{max}\) = 2, *P* = 1, *w* = 10, $N_c$ = 100, and *p* = 0.001. The simulated metacommunity was initialized in a way that mimics community assembly in small vernal pools that periodically flood (and thus are reset seasonally). In the simulated pool system, local communities are drawn at random from the regional species pool, and thus their initial degree of maladaptation in the pool is random as well. The initial species richness of each site $s_{0k}$ was drawn from a random Poisson distribution, $s_{0k} \sim Pois(0.75)$, the initial population size for all species $N_{0i} \sim Pois(10)$, and the initial degree of maladaptation \(\beta_{i0} \sim Gamma(0.75,1)\). From this \(\beta_{i0}\), the initial distance to the local patch's optimum phenotype was calculated as $d_{i0}=\sqrt{B_{i0}(w+P)}$ and the initial trait value for each species $x_{i0}$ was calculated by subtracting $d_{i0}$ from the lowest site environmental value $E_k$ (Figure \@ref(fig:figS1)).
 
-The species interaction matrix was fixed throughout the simulation, with \(\alpha_{ii} = 0.00125\) and \(\alpha_{ij} \sim U(0.0015,1)\). After draws for all random parameter values, the same resulting initial community was used for all simulations, to allow direct comparison across dispersal and heritability values. Simulations were run across a range of dispersal values (identical for all species; *d* = 0, $10^{-9},10^{-8},10^{-7},10^{-6},10^{-5},10^{-4},10^{-3},10^{-2}$, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1) and heritability values (identical for all species: $h^2$ = 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1). The simulations were run in MATLAB (version R2022a) for 1000 time steps and produced records of $N_{ikt}$ and $x_{ikt}$.
+The species interaction matrix was fixed throughout the simulation, with \(\alpha_{ii} = 0.00125\) and \(\alpha_{ij} \sim U(0.0015,1)\). After draws for all random parameter values, the same resulting initial community was used for all simulations, to allow direct comparison across dispersal and heritability values. Simulations were run across a range of dispersal values (identical for all species; *d* = 0, $10^{-9},10^{-8},10^{-7},10^{-6},10^{-5},10^{-4},10^{-3},10^{-2}$, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1) and heritability values (identical for all species: $h^2$ = 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1). The simulations were run in MATLAB (version R2022a) for 1000 time steps and produced records of $N_{ikt}$ and $x_{ikt}$. To test the impacts of strength of selection and environmental variability, we repeated simulations at a single, representative level of heritability and dispersal ($d = 10^{-3}$, $h^2 = 0.1$) in four different scenarios: Scenario 1 (weak selection, fixed environment: $P = 1, w = 10, v[E] = 0$), Scenario 2 (strong selection, fixed environment: $P = 0.1, w = 0.2, v[E] = 0$), Scenario 3 (weak selection, variable environment: $P = 1, w = 10, v[E] = 0.01$), and Scenario 4 (strong selection, variable environment: P = 0.1, w = 0.2, v[E] = 0.01).
 
 **Statistical model**
 
-To determine the relative influence of environmental and spatial properties, population dynamics, and evolutionary dynamics for community structure, we applied hierarchical modelling of species communities (HMSC, Ovaskainen et al. 2017; Tikhonov et al. 2020) to model the abundance at each site and year for each species $N_{ikt}$. The abundance values were modeled as $N_{ikt} \sim N(L_{ikt},\sigma_2)$, where the linear predictors **L** are the sum of fixed and random effects **L^F^** + **L^R^** (Tikhonov et al. 2020). The fixed effects were (1) $E_k$, the site’s environmental value, (2) the value of each species' population size the time step before $N_{ik,t-1}$, (3) the absolute change in each species' trait value from the previous time step to the next $|\Delta x_{ik,t-1 \to t}|$, (4) and an interaction term for population size by change in trait value $N_{ik,t-1} \times |\Delta x_{ik,t-1 \to t}|$, which led to a total of 46 predictors. The random effects were modeled at the site-level ($\epsilon_{ik} \sim N(0, \Omega^S)$, where $\Omega^S$ is the site species-to-species covariance matrix) and at the time step level ($\epsilon_{it} \sim N(0, \Omega^T)$, where $\Omega^T$ is the time species-to-species covariance matrix) using a latent variable approach. In this approach, species-to-species covariance matrices are computed as $\Omega = \lambda \intercal \lambda$, where $\lambda$ are the loadings of each species with latent variables, and latent variables are modeled as $\epsilon_{ik} = \sum_B \eta_{kB} \lambda_{Bi}$ and $\epsilon_{it} = \sum_B \eta_{tB} \lambda_{Bi}$ for *B* latent variables considered (Ovaskainen et al. 2016). The spatial latent variables represent a spatial model, where species respond to some latent spatial predictor associated with the *xy* coordinates of the site (Tikhonov et al. 2020 [@Tikhonov2020]). Simulation results were implemented using 'R.matlab' (Bengtsson 2022), analysis and was conducted in R (version 4.1.1) using packages ‘Hmsc’, and XX (Tikhonov et al. 2022; XX).
+To determine the relative influence of environmental and spatial properties, population dynamics, and evolutionary dynamics for community structure, we applied hierarchical modelling of species communities (HMSC, Ovaskainen et al. 2017; Tikhonov et al. 2020) to model the abundance at each site and year for each species $N_{ikt}$. The abundance values were modeled as $N_{ikt} \sim N(L_{ikt},\sigma_2)$, where the linear predictors **L** are the sum of fixed and random effects **L^F^** + **L^R^** (Tikhonov et al. 2020). The fixed effects were (1) $E_k$, the value of the site’s environmental parameter, (2) the value of each species' population size the time step before $N_{ik,t-1}$, (3) the absolute value of the change in each species' trait value from the previous time step to the next $|\Delta x_{ik,t-1 \to t}|$, (4) and an interaction term for population size by change in trait value $N_{ik,t-1} \times |\Delta x_{ik,t-1 \to t}|$, which led to a total of 46 predictors. The random effects were modeled at the site-level ($\epsilon_{ik} \sim N(0, \Omega^S)$, where $\Omega^S$ is the site species-to-species covariance matrix) and at the time step level ($\epsilon_{it} \sim N(0, \Omega^T)$, where $\Omega^T$ is the time species-to-species covariance matrix) using a latent variable approach. In this approach, species-to-species covariance matrices are computed as $\Omega = \lambda \intercal \lambda$, where $\lambda$ are the loadings of each species with latent variables, and latent variables are modeled as $\epsilon_{ik} = \sum_B \eta_{kB} \lambda_{Bi}$ and $\epsilon_{it} = \sum_B \eta_{tB} \lambda_{Bi}$ for *B* latent variables considered (Ovaskainen et al. 2016). The spatial latent variables represent a spatial model, where species respond to some latent spatial predictor associated with the *xy* coordinates of the site (Tikhonov et al. 2020 [@Tikhonov2020]). Analysis and was conducted in R (version 4.1.1) using packages ‘Hmsc’, 'R.matlab', and XX (Bengtsson 2022; Tikhonov et al. 2022; XX).
 
 Results
 ===============================================================================
@@ -129,13 +131,11 @@ m.df <- name$m.df
 ```
 
 **Statistical model**
-The goal of fitting the observed data to the HMSC model was to determine whether HMSC could successfully estimate the overall effects of four main drivers of population size for each of the species in the simulated metacommunity: environment, population size at the previous time step, evolution, thus change in species' trait $x$, and the interaction between population size and change in trait $x$. The full simulated time series was used as data to fit to the HMSC model, and therefore (1) the predictive power of the model was high ($R^2$ > 0.98 for all species, in all four model scenarios) and (2) using the population size at the previous time step was sufficient to explain almost of all the variation in the HMSC model (Appendix XX VarPart results). Instead of comparing the environmental, density, and evolutionary predictors on their importance for overall population size and explanatory power, we instead look at the values of the estimated effect size for scaled (to mean zero and unit variance) predictors for a single set of representative simulation runs, when dispersal $d = 10^{-3}$ and heritability $h^2 = 0.1$ for all species. 
+The goal of fitting the observed data to the HMSC model was to determine whether HMSC could successfully estimate the overall effects of four main drivers of population size for each of the species in the simulated metacommunity: environment, population size at the previous time step, evolution in species' trait $x$, and the interaction between population size and change in trait $x$. The full simulated time series was used as data to fit to the HMSC model, and therefore the (1) the predictive power of the model was high ($R^2$ > 0.98 for all species, in all four model scenarios) and (2) using the population size at the previous time step was sufficient to explain almost of all the variation in the HMSC model (Appendix XX VarPart results). Instead of comparing the environmental, biotic, and evolutionary predictors on their importance for overall population size and explanatory power, we instead look at the values of the estimated effect size for scaled (to mean zero and unit variance) predictors for a single set of representative simulation runs, when dispersal $d = 10^{-3}$ and heritability $h^2 = 0.1$ for all species. 
 
-There was no observed strong, consistent effect of changing the strength of selection (weak selection: $P = 1, w = 10$, strong selection: $P = 0.1, w = 0.2$) or the degree of environmental variability (no environmental variability: $v[E] = 0$, environmental variability: $v[E] = 0.01$) for the overall Intercept, the effects of environment, the intraspecific predictors (Figure \@ref(fig:fig4)), or the interspecific impacts of species densities on densities of other species (Figure \@ref(fig:fig5)). However, these differing simulation scenarios did impact the interspecific trait evolution predictors: scenarios with weak selection had a much stronger impact of $|\Delta x_{ik,t-1 \to t}|$ for abundances of other species, and scenarios without environmental variability had a much stronger impact of the interaction term for population size by change in trait value $N_{ik,t-1} \times |\Delta x_{ik,t-1 \to t}|$ (Figure \@ref(fig:fig5)).
+There was no observed strong, consistent effect of changing the strength of selection (weak selection: $P = 1, w = 10$, strong selection: $P = 0.1, w = 0.2$) or the degree of environmental variability (no environmental variability: $v[E] = 0$, environmental variability: $v[E] = 0.01$) for the overall Intercept, the effects of environment, the intraspecific predictors (Figure \@ref(fig:fig4)), or the interspecific impacts of species abundances on abundances of other species (Figure \@ref(fig:fig5)). However, these differing simulation scenarios did impact the interspecific trait evolution predictors: scenarios with weak selection (1,3) had a much stronger impact of $|\Delta x_{ik,t-1 \to t}|$ for abundances of other species, and scenarios without environmental variability (1,2) had a much stronger impact of the interaction term for population size by change in trait value $N_{ik,t-1} \times |\Delta x_{ik,t-1 \to t}|$ (Figure \@ref(fig:fig5)). These results can be explained by evaluating the patterns of change in species composition ($\beta$ diversity) and change in trait values ($|\Delta x|$) over the course of the simulation time series. Scenarios with strong selection (2 and 4) experienced more rapid loss of locally maladapted species during the initial 'community assembly' phase of the simulation (see in the strong initial drop in $\beta$ diversity in Figure \@ref(fig:fig7)). This loss of maladapted species meant there was less opportunity for local adaptation occurring in the same time frame as the most substantial shifts in species abundances (Figure \@ref(fig:fig7)), which would produce the stronger effect size coefficients $\beta_{|\Delta x|}$ observed in the weak selection scenarios in Figure \@ref(fig:fig5). Though dispersal and environmental variability (in scenarios 3 and 4) did lead to more local adaptation and changes in species abundances and local composition later in the time series (Figure \@ref(fig:fig7)), these were not correlated with each other and thus did not produce strong impacts of trait evolution for species abundances.
 
-It is interesting to look in more depth at the impacts that trait evolution - quantified as the absolute value of the change in the population's trait value $x$ from one time step to the next ($|\Delta x_{ik,t-1 \to t}|$), have for the population sizes of other species ($y_i$). In Scenario 1 (weak selection, no environmental variability), we observe that $|\Delta x_{15}|$ has a very strong impact for $y_{13}$, with a posterior mean of `r mean(m.df$Bx13.15)` (and 95% HPDI, or 95% highest probability density interval = `r quantile(m.df$Bx13.15,probs=c(0.025,0.975))`). Figure 6 \@ref(fig:fig6) shows that high population densities of species 13 correlate with high trait changes of species 15 in all 5 patches, where both species co-exist. These indicate that species 15 had its greatest trait changes at the start of the simulation during which species 13 reached high population densities. As species 15 declines due to the increase of species 2, species 13 recovers again its population size (Fig. 6b,h,j). Similarly we also observe a strong impact of $|\Delta x_{2}|$ for $y_{15}$, with a posterior mean of `r mean(m.df$Bx15.2)` (and 95% HPDI, or 95% highest probability density interval = `r quantile(m.df$Bx15.2,probs=c(0.025,0.975))`). It is important to note that interspecific impacts of $|\Delta x_{i}|$ are always indirect, as there is no direct interaction between $x_i$ and $y_j$. The only possible form of influence of is an increase in $y_i$ through evolution, leading to changes in intraspecific competition. We studied these posteriors in more detail, to provide an example on how to interpret these parameter estimations by the HMSC model (see Appendix XX). 
-
-
+It is interesting to look in more depth at the impacts that trait evolution - quantified as the absolute value of the change in the population's trait value $x$ from one time step to the next ($|\Delta x_{ik,t-1 \to t}|$), have for the population sizes of other species ($y_i$). In Scenario 1 (weak selection, no environmental variability), we observe that $|\Delta x_{15}|$ Species 15 has a very strong impact for $y_{13}$, with a posterior mean of `r mean(m.df$Bx13.15)` (and 95% HPDI, or 95% highest probability density interval = `r quantile(m.df$Bx13.15,probs=c(0.025,0.975))`). See Figure \@ref(fig:fig8). XXXXX.
 
 Another interesting result is seen when interpreting the interaction term included in the model. The model considers the change in trait from one time step to the next ($|\Delta x_{ik,t-1 \to t}|$), the population size at time $t-1$, $N_{ik,t-1}$, and a term for the interaction between these $N_{ik,t-1} \times |\Delta x_{ik,t-1 \to t}|$. The portion of the model that considers these predictors is as follows:
 
@@ -174,7 +174,9 @@ rownames(tab) <- c("mean", "2.5% HPDI","96.5% HPDI")
 knitr::kable(tab,digits=4)
 ```
 
-This means that the absolute value of trait evolution $|\Delta x_{1,t-1 \to t}|$ had a positive impact on population size $N_{1,t}$, and the population size at the previous time step $N_{1,t-1}$ also had a small positive effect, but the effect of trait evolution depended on the population size (Figure \@ref(fig:fig7)). These interaction terms are interesting to interpret from a perspective of better understanding eco-evolutionary interactions (where the impacts of evolution for population size depend on the value of population size). Figure (Figure \@ref(fig:fig5)) indicates stronger interaction effects in the weak selection scenarios (1 and 2). We can look in more depth at the interaction effects and evaluate whether they are additive, synergistic, or antagonistic. We calculated posterior distributions for $\beta_3 - (\beta_1 + \beta_2)$ and plot these in Figure \@ref(fig:fig8). Values with negative HPDI are antagonistic, with HPDI overlapping 0 are additive, and with positive HPDI are synergistic. We observed substantially more antagonisic interactions of population size and trait evolution in the scenarios with weak selection (Scenarios 1 and 3).
+This means that the absolute value of trait evolution $|\Delta x_{1,t-1 \to t}|$ had a positive impact on population size $N_{1,t}$, and the population size at the previous time step $N_{1,t-1}$ also had a small positive effect, but the effect of trait evolution depended on the population size (Figure \@ref(fig:fig9)). These interaction terms are interesting to interpret from a perspective of better understanding eco-evolutionary interactions (where the impacts of evolution for population size depend on the value of population size). Figure (Figure \@ref(fig:fig5)) indicates stronger interaction effects in the weak selection scenarios (1 and 2). We can look in more depth at the interaction effects and evaluate whether they are additive, synergistic, or antagonistic. We calculated posterior distributions for $\beta_3 - (\beta_1 + \beta_2)$ and plot these in Figure \@ref(fig:fig10). Values with negative HPDI are antagonistic, with HPDI overlapping 0 are additive, and with positive HPDI are synergistic. We observed substantially more antagonisic interactions of population size and trait evolution in the scenarios with weak selection (Scenarios 1 and 3).
+
+The importance of evolution for community composition can be observed by considering model predictions for the simulated dynamics when there is no evolution. In this instance, we replace the $|\Delta x|$ values and the interaction effects $N_{ik,t-1} \cdot |\Delta x_{ik,t-1 \to t}|$ in the predictor matrix to 0 and consider the predicted values compared to observed. The deviations seen in Figure \@ref(fig:fig10) indicate that failing to consider evolution in the system (and interactions with population size) does impact the predicted population size. This is less pronounced in this simulated example, likely due to the perfect time series included in the HMSC model and thus the high explanatory power of the $N_{ik,t-1}$ predictors. [note: try average |DeltaX|, try to separate most explanatory N_t-1 values (intra or inter?). This needs more work.]
 
 Discussion
 ================================================================================
@@ -187,10 +189,6 @@ I have analysed data collected by Herman Bumpus [@Bumpus1898] on the relationshi
 Here is one way to add some more detailed comments into the manuscript itself, though this can also be done within the text (see above). 
 
 --->
-When interpreting estimated posteriors of the HMSC model, for the different parameters, it is important to consider that these are based on correlations. Such a correlation may be the result of a direct impact from one parameter, the effect of an unmeasured parameter or the result of different parameter interacting. Therefore, when interpreting their effects on the communitiy processes they need to be investigated further. As an example for this we examined the higher posterior of $|\Delta x_{15}|$ on $y_{13}$ and of $|\Delta x_{2}|$ on $y_{15}$ (for further detail see Appendix XX). In this example we were able to show that the effect of $|\Delta x_{2}|$ on $y_{15}$ was a direct consequence of the strong competition coefficient between both species and as species 2 was the stronger competitor (through higher population size) it led to the decline of $y_{15}$. At the same time the effect of $|\Delta x_{15}|$ on $y_{13}$ was the result of a correlation without causation, as species 13 has no strong competition with species 15 (or 2). Therefore, before concluding effects of the estimated posteriors these parameters need to be further analyzed. Furthermore, results from species with low densities need to be interpreted with care as the low population size might inflate the resulting posterior.
-
-
-
 
 Overall, this document demonstrates how high quality, professional looking documents can be written using Rmarkdown. The [underlying code](https://github.com/StirlingCodingClub/Manuscripts_in_Rmarkdown/blob/master/ms.Rmd) for this manuscript is publicly available, along with [accompanying notes](https://stirlingcodingclub.github.io/Manuscripts_in_Rmarkdown/Rmarkdown_notes.html) to understand how it was written. By using Rmarkdown to write manuscripts, authors can more easily use version control (e.g., git) throughout the writing process. The ability to easily integrate citations though BibTeX, LaTeX tools, and dynamic R code can also make writing much more efficient and more enjoyable. Further, obtaining the benefits of using Rmarkdown does not need to come with the cost of isolating colleagues who prefer to work with Word or LaTeX because Rmarkdown can easily be converted to these formats (in the case of Word, with the push of a button). By learning all of the tools used in this manuscript, readers should have all of the necessary knowledge to get started writing and collaborating in Rmarkdown.
 
@@ -474,7 +472,7 @@ cowplot::plot_grid(s1[[4]],s2[[4]],s3[[4]],s4[[4]],s1[[6]],s2[[6]],s3[[6]],s4[[6
 \newpage
 
 ```{r fig6, echo=FALSE, fig.show="hold", warning=FALSE,out.width="90%", fig.cap = "Plot showing interpretation of impact of DeltaX-15 for Y-13."}
-# Load data
+# # Load data
 res  <- R.matlab::readMat(paste("../data/",result,"_res.mat",sep="")) # Scenario 1
 # Identify sites where Species 15 and 13 co-occur
 pa <- res$N
@@ -501,39 +499,159 @@ patches_l<-list()
 p_X<-list()
 p_Y<-list()
 for (i in 1:length(b)) {
-patches[[i]] <- data.frame(x15=X3d[b[i],23,],y02=Y3d[b[i],2,],y13=Y3d[b[i],9,],y15=Y3d[b[i],11,],time=2:1000)  
-patches_l[[i]] <- pivot_longer(patches[[i]],cols=2:4,values_to="Y",names_to = "sp")
-p_X[[i]] <-ggplot(patches_l[[i]],aes(x=x15,y=Y,color=sp,linetype=sp))+
-  geom_point(size=2,alpha=0.5)+
-  ylim(c(0,700))+
-  scale_color_manual(values = c("coral3","darkorchid4","rosybrown1"))+
-  theme_bw()+
-  xlab(NULL)+ylab(NULL)+
-  theme()+
-  guides(color = FALSE,linetype=F)
-
-p_Y[[i]]<-ggplot(patches_l[[i]],aes(x=time,y=Y,color=sp,linetype=sp))+
-  geom_line(linewidth=2)+
-  ylim(c(0,700))+
-  scale_color_manual(values = c("coral3","darkorchid4","rosybrown1"))+
-  theme_bw()+
-  ylab(NULL)+xlab(NULL)+
-  theme(axis.text.y = element_blank(),axis.text.x = element_blank())+
-  guides(color = FALSE,linetype=F)
-}
-
+ patches[[i]] <- data.frame(x15=X3d[b[i],23,],y04=Y3d[b[i],3,],y13=Y3d[b[i],9,],y15=Y3d[b[i],11,],time=2:1000)
+ patches_l[[i]] <- pivot_longer(patches[[i]],cols=2:4,values_to="Y",names_to = "sp")
+ p_X[[i]] <-ggplot(patches_l[[i]],aes(x=x15,y=Y,color=sp,linetype=sp))+
+   geom_point(size=2,alpha=0.5)+
+   ylim(c(0,700))+
+   scale_color_manual(values = c("gray47","darkorchid4","rosybrown1"))+
+   theme_bw()+
+   xlab(NULL)+ylab(NULL)+
+   theme()+
+   guides(color = FALSE,linetype=F)
+ 
+ p_Y[[i]]<-ggplot(patches_l[[i]],aes(x=time,y=Y,color=sp,linetype=sp))+
+   geom_line(linewidth=2)+
+   ylim(c(0,700))+
+   scale_color_manual(values = c("gray47","darkorchid4","rosybrown1"))+
+   theme_bw()+
+   ylab(NULL)+xlab(NULL)+
+   theme(axis.text.y = element_blank(),axis.text.x = element_blank())+
+   guides(color = FALSE,linetype=F)
+ }
+ 
 p_X[[1]]+p_X[[2]]+p_X[[3]]+ylab("Specis density")+
-  p_X[[4]]+p_X[[5]]+xlab("Delta x of Species 15")+
-  p_Y[[1]]+p_Y[[2]]+p_Y[[3]]+p_Y[[4]]+p_Y[[5]]+xlab("Time")+
-  theme(axis.text.x=element_text())+
-  scale_x_continuous(breaks = c(0,250,500,750,1000))+
-  plot_layout(nrow=5,byrow=F)+
-  plot_annotation(tag_levels = list(c("a","c","e","g","i","b","d","f","h","j")))
+ p_X[[4]]+p_X[[5]]+xlab("Delta x of Species 15")+
+ p_Y[[1]]+p_Y[[2]]+p_Y[[3]]+p_Y[[4]]+p_Y[[5]]+xlab("Time")+
+ theme(axis.text.x=element_text())+
+ scale_x_continuous(breaks = c(0,250,500,750,1000))+
+ plot_layout(nrow=5,byrow=F)+
+ plot_annotation(tag_levels = list(c("a","c","e","g","i","b","d","f","h","j")))
 ```
 
 \newpage
 
-```{r fig7, echo=FALSE, fig.show="hold", out.width="60%", fig.cap = "Interpretation of interaction effect for Species 1, Scenario 1. Model-predicted value for $N_{1t}$ across a range of $|deltaX|$ values, using the mean (black line), 2.5% (orange lines), and 97.5% (green lines) values of $N_{1,t-1}$. Observed values from the simulation are shown as grey points."}
+```{r fig7, echo=FALSE, warning=FALSE, message=FALSE, fig.show="hold", out.width="100%", fig.cap = "Time series of diversity, N, deltaX."}
+d_lev <- c("d_zero","d_minus9","d_minus8","d_minus7","d_minus6","d_minus5","d_minus4","d_minus3","d_minus2","d_01","d_02","d_03","d_04","d_05","d_06","d_07","d_08","d_09","d_10")
+h_lev <- c("h_0_","h_01_","h_02_","h_03_","h_04_","h_05_","h_06_","h_07_","h_08_","h_09_","h_10_")
+setwd("../data")
+z <- 2
+f <- 8
+result <- paste(h_lev[z],d_lev[f],sep="")
+# Scenario 1
+res  <- R.matlab::readMat(paste(result,"_res.mat",sep=""))
+r <- res$N
+r1 <- get_deltaX(res) # setup for dX plot
+delta_x_time_s1 <- r1$delta_x_time
+tot_delta_x_s1 <- r1$tot_delta_x
+r2 <- get_div(r)
+div_s1 <- r2$div # setup for diversity plot
+totN1 <- r2$totN # setup for N plot
+# Scenario 2
+res  <- R.matlab::readMat(paste(result,"_res_v02.mat",sep=""))
+r <- res$N
+r1 <- get_deltaX(res)
+delta_x_time_s2 <- r1$delta_x_time
+tot_delta_x_s2 <- r1$tot_delta_x
+r2 <- get_div(r)
+div_s2 <- r2$div # setup for diversity plot
+totN2 <- r2$totN # setup for N plot
+# Scenario 3
+res  <- R.matlab::readMat(paste(result,"_res_v03.mat",sep=""))
+r <- res$N
+r1 <- get_deltaX(res)
+delta_x_time_s3 <- r1$delta_x_time
+tot_delta_x_s3 <- r1$tot_delta_x
+r2 <- get_div(r)
+div_s3 <- r2$div # setup for diversity plot
+totN3 <- r2$totN # setup for N plot
+# Scenario 4
+res  <- R.matlab::readMat(paste(result,"_res_v04.mat",sep=""))
+r <- res$N
+r1 <- get_deltaX(res)
+delta_x_time_s4 <- r1$delta_x_time
+tot_delta_x_s4 <- r1$tot_delta_x
+r2 <- get_div(r)
+div_s4 <- r2$div # setup for diversity plot
+totN4 <- r2$totN # setup for N plot
+
+## Diversity as time series
+# Scenario 1
+div_gg <- reshape2::melt(div_s1[,,1])
+colnames(div_gg) <- c("time","div","mean")
+div_gg$se <- reshape2::melt(div_s1[,,2])[,3]
+div_list <- list()
+div_list[[1]] <- ggplot2::ggplot(div_gg,ggplot2::aes(x=time,y=mean,col=div)) + ggplot2::geom_line(size=0.05) + ggplot2::geom_point(size=0.2) + ggplot2::geom_errorbar(ggplot2::aes(ymin=mean-se, ymax=mean+se), width=0.02, position=ggplot2::position_dodge(.05), size=0.05) + ggplot2::coord_cartesian(xlim=c(0,200))  + theme(legend.position = "none")
+# Scenario 2
+div_gg <- reshape2::melt(div_s2[,,1])
+colnames(div_gg) <- c("time","div","mean")
+div_gg$se <- reshape2::melt(div_s1[,,2])[,3]
+div_list[[2]] <- ggplot2::ggplot(div_gg,ggplot2::aes(x=time,y=mean,col=div)) + ggplot2::geom_line(size=0.05) + ggplot2::geom_point(size=0.2) + ggplot2::geom_errorbar(ggplot2::aes(ymin=mean-se, ymax=mean+se), width=0.02, position=ggplot2::position_dodge(.05), size=0.05) + ggplot2::coord_cartesian(xlim=c(0,200)) + theme(legend.position = "none")
+# Scenario 3
+div_gg <- reshape2::melt(div_s3[,,1])
+colnames(div_gg) <- c("time","div","mean")
+div_gg$se <- reshape2::melt(div_s1[,,2])[,3]
+div_list[[3]] <- ggplot2::ggplot(div_gg,ggplot2::aes(x=time,y=mean,col=div)) + ggplot2::geom_line(size=0.05) + ggplot2::geom_point(size=0.2) + ggplot2::geom_errorbar(ggplot2::aes(ymin=mean-se, ymax=mean+se), width=0.02, position=ggplot2::position_dodge(.05), size=0.05) + ggplot2::coord_cartesian(xlim=c(0,200)) + theme(legend.position = "none")
+# Scenario 4
+div_gg <- reshape2::melt(div_s4[,,1])
+colnames(div_gg) <- c("time","div","mean")
+div_gg$se <- reshape2::melt(div_s1[,,2])[,3]
+div_list[[4]] <- ggplot2::ggplot(div_gg,ggplot2::aes(x=time,y=mean,col=div)) + ggplot2::geom_line(size=0.05) + ggplot2::geom_point(size=0.2) + ggplot2::geom_errorbar(ggplot2::aes(ymin=mean-se, ymax=mean+se), width=0.02, position=ggplot2::position_dodge(.05), size=0.05) + ggplot2::coord_cartesian(xlim=c(0,200)) + theme(legend.position = "none")
+
+## Time series plot of total N per scenario (by species)
+mycols2 <- c("maroon4","coral3","peachpuff3","gray47","orange3","darkorange","gray33","lightgoldenrod2","gray96","cadetblue4","gray40","lightseagreen","darkorchid4","midnightblue","rosybrown1" )
+# Scenario 1
+totN_s <- data.frame(t(totN1))
+colnames(totN_s) <- gsub("X","s",colnames(totN_s))
+totN_s <- reshape2::melt(totN_s)
+totN_s$time <- rep(1:1000,11)
+N_list <- list()
+N_list[[1]] <- ggplot2::ggplot(totN_s,ggplot2::aes(x=time,y=value,col=variable)) + ggplot2::geom_line() + ggplot2::coord_cartesian(xlim=c(0,200),ylim=c(0,15000)) + scale_color_manual(values=mycols2[-e]) + theme(legend.position = "none")
+# Scenario 2
+totN_s <- data.frame(t(totN2))
+colnames(totN_s) <- gsub("X","s",colnames(totN_s))
+totN_s <- reshape2::melt(totN_s)
+totN_s$time <- rep(1:1000,11)
+N_list[[2]] <- ggplot2::ggplot(totN_s,ggplot2::aes(x=time,y=value,col=variable)) + ggplot2::geom_line() + ggplot2::coord_cartesian(xlim=c(0,200),ylim=c(0,15000)) + scale_color_manual(values=mycols2[-e]) + theme(legend.position = "none")
+# Scenario 3
+totN_s <- data.frame(t(totN3))
+colnames(totN_s) <- gsub("X","s",colnames(totN_s))
+totN_s <- reshape2::melt(totN_s)
+totN_s$time <- rep(1:1000,11)
+N_list[[3]] <- ggplot2::ggplot(totN_s,ggplot2::aes(x=time,y=value,col=variable)) + ggplot2::geom_line() + ggplot2::coord_cartesian(xlim=c(0,200),ylim=c(0,15000)) + scale_color_manual(values=mycols2[-e]) + theme(legend.position = "none")
+# Scenario 4
+totN_s <- data.frame(t(totN4))
+colnames(totN_s) <- gsub("X","s",colnames(totN_s))
+totN_s <- reshape2::melt(totN_s)
+totN_s$time <- rep(1:1000,11)
+N_list[[4]] <- ggplot2::ggplot(totN_s,ggplot2::aes(x=time,y=value,col=variable)) + ggplot2::geom_line() + ggplot2::coord_cartesian(xlim=c(0,200),ylim=c(0,15000)) + scale_color_manual(values=mycols2[-e]) + theme(legend.position = "none")
+
+## Time series plot of total |deltaX| per scenario
+tot_delta_x_s1 <- data.frame(tot_delta_x_s1)
+tot_delta_x_s1$time <- 2:1000
+plist <- list()
+plist[[1]] <- ggplot2::ggplot(tot_delta_x_s1,ggplot2::aes(x=time,y=tot_delta_x_s1)) + ggplot2::geom_line(size=0.2) + ggplot2::coord_cartesian(ylim=c(0,2))
+
+tot_delta_x_s2 <- data.frame(tot_delta_x_s2)
+tot_delta_x_s2$time <- 2:1000
+plist[[2]] <- ggplot2::ggplot(tot_delta_x_s2,ggplot2::aes(x=time,y=tot_delta_x_s2)) + ggplot2::geom_line(size=0.2) + ggplot2::coord_cartesian(ylim=c(0,2))
+
+tot_delta_x_s3 <- data.frame(tot_delta_x_s3)
+tot_delta_x_s3$time <- 2:1000
+plist[[3]] <- ggplot2::ggplot(tot_delta_x_s3,ggplot2::aes(x=time,y=tot_delta_x_s3)) + ggplot2::geom_line(size=0.2) + ggplot2::coord_cartesian(ylim=c(0,2))
+
+tot_delta_x_s4 <- data.frame(tot_delta_x_s4)
+tot_delta_x_s4$time <- 2:1000
+plist[[4]] <- ggplot2::ggplot(tot_delta_x_s4,ggplot2::aes(x=time,y=tot_delta_x_s4)) + ggplot2::geom_line(size=0.2) + ggplot2::coord_cartesian(ylim=c(0,2))
+
+# Need to add legend
+cowplot::plot_grid(div_list[[1]],div_list[[2]],div_list[[3]],div_list[[4]],N_list[[1]],N_list[[2]],N_list[[3]],N_list[[4]],plist[[1]],plist[[2]],plist[[3]],plist[[4]],byrow=TRUE,rel_widths = c(1,1,1,1,1,1,1,1,2,2,2,2),labels=c("a","b","c","d","e","f","g","h","i","j","k","l"),label_size=10)
+```
+
+\newpage
+
+
+```{r fig8, echo=FALSE, fig.show="hold", out.width="60%", fig.cap = "Interpretation of interaction effect for Species 1, Scenario 1. Model-predicted value for $N_{1t}$ across a range of $|deltaX|$ values, using the mean (black line), 2.5% (orange lines), and 97.5% (green lines) values of $N_{1,t-1}$. Observed values from the simulation are shown as grey points."}
 # 1 generate posterior predictions for y2 ~ y_t-1_1
 m.df.1 <- m.df.1[,c(1,2,14,25)]
 # range of observed Y_t-1_2.2, after scaling
@@ -571,7 +689,7 @@ points(Yt1_1.1,scale(m.1$Y[,"y1"]),cex=.3,pch=19,col="lightgrey")
 
 \newpage
 
-```{r fig8, echo=FALSE, fig.show="hold", out.width="60%", fig.cap = "Antagonistic (HPDI < 0), additive (HPDI includes 0), or synergistic (HPDI > 0) eco-evolutionary interaction effects for (a) scenario 1 (weak selection, no environmental variability), (b) scenario 2 (strong selection, no environmental variability), (c) scenario 3 (weak selection, environmental variability), and (d) scenario 4 (strong selection, environmental variability)."}
+```{r fig9, echo=FALSE, fig.show="hold", out.width="60%", fig.cap = "Antagonistic (HPDI < 0), additive (HPDI includes 0), or synergistic (HPDI > 0) eco-evolutionary interaction effects for (a) scenario 1 (weak selection, no environmental variability), (b) scenario 2 (strong selection, no environmental variability), (c) scenario 3 (weak selection, environmental variability), and (d) scenario 4 (strong selection, environmental variability)."}
 # Load data
 load("../output/h_01_d_minus3_hmsc_v01.RData")
 # Settings for number of species and their identity
@@ -665,6 +783,129 @@ plist[[4]] <- bayesplot::mcmc_intervals(add,point_size=2) +
 
 gridExtra::grid.arrange(plist[[1]],plist[[2]],plist[[3]],plist[[4]],ncol=1,nrow=4,layout_matrix=rbind(1,2,3,4))
 ```
+
+\newpage
+
+
+```{r fig10, echo=FALSE, fig.show="hold", out.width="100%", fig.cap = "Predicted plots with |deltaX| = 0"}
+# Load results
+load("../output/h_01_d_minus3_hmsc_v01.RData")
+mX <- X
+mX[,24:34] <- 0
+pd.1 <- predict(m.1,XData=mX)
+# What do the predicted vs. observed values look like?
+## Calculate HPDI for each data point
+s <- ncol(m.1$Y)
+pdv.1 <- lapply(pd.1,as.vector)
+pdm.1 <- do.call(rbind, pdv.1)
+pd_hdpi_25.1 <- apply(pdm.1,2,quantile,probs=0.025)
+pd_hdpi_975.1 <- apply(pdm.1,2,quantile,probs=0.975)
+pdm_hdpi_25.1 <- matrix(pd_hdpi_25.1,nrow=dim(pd.1[[1]])[1],ncol=dim(pd.1[[1]])[2],byrow=FALSE)
+pdm_hdpi_975.1 <- matrix(pd_hdpi_975.1,nrow=dim(pd.1[[1]])[1],ncol=dim(pd.1[[1]])[2],byrow=FALSE)
+## Plot time series with 95% HDPI
+## Identify which species are absent (N=0) in each site-by-year instance
+plotY <- Y
+plot_25 <- pdm_hdpi_25.1
+plot_975 <- pdm_hdpi_975.1
+a <- apply(plotY,2,min)
+for(i in 1:s){
+  b <- which(plotY[,i]==a[i])
+  plotY[b,i] <- NA
+  plot_25[b,i] <- NA
+  plot_975[b,i] <- NA
+}
+## Plot
+par(mfrow=(c(10,5)))
+par(mar=c(1,1,1,1))
+for(j in 1:50){
+  plot(plotY[Random$site==j,1],type="n",ylim=c(-1,800),ylab=NA,xlab=NA,xaxs="i",yaxs="i")
+  lines(plot_25[Random$site==j,1],col="red")
+  lines(plot_975[Random$site==j,1],col="red")
+  lines(plotY[Random$site==j,1],col="black")
+  for(s in 2:s){
+    lines(plot_25[Random$site==j,s],col="red")
+    lines(plot_975[Random$site==j,s],col="red")
+    lines(plotY[Random$site==j,s],col="black")
+  }
+}
+
+# We zoom into a few sites to understand what the plot is telling us:
+factor <- matrix(NA,nrow=nrow(Random),ncol=ncol(Random),dimnames=list(NULL,colnames(Random)))
+factor[,1] <- as.numeric(as.character(Random$site))
+factor[,2] <- as.numeric(as.character(Random$year))
+factor[,3] <- as.numeric(as.character(Random$sample))
+factor <- as.data.frame(factor)
+
+par(mfrow=c(6,1))
+k <- c(5,12,15,20,49)
+#k <- c(17,21,30,35,40)
+j <- k[1]
+plot(plotY[factor$site==j & factor$year < 200,1],type="n",ylim=c(-1,800),ylab=NA,xlab=NA,xaxs="i",yaxs="i")
+lines(plot_25[factor$site==j & factor$year < 200,1],col="red")
+lines(plot_975[factor$site==j & factor$year < 200,1],col="red")
+lines(plotY[factor$site==j & factor$year < 200,1],col="black")
+for(s in 2:s){
+lines(plot_25[factor$site==j & factor$year < 200,s],col="red")
+lines(plot_975[factor$site==j & factor$year < 200,s],col="red")
+lines(plotY[factor$site==j & factor$year < 200,s],col="black")
+}
+
+j <- k[2]
+plot(plotY[factor$site==j & factor$year < 200,1],type="n",ylim=c(-1,800),ylab=NA,xlab=NA,xaxs="i",yaxs="i")
+lines(plot_25[factor$site==j & factor$year < 200,1],col="red")
+lines(plot_975[factor$site==j & factor$year < 200,1],col="red")
+lines(plotY[factor$site==j & factor$year < 200,1],col="black")
+for(s in 2:s){
+lines(plot_25[factor$site==j & factor$year < 200,s],col="red")
+lines(plot_975[factor$site==j & factor$year < 200,s],col="red")
+lines(plotY[factor$site==j & factor$year < 200,s],col="black")
+}
+
+j <- k[3]
+plot(plotY[factor$site==j & factor$year < 200,1],type="n",ylim=c(-1,800),ylab=NA,xlab=NA,xaxs="i",yaxs="i")
+lines(plot_25[factor$site==j & factor$year < 200,1],col="red")
+lines(plot_975[factor$site==j & factor$year < 200,1],col="red")
+lines(plotY[factor$site==j & factor$year < 420,1],col="black")
+for(s in 2:s){
+lines(plot_25[factor$site==j & factor$year < 200,s],col="red")
+lines(plot_975[factor$site==j & factor$year < 200,s],col="red")
+lines(plotY[factor$site==j & factor$year < 200,s],col="black")
+}
+
+j <- k[4]
+plot(plotY[factor$site==j & factor$year < 200,1],type="n",ylim=c(-1,800),ylab=NA,xlab=NA,xaxs="i",yaxs="i")
+lines(plot_25[factor$site==j & factor$year < 200,1],col="red")
+lines(plot_975[factor$site==j & factor$year < 200,1],col="red")
+lines(plotY[factor$site==j & factor$year < 200,1],col="black")
+for(s in 2:s){
+lines(plot_25[factor$site==j & factor$year < 200,s],col="red")
+lines(plot_975[factor$site==j & factor$year < 200,s],col="red")
+lines(plotY[factor$site==j & factor$year < 200,s],col="black")
+}
+
+j <- k[5]
+plot(plotY[factor$site==j & factor$year < 200,1],type="n",ylim=c(-1,800),ylab=NA,xlab=NA,xaxs="i",yaxs="i")
+lines(plot_25[factor$site==j & factor$year < 200,1],col="red")
+lines(plot_975[factor$site==j & factor$year < 200,1],col="red")
+lines(plotY[factor$site==j & factor$year < 200,1],col="black")
+for(s in 2:s){
+lines(plot_25[factor$site==j & factor$year < 200,s],col="red")
+lines(plot_975[factor$site==j & factor$year < 200,s],col="red")
+lines(plotY[factor$site==j & factor$year < 200,s],col="black")
+}
+
+j <- 48
+plot(plotY[factor$site==j & factor$year < 800,1],type="n",ylim=c(-1,800),ylab=NA,xlab=NA,xaxs="i",yaxs="i")
+lines(plot_25[factor$site==j & factor$year < 800,1],col="red")
+lines(plot_975[factor$site==j & factor$year < 800,1],col="red")
+lines(plotY[factor$site==j & factor$year < 800,1],col="black")
+for(s in 2:s){
+lines(plot_25[factor$site==j & factor$year < 800,s],col="red")
+lines(plot_975[factor$site==j & factor$year < 800,s],col="red")
+lines(plotY[factor$site==j & factor$year < 800,s],col="black")
+}
+```
+
 
 \newpage
 
