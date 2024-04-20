@@ -36,6 +36,7 @@ knitr::opts_chunk$set(
 library(Hmsc)
 library(ggplot2)
 library(tidyr)
+library(coda)
 ```
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
 # Wrap long lines
@@ -46,11 +47,12 @@ knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE,out.width="50%"
 Population growth over time in a single species is first modelled using a Beverton-Holt (discrete-time, logistic) model (@Beverton1957), using an intra-specific competition coefficient for density-dependent growth (@Hart2013).
 
 $$ N_{i,t+1} = \frac{r_i N_{i,t}}{1 + \alpha_{ii} N_{i,t}}$$
-Note that in this model, the system is at equilibrium when $N_{i,t+1} = N_{i,t}$, and therefore:
+Note that in this model, the system is at equilibrium when $N_{i,t+1} = N_{i,t}$, and therefore: $$ N^* = N^*\frac{r_i}{1 + \alpha_{ii} N^*} $$
 
-$$ N^* = N^*\frac{r_i}{1 + \alpha_{ii} N^*} $$
 $$ 1 = \frac{r_i}{1 + \alpha_{ii} N^*} $$
+
 $$ N^* = \frac{r_i - 1}{\alpha_{ii}} $$
+
 ## Population dynamics simulation
 In the metacommunity simulation in the main text, a species resides in a site with an initial population size $N_{i,0} \sim Pois(10)$, a growth rate $r_i$ that depends on the local environmental value $E_k$ and the species trait $x_i$, and a fixed intra-specific competition coefficient of $\alpha_{ii}$ = 0.00125. We simulate population growth here:
 
@@ -83,20 +85,29 @@ ggplot2::ggplot(dat, aes(time, N)) + geom_point() + geom_hline(yintercept = ((r1
 
 ## Linear statistical model
 
-We fit the population time series data to a first-order auto-regressive model to predict $N_{t+1}$ as a function of $N_t$:
+We fit the population time series data to a first-order auto-regressive model to predict $N_{t+1}$ as a function of $N_t$, and compare that to a linear regression:
 
 $$ N_{t+1} = \beta_0 + \beta_1 N_t + \epsilon_t $$
-```{r}
-m.1 <- arima(log(N),order=c(1,0,0))
+```{r,warning=FALSE}
+# Fit the model
+m.1.ar <- arima(x = log(N), order = c(1,0,0), include.mean = T, method="CSS")
+m.1.lm <- lm(log(dat$N[2:t]) ~ log(dat$N[1:(t-1)]))
 #plotting the series along with the fitted values
-m.1.fit <- log(N) - residuals(m.1)
-dat$ar1.fit <- m.1.fit
+m.1.ar.fit <- log(N) - residuals(m.1.ar)
+m.1.lm.fit <- log(dat$N[2:t]) - m.1.lm$resid
+dat$ar1.fit <- m.1.ar.fit
+dat$lm.fit <- NA
+dat$lm.fit[2:t] <- m.1.lm.fit
 ```
-```{r figs2, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs2}Population size over time (black line) with fitted values from a first-order autoregressive model (red dashed line)."}
-colors <- c("data" = "black", "model fit" = "blue")
-ggplot(data=dat,aes(x=time)) + geom_point(aes(y=log(N),color="data")) + geom_point(aes(y=ar1.fit, color = "model fit"), alpha=0.5) +
+```{r figs2, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs2}Population size over time (black line) with fitted values from a first-order autoregressive model (red dashed line).",warning=FALSE}
+colors <- c("data" = "black", "AR1 fit" = "gray", "lm fit"="orange")
+ggplot(data=dat,aes(x=time)) +
+  geom_point(aes(y=log(N),color="data")) +
+  geom_point(aes(y=ar1.fit, color = "AR1 fit"), alpha=0.5) +
+  geom_point(aes(y=lm.fit, color = "lm fit"), alpha=0.5) +
   geom_line(aes(y=log(N), color="data"), linewidth=.4) +
-  geom_line(aes(y=ar1.fit, color = "model fit"), alpha=0.5, linewidth=.4) +
+  geom_line(aes(y=ar1.fit, color = "AR1 fit"), alpha=0.5, linewidth=.4) +
+  geom_line(aes(y=ar1.fit, color = "lm fit"), alpha=0.5, linewidth=.4) +
   theme_bw() +
   xlab("time") +
   ylab("N") +
@@ -104,20 +115,72 @@ ggplot(data=dat,aes(x=time)) + geom_point(aes(y=log(N),color="data")) + geom_poi
   scale_color_manual(values = colors)
 ```
 
-We can also examine density dependence by plotting $\Delta N = N_{t+1} - N_t$ vs. $N_t$:
+The linear model is a good fit, and $N_{t+1}$ and $N_t$ are well-represented by a linear function:
 
-```{r}
+```{r figs3, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs3}Population size (logarithm) at one time step $N_{t+1}$ as a function of log-population size in the previous time step $N_t$. "}
 dN <- rep(NA, (t-1))
 for (i in 1:(t-1)) {
   dN[i] <- log(N[i+1])-log(N[i])
 }
-```
-```{r figs3, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs2}Population size over time (black line) with fitted values from a first-order autoregressive model (red dashed line)."}
 d.dN <- as.data.frame(dN)
 d.dN$Nt <- log(dat$N[1:(t-1)])
-ggplot2::ggplot(d.dN, aes(Nt, dN)) + geom_point()
+d.dN$Nt_plus_1 <- log(dat$N[2:t])
+ggplot2::ggplot(d.dN, aes(x=Nt,y=Nt_plus_1)) + geom_point()
 ```
 
+We also examine density dependence by plotting $\Delta N = N_{t+1} - N_t$ vs. $N_t$:
+
+```{r figs4, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs4} Change in population size from one time step to the next $N_{t+1}$ as a function of $N_{t+1}$"}
+d.dN <- as.data.frame(dN)
+d.dN$Nt <- log(dat$N[1:(t-1)])
+d.dN$Nt_plus_1 <- log(dat$N[2:t])
+ggplot2::ggplot(d.dN, aes(Nt, dN)) + geom_point()
+```
+## Bayesian linear statistical model: HMSC
+We can estimate the same model parameters using HMSC:
+
+```{r}
+# prepare data in HMSC format
+Y <- as.matrix(log(dat$N[2:t]))
+XData <- data.frame(x=log(dat$N[1:(t-1)]))
+m.1.hmsc <- Hmsc(Y=Y,XData=XData,XFormula=~x)
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 1000
+transient <- 500*thin
+verbose <- 500*thin
+# sample MCMC
+m.1.sample <- sampleMcmc(m.1.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+```
+
+```{r}
+m.post.hmsc <- convertToCodaObject(m.1.sample)
+summary(m.post.hmsc$Beta)
+plot(m.post.hmsc$Beta)
+```
+
+These estimates match well with those from the AR1 and linear model:
+
+```{r}
+# AR1 coefficients (recall that the intercept is the term below multipled by 1 - phi1)
+m.1.ar$coef
+m.1.ar$coef[2]*(1-m.1.ar$coef[1])
+# linear model
+summary(m.1.lm)$coefficients[1:2,1:2]
+# Bayesian estimates
+summary(m.post.hmsc$Beta)$statistics[1:2,1:2]
+```
+
+```{r figs5, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs5} Observed (grey) and model-fit (blue) values for population size at time t (x-axis) and t+1 (y-axis).",results='hide',fig.keep='all'}
+Gradient <- constructGradient(m.1.sample,focalVariable="x",ngrid=29)
+predY <- predict(m.1.sample,Gradient=Gradient,expected=TRUE)
+#preds <-computePredictedValues(m.1.sample)
+plotGradient(m.1.sample,Gradient,pred=predY,showData=T,measure="Y",main="",xlab="N_t",ylab="predicted N_t+1")
+```
+
+## Conclusions
+In this example, a first-order auto-regressive model works well, bypassing the need to estimate logistic growth parameters $r_i$ and $\alpha_{ii}$. The density-dependence dynamics ($\Delta N \sim f(N_t)$) show an overall declining trend over time. The Bayesian estimation implemented in HMSC gives good parameter estimates.
 
 ```{r}
 knitr::knit_exit()
