@@ -9,6 +9,7 @@ output:
     toc: no
     fig_caption: yes
     latex_engine: xelatex
+    extra_dependencies: ["float"]
   bookdown::html_document2: default
   word_document:
     reference_docx: docx_template.docx
@@ -19,7 +20,6 @@ header-includes:
 - \fancyhead[R]{Detection of ecoevo dynamics}
 - \usepackage{lineno}
 - \linenumbers
-linestretch: 2
 link-citations: yes
 linkcolor: blue
 csl: the-american-naturalist.csl
@@ -34,16 +34,173 @@ knitr::opts_chunk$set(
 ```
 ```{r setup,echo=FALSE,message=FALSE}
 library(Hmsc)
+library(ggplot2)
+library(tidyr)
 ```
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
 # Wrap long lines
-knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE)
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE,out.width="50%")
 ```
 
-# 1 species, logistic growth
-Population growth over time in a single species is first modelled using a Beverton-Holt (discrete-time, logistic) model (@Beverton1957), using an intra-specific competition coefficient for density-dependent growth.
+# One species, logistic growth
+Population growth over time in a single species is first modelled using a Beverton-Holt (discrete-time, logistic) model (@Beverton1957), using an intra-specific competition coefficient for density-dependent growth (@Hart2013).
 
 $$ N_{i,t+1} = \frac{r_i N_{i,t}}{1 + \alpha_{ii} N_{i,t}}$$
+Note that in this model, the system is at equilibrium when $N_{i,t+1} = N_{i,t}$, and therefore:
+
+$$ N^* = N^*\frac{r_i}{1 + \alpha_{ii} N^*} $$
+$$ 1 = \frac{r_i}{1 + \alpha_{ii} N^*} $$
+$$ N^* = \frac{r_i - 1}{\alpha_{ii}} $$
+## Population dynamics simulation
+In the metacommunity simulation in the main text, a species resides in a site with an initial population size $N_{i,0} \sim Pois(10)$, a growth rate $r_i$ that depends on the local environmental value $E_k$ and the species trait $x_i$, and a fixed intra-specific competition coefficient of $\alpha_{ii}$ = 0.00125. We simulate population growth here:
+
+```{r}
+set.seed(42)
+# Simulate initial species population growth
+N1.0 <- rpois(1,10)
+r1.0 <- 1.67
+alpha.11 <- 0.00125
+# model function
+disc_log <- function(r, N0, alpha) {
+    Nt1 <- (r*N0) / (1+alpha*N0)
+    return(Nt1)
+}
+# Simulation of model for t time steps
+t <- 30
+N <- rep(NA, t)
+N[1] <- N1.0
+for (i in 2:t) {
+  N[i] <- disc_log(r=r1.0, N0=N[i-1], alpha=alpha.11)
+}
+```
+```{r figs1, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs1}Population size \\textit{N} over time \\textit{t} for a discrete-time logistic growth model, with parameters $r_i$ = 1.67, $N_{1,0}$ = 14, and $\\alpha_{11}$ = 0.00125."}
+# Plot simulation: ggplot
+dat <- as.data.frame(N)
+dat$time <- 1:t
+ggplot2::ggplot(dat, aes(time, N)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),
+    linetype = "dashed", color = "gray")
+```
+
+## Linear statistical model
+
+We fit the population time series data to a first-order auto-regressive model to predict $N_{t+1}$ as a function of $N_t$:
+
+$$ N_{t+1} = \beta_0 + \beta_1 N_t + \epsilon_t $$
+```{r}
+m.1 <- arima(log(N),order=c(1,0,0))
+#plotting the series along with the fitted values
+m.1.fit <- log(N) - residuals(m.1)
+dat$ar1.fit <- m.1.fit
+```
+```{r figs2, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs2}Population size over time (black line) with fitted values from a first-order autoregressive model (red dashed line)."}
+colors <- c("data" = "black", "model fit" = "blue")
+ggplot(data=dat,aes(x=time)) + geom_point(aes(y=log(N),color="data")) + geom_point(aes(y=ar1.fit, color = "model fit"), alpha=0.5) +
+  geom_line(aes(y=log(N), color="data"), linewidth=.4) +
+  geom_line(aes(y=ar1.fit, color = "model fit"), alpha=0.5, linewidth=.4) +
+  theme_bw() +
+  xlab("time") +
+  ylab("N") +
+  labs(color="Legend") +
+  scale_color_manual(values = colors)
+```
+
+We can also examine density dependence by plotting $\Delta N = N_{t+1} - N_t$ vs. $N_t$:
+
+```{r}
+dN <- rep(NA, (t-1))
+for (i in 1:(t-1)) {
+  dN[i] <- log(N[i+1])-log(N[i])
+}
+```
+```{r figs3, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs2}Population size over time (black line) with fitted values from a first-order autoregressive model (red dashed line)."}
+d.dN <- as.data.frame(dN)
+d.dN$Nt <- log(dat$N[1:(t-1)])
+ggplot2::ggplot(d.dN, aes(Nt, dN)) + geom_point()
+```
+
+
+```{r}
+knitr::knit_exit()
+```
+
+
+
+
+In the metacommunity simulation in the main text, a species $i$ resides in a site $k$ with an environmental optimum trait value $E_k \sim unif(0,1)$, an initial population size $N_{i,0} \sim Pois(10)$, and an initial degree of maladaptation $\beta_{0,i} \sim Gamma(0.75,1)$. From this \(\beta_{0,i}\), the initial distance to the local patch's optimum phenotype was calculated as $d_{0,i}=\sqrt{B_{0,i}(w+P)}$ and the initial trait value for each species $x_{0,i}$ is calculated by subtracting $d_{0,i}$ from the local environmental optimum value $E_k$. Here I simulate a species that is initially suited for the environment ($d_{0,i}$)
+
+Internal question 1 - how does the $\alpha$ version compared to the $K$ version?
+
+```{r}
+set.seed(42)
+# Simulate initial species population growth
+N1.0 <- rpois(1,10)
+# Behind-the-scenes initial r1.0
+E1 <- runif(1,0,1)
+beta1.0 <- rgamma(1,0.75,1)
+w <- 10
+P <- 1
+Wmax <- 2
+What <- Wmax*sqrt(w / (P+w))
+h2 <- 0
+d1.0 <- sqrt(beta1.0*(w+P))
+x1.0 <- E1 - d1.0
+# Emergent initial r1.0
+r1.0 <- What*exp( -(((w+(1-h2)*P)/(P+w))*(E1-x1.0))^2/ (2*(P+w)))
+alpha.11 <- 0.00125
+
+# model function
+disc_log <- function(r, N0, alpha) {
+    Nt1 <- (r*N0) / (1+alpha*N0)
+    return(Nt1)
+}
+
+# Simulation of model for t time steps
+N <- rep(NA, t)
+N[1] <- N1.0
+t <- 30
+for (i in 2:t) {
+  N[i] <- disc_log(r=r1.0, N0=N[i-1], alpha=alpha.11)
+    N0 <- N[i]
+}
+# Plot simulation: ggplot
+dat <- as.data.frame(N)
+dat$time <- as.numeric(rownames(dat))
+ggplot2::ggplot(dat, aes(time, N)) + geom_point() + geom_hline(yintercept = (1/alpha.11),
+    linetype = "dashed", color = "gray")
+# Additional plot: how does growth rate change with time?
+range <- seq(0,800,by=0.01)
+rec <- rep(NA, length(range))
+for (i in 1:length(range)) {
+    rec[i] <- r1.0 / (1+alpha.11*range[i])
+}
+plot(y=rec,x=range,ylim=c(-1,2))
+```
+
+
+```{r}
+# Parameter values to use for simulation
+r <- 1.21
+K <- 1400
+N0 <- 4
+t <- 30
+# model function
+disc_log <- function(r, N0, K) {
+    Nt1 <- N0 + r * N0 * (1 - N0/K)
+    return(Nt1)
+}
+# Simulation of model for t time steps
+N <- rep(NA, t)
+for (i in 1:t) {
+    N[i] <- disc_log(r, N0, K)
+    N0 <- N[i]
+}
+# Plot simulation: ggplot
+dat <- as.data.frame(N)
+dat$time <- as.numeric(rownames(dat))
+ggplot2::ggplot(dat, aes(time, N)) + geom_point() + geom_hline(yintercept = K,
+    linetype = "dashed", color = "gray")
+```
+
 
 
 $$ N_{i,t+1} =\frac{\hat{W}e^ \frac{-[(\frac{w+(1-h^2)P} {P+w})(E-x_{i,t})]^2}{2(P+w)}N_{i,t}} {1 + \alpha_{ii}N_{i,t} + \sum_{j \neq i}^{S} \alpha_{ij}N_{j,t}} $$
@@ -66,10 +223,7 @@ psrf.beta <- gelman.diag(m.post$Beta, multivariate=FALSE)$psrf
 
 # References
 
-```{r}
-1 + 1
-knitr::knit_exit()
-```
+
 
 
 
