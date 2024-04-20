@@ -1,0 +1,75 @@
+---
+title: "Appendix S1. Linear regression models and non-linear population dynamics"
+author:
+  - Jelena H. Pantel^[Laboratoire Chrono-environnement,UMR 6249 CNRS-UFC, 16 Route de Gray, 25030 Besançon cedex, France, jelena.pantel@univ-fcomte.fr]
+  - Ruben J. Hermann^[University of Duisburg-Essen, Universitätsstraße 5, 45141 Essen, Germany, ruben.hermann@uni-due.de]
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::pdf_document2:
+    toc: no
+    fig_caption: yes
+    latex_engine: xelatex
+  bookdown::html_document2: default
+  word_document:
+    reference_docx: docx_template.docx
+header-includes:
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead[L]{Author Pantel and Hermann}
+- \fancyhead[R]{Detection of ecoevo dynamics}
+- \usepackage{lineno}
+- \linenumbers
+linestretch: 2
+link-citations: yes
+linkcolor: blue
+csl: the-american-naturalist.csl
+bibliography: refs.bib
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+```{r setup,echo=FALSE,message=FALSE}
+library(Hmsc)
+```
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+# Wrap long lines
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE)
+```
+
+# 1 species, logistic growth
+Population growth over time in a single species is first modelled using a Beverton-Holt (discrete-time, logistic) model (@Beverton1957), using an intra-specific competition coefficient for density-dependent growth.
+
+$$ N_{i,t+1} = \frac{r_i N_{i,t}}{1 + \alpha_{ii} N_{i,t}}$$
+
+
+$$ N_{i,t+1} =\frac{\hat{W}e^ \frac{-[(\frac{w+(1-h^2)P} {P+w})(E-x_{i,t})]^2}{2(P+w)}N_{i,t}} {1 + \alpha_{ii}N_{i,t} + \sum_{j \neq i}^{S} \alpha_{ij}N_{j,t}} $$
+
+```{r}
+
+```
+
+
+
+## Generating the data frames
+For the diagnosis first need to convert the chains into a coda object and extract the effective sample size (ESS), which denotes how many MCMC iteration were independent (e.g. having no autocorrelation) from previous iterations, and  potential scale reduction factors (PSRF), which describe how well the MCMC chains converged around a value and if the two chains differ from each other. Therefore a high value for ESS (close to the number of actual iterations multiplied by the number of chains) is preferable and a PSRF value of 1 represents both chains converging on the same mean.
+Note we do not check the predictive and explanatory power of the model, as we have a perfect data set by the time series data of the simulations, which leads to $R^2$ > .98.
+```{r eval=FALSE}
+load("../../output/h_01_d_minus3_hmsc_v01.RData")
+m.post <- convertToCodaObject(m.1)
+ess.beta<- effectiveSize(m.post$Beta)
+psrf.beta <- gelman.diag(m.post$Beta, multivariate=FALSE)$psrf
+```
+
+# References
+
+```{r}
+1 + 1
+knitr::knit_exit()
+```
+
+
+
