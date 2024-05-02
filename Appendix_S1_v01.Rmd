@@ -195,8 +195,53 @@ First we add environment-dependent growth rate. The growth rate $r_i$ becomes:
 
 $$ r_i = \hat{W}e^{-(E-x_{i,t})^2}$$
 
-Here, $\hat{W}$ is the maximal population growth rate (set to )
+Here, $\hat{W}$ is the maximal population growth rate (set to `r r1.0` as above), $E$ is the local environmental trait optimum value, and $x_{i,t}$ is species *i* trait value at time *t*. We simulate the environment $E$ value fluctuating randomly over time, and use a linear model to fit $E$ as a covariate:
 
+```{r}
+# Simulate initial species population growth with environment fluctuations
+N1.0 <- rpois(1,10)
+r1.0 <- 1.67
+alpha.11 <- 0.00125
+E.0 <- 0.8
+x1.0 <- 0.8
+# model function
+disc_log_E <- function(r, N0, alpha, E, x) {
+    Nt1 <- ((r*exp(-(E-x)^2))*N0) / (1+alpha*N0)
+    return(Nt1)
+}
+# Simulation of model for t time steps
+t <- 30
+N <- rep(NA, t)
+N[1] <- N1.0
+E <- rep(NA, t)
+E[1] <- E.0
+for (i in 2:t) {
+  N[i] <- disc_log_E(r=r1.0, N0=N[i-1], alpha=alpha.11, E=E[i-1], x=x1.0)
+  E[i] <- E[i-1] + rnorm(1,0,.1)
+}
+```
+```{r figs1, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs1}Population size \\textit{N} over time \\textit{t} for a discrete-time logistic growth model, with parameters $r_i$ = 1.67, $N_{1,0}$ = 14, and $\\alpha_{11}$ = 0.00125."}
+# Plot simulation: ggplot
+dat <- as.data.frame(cbind(N,E))
+dat$time <- 1:t
+ggplot2::ggplot(dat, aes(time, N)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),
+    linetype = "dashed", color = "gray")
+```
+
+```{r}
+r1.0 <- 1.67
+E <- 0.8
+x1.0 <- 0.7
+x_range <- seq(0,2,by=0.01)
+r_range <- r1.0*exp(-(E-x_range)^2)
+plot(x_range,r_range)
+```
+
+
+# Simulate initial species population growth
+N1.0 <- rpois(1,10)
+r1.0 <- 1.67
+alpha.11 <- 0.00125
 
 equation becomes:
 
