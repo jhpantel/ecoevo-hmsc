@@ -186,6 +186,45 @@ In this example, a first-order auto-regressive model works well, bypassing the n
 knitr::knit_exit()
 ```
 
+# One species, logistic growth, environmental covariate
+We now consider using a linear model to analyze population growth when the species growth rate is impacted by a single environmental covariate.
+
+## Growth depends on environment
+
+First we add environment-dependent growth rate. The growth rate $r_i$ becomes:
+
+$$ r_i = \hat{W}e^{-(E-x_{i,t})^2}$$
+
+Here, $\hat{W}$ is the maximal population growth rate (set to )
+
+
+equation becomes:
+
+$$ N_{i,t+1} = \frac{r_i N_{i,t}}{1 + \alpha_{ii} N_{i,t}}$$
+
+
+
+
+We make this not linked to then linked to growth and in each instance run a linear model to show no effect is detected or is detected as it should be. E can vary randomly, as long as it links to growth.
+
+```{r}
+# Simulate initial species population growth
+N1.0 <- rpois(1,10)
+r1.0 <- 1.67
+alpha.11 <- 0.00125
+# model function
+disc_log <- function(r, N0, alpha) {
+    Nt1 <- (r*N0) / (1+alpha*N0)
+    return(Nt1)
+}
+# Simulation of model for t time steps
+t <- 30
+N <- rep(NA, t)
+N[1] <- N1.0
+for (i in 2:t) {
+  N[i] <- disc_log(r=r1.0, N0=N[i-1], alpha=alpha.11)
+}
+```
 
 
 
