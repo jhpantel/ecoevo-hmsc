@@ -38,6 +38,8 @@ library(ggplot2)
 library(tidyr)
 library(coda)
 library(patchwork)
+library(jtools)
+library(bayesplot)
 ```
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
 # Wrap long lines
@@ -180,6 +182,15 @@ predY <- predict(m.1.sample,Gradient=Gradient,expected=TRUE)
 plotGradient(m.1.sample,Gradient,pred=predY,showData=T,measure="Y",main="",xlab="N_t",ylab="predicted N_t+1")
 ```
 
+```{r}
+lm_dat <- data.frame(cbind(log(dat$N[2:t]),log(dat$N[1:(t-1)])))
+colnames(lm_dat) <- c("Nt1","Nt")
+ggplot(lm_dat,aes(Nt,Nt1)) +
+  stat_summary(fun.data= mean_cl_normal) + 
+  geom_smooth(method='lm')
+```
+
+
 ## Conclusions
 In this example, a first-order auto-regressive model works well, bypassing the need to estimate logistic growth parameters $r_i$ and $\alpha_{ii}$. The density-dependence dynamics ($\Delta N \sim f(N_t)$) show an overall declining trend over time. The Bayesian estimation implemented in HMSC gives good parameter estimates.
 
@@ -217,7 +228,7 @@ for (i in 2:t) {
   E[i] <- E[i-1] + rnorm(1,0,.1)
 }
 ```
-```{r figs6, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs1}Population size \\textit{N} over time \\textit{t} for a discrete-time logistic growth model, with parameters $r_i$ = 1.67, $N_{1,0}$ = 14, and $\\alpha_{11}$ = 0.00125."}
+```{r figs6, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs1}Population size \\textit{N} over time \\textit{t} for a discrete-time logistic growth model, with parameters $r_i$ = 1.67, $N_{1,0}$ = 14, and $\\alpha_{11}$ = 0.00125. Relationship between E and Nt is also shown."}
 # Plot simulation: ggplot
 dat <- as.data.frame(cbind(N,E))
 dat$time <- 1:t
@@ -235,7 +246,7 @@ $$ N_{t} = \beta_0 + \beta_1 N_{t-1} + \beta_2 E_{t-1}+ \epsilon_t $$
 ```{r,warning=FALSE}
 # Fit the model
 m.2.ar <- arima(x = log(N), order = c(1,0,0), include.mean = T, method="CSS", xreg=E)
-m.2.lm <- lm(log(dat$N[2:t]) ~ log(dat$N[1:(t-1)]) + E[1:(t-1)])
+m.2.lm <- lm(log(dat$N[2:t]) ~ log(dat$N[1:(t-1)]) + log(E[1:(t-1)]))
 #plotting the series along with the fitted values
 m.2.ar.fit <- log(N) - residuals(m.2.ar)
 m.2.lm.fit <- log(dat$N[2:t]) - m.2.lm$resid
@@ -258,7 +269,6 @@ ggplot(data=dat,aes(x=time)) +
   labs(color="Legend") +
   scale_color_manual(values = colors)
 ```
-The linear model is a good fit when including the environmental covariate. $N_{t+1}$ and $N_t$ are no longer well-represented by a linear function without taking $E$ into account.
 
 ```{r figs8, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs3}Population size (logarithm) at one time step $N_{t+1}$ as a function of log-population size in the previous time step $N_t$. "}
 dN <- rep(NA, (t-1))
@@ -273,12 +283,27 @@ p1 <- ggplot2::ggplot(d.dN, aes(x=Nt,y=Nt_plus_1)) + geom_point()
 d.dN <- as.data.frame(dN)
 d.dN$Nt <- log(dat$N[1:(t-1)])
 d.dN$Nt_plus_1 <- log(dat$N[2:t])
-d.dN$E <- dat$E[2:t]
+d.dN$E <- log(dat$E[2:t])
 p2 <- ggplot2::ggplot(d.dN, aes(x=E,y=Nt_plus_1)) + geom_point()
 p3 <- ggplot2::ggplot(d.dN, aes(Nt, dN)) + geom_point()
 p4 <- ggplot2::ggplot(d.dN, aes(E, dN)) + geom_point()
 
 p1+p2+p3+p4
+```
+
+The linear model is a good fit when including the environmental covariate. $N_{t+1}$ and $N_t$ can still be captured by a linear relationship. However we see that the relationship between $N_{t+1}$ and $E_t$ is non-linear. This tells us that the lm is good for predictions, but not for inference (for capturing well the relationsip between the predictor and response variable). The use of linear relationships in JSDMs is discussed in [@Ingram2020], and in many applications (e.g. [@Erickson2023]) quadratic terms are used, which create bell-shaped response curves that may better match species with optimal niches (as opposed to linear, monotonically increasing relationships between population size and environmental predictors). We thus include a quadratic term for $E_t$ to provide a better fit to the data.
+
+```{r}
+df <- data.frame(cbind(log(dat$N[2:t]),log(dat$N[1:(t-1)]),E[1:(t-1)],E[1:(t-1)]^2))
+colnames(df) <- c("Nt1","Nt","E","Esq")
+m.2.lm <- lm(Nt1 ~ Nt + E + Esq,data=df)
+```
+
+```{r figs9, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs3}Population size (logarithm) at one time step $N_{t+1}$ as a function of log-population size in the previous time step $N_t$. "}
+jtools::effect_plot(m.2.lm,pred=E,plot.points = TRUE)
+ggplot(data = blah, aes(x = E, y = Nt1)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ x + I(x^2))
 ```
 
 ## Bayesian linear statistical model: HMSC
@@ -287,9 +312,8 @@ We can estimate the same model parameters using HMSC:
 ```{r}
 # prepare data in HMSC format
 Y <- as.matrix(log(dat$N[2:t]))
-XData <- data.frame(x=cbind(log(dat$N[1:(t-1)])),E[1:(t-1)])
-colnames(XData)[2] <- "E"
-m.2.hmsc <- Hmsc(Y=Y,XData=XData,XFormula=~x+E)
+XData <- df
+m.2.hmsc <- Hmsc(Y=Y,XData=XData,XFormula=~Nt+E+Esq)
 # Bayesian model parameters
 nChains <- 2
 thin <- 5
@@ -303,7 +327,8 @@ m.2.sample <- sampleMcmc(m.2.hmsc,thin=thin,sample=samples,transient=transient,n
 ```{r}
 m2.post.hmsc <- convertToCodaObject(m.2.sample)
 summary(m2.post.hmsc$Beta)
-plot(m2.post.hmsc$Beta)
+bayesplot::mcmc_trace(m2.post.hmsc$Beta)
+bayesplot::mcmc_areas(m2.post.hmsc$Beta,area_method = c("equal height"))
 ```
 
 These estimates match well with those from the AR1 and linear model:
@@ -313,19 +338,20 @@ These estimates match well with those from the AR1 and linear model:
 m.2.ar$coef
 m.2.ar$coef[2]*(1-m.2.ar$coef[1])
 # linear model
-summary(m.2.lm)$coefficients[1:3,1:2]
+summary(m.2.lm)$coefficients[1:4,1:2]
 # Bayesian estimates
-summary(m2.post.hmsc$Beta)$statistics[1:3,1:2]
+summary(m2.post.hmsc$Beta)$statistics[1:4,1:2]
 ```
 
 We recall that the interpretation of the coefficients in an arimaX (arima with covariates) model is difficult. They do not give the impact on $N_t$ per unit increase in X as in a regression. So we do not interpret the causation implied by the coefficient in the arimaX model. In the regression model, we can see that $E$ has a positive impact on $N_t$.
 
 
 ```{r figs9, fig.pos = "H", fig.show="hold", fig.cap = "\\label{fig:figs5} Observed (grey) and model-fit (blue) values for population size at time t (x-axis) and t+1 (y-axis).",results='hide',fig.keep='all'}
-Gradient <- constructGradient(m.2.sample,focalVariable="E",non.focalVariables=list(x=list(2)),ngrid=39)
-predY <- predict(m.2.sample,Gradient=Gradient,expected=TRUE)
-#preds <-computePredictedValues(m.1.sample)
+Gradient <- constructGradient(m.2.sample,focalVariable="E",non.focalVariables=list(Nt=list(2),Esq=list(2)),ngrid=39)
+predY <- predict(m.2.sample,XData=Gradient$XDataNew,expected=TRUE)
 plotGradient(m.2.sample,Gradient,pred=predY,showData=T,measure="Y",main="",xlab="E_t",ylab="predicted N_t+1")
+# Can't figure out curved gradient
+pr <- predict(m.2.hmsc,m.2.sample,)
 ```
 
 ## Conclusions
@@ -337,12 +363,7 @@ a first-order auto-regressive model works well, bypassing the need to estimate l
 knitr::knit_exit()
 ```
 
-```{r}
-blah <- data.frame(cbind(log(dat$N[2:t]),log(dat$N[1:(t-1)]),E[1:(t-1)]))
-colnames(blah) <- c("Nt1","Nt","E")
-mod <- lm(Nt1 ~ Nt + E,data=blah)
-jtools::effect_plot(mod,pred=E,plot.points = TRUE)
-```
+
 
 
 # Simulate initial species population growth
