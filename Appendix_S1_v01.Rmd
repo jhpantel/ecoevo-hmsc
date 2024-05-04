@@ -402,7 +402,158 @@ dat <- melt(N, id.vars="time")
 ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray")
 ```
 ## Linear statistical model with environmental covariate
-XX
+
+We fit each species' population time series to an arimaX and lm with population size of the others species as a covariate.
+
+$$ N_{1,t} = \beta_0 + \beta_1 N_{1,t-1} + \beta_2 N_{2,t-1}+ \epsilon_t $$
+
+```{r figs12, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs1}Population size \\textit{N} over time \\textit{t} for a discrete-time logistic growth model, with parameters $r_i$ = 1.67, $N_{1,0}$ = 14, and $\\alpha_{11}$ = 0.00125. Relationship between E and Nt is also shown."}
+# Plot simulation: ggplot
+dat <- as.data.frame(cbind(N$N1,N$N2))
+colnames(dat) <- c("N1","N2")
+dat$time <- 1:t
+p1 <- ggplot2::ggplot(dat, aes(time, N1)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray")
+p2 <- ggplot2::ggplot(dat, aes(time, N2)) + geom_point()
+p1 + p2
+```
+
+```{r,warning=FALSE}
+## Fit the model for Species 1
+m.3.ar.n1 <- arima(x = log(N$N1), order = c(1,0,0), include.mean = T, method="CSS", xreg=N$N2)
+m.3.lm.n1 <- lm(log(dat$N1[2:t]) ~ log(dat$N1[1:(t-1)]) + log(dat$N2[1:(t-1)]))
+#plotting the series along with the fitted values
+m.3.ar.fit.n1 <- log(N$N1) - residuals(m.3.ar.n1)
+m.3.lm.fit.n1 <- log(dat$N1[2:t]) - m.3.lm.n1$resid
+dat$ar3.fit.n1 <- m.3.ar.fit.n1
+dat$lm3.fit.n1 <- NA
+dat$lm3.fit.n1[2:t] <- m.3.lm.fit.n1
+## Species 2
+m.3.ar.n2 <- arima(x = log(N$N2), order = c(1,0,0), include.mean = T, method="CSS", xreg=N$N1)
+m.3.lm.n2 <- lm(log(dat$N2[2:t]) ~ log(dat$N2[1:(t-1)]) + log(dat$N1[1:(t-1)]))
+#plotting the series along with the fitted values
+m.3.ar.fit.n2 <- log(N$N2) - residuals(m.3.ar.n2)
+m.3.lm.fit.n2 <- log(dat$N2[2:t]) - m.3.lm.n2$resid
+dat$ar3.fit.n2 <- m.3.ar.fit.n2
+dat$lm3.fit.n2 <- NA
+dat$lm3.fit.n2[2:t] <- m.3.lm.fit.n2
+```
+
+
+```{r figs12, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs2}Population size over time (black line) with fitted values from a first-order autoregressive model (red dashed line).",warning=FALSE}
+colors <- c("data" = "black", "AR1 fit" = "gray", "lm fit"="orange")
+p1 <- ggplot(data=dat,aes(x=time)) +
+  geom_point(aes(y=log(N1),color="data")) +
+  geom_point(aes(y=ar3.fit.n1, color = "AR1 fit"), alpha=0.5) +
+  geom_point(aes(y=lm3.fit.n1, color = "lm fit"), alpha=0.5) +
+  geom_line(aes(y=log(N1), color="data"), linewidth=.4) +
+  geom_line(aes(y=ar3.fit.n1, color = "AR1 fit"), alpha=0.5, linewidth=.4) +
+  geom_line(aes(y=lm3.fit.n1, color = "lm fit"), alpha=0.5, linewidth=.4) +
+  theme_bw() +
+  xlab("time") +
+  ylab("N1") +
+  labs(color="Legend") +
+  scale_color_manual(values = colors)
+p2 <- ggplot(data=dat,aes(x=time)) +
+  geom_point(aes(y=log(N2),color="data")) +
+  geom_point(aes(y=ar3.fit.n2, color = "AR1 fit"), alpha=0.5) +
+  geom_point(aes(y=lm3.fit.n2, color = "lm fit"), alpha=0.5) +
+  geom_line(aes(y=log(N2), color="data"), linewidth=.4) +
+  geom_line(aes(y=ar3.fit.n2, color = "AR1 fit"), alpha=0.5, linewidth=.4) +
+  geom_line(aes(y=lm3.fit.n2, color = "lm fit"), alpha=0.5, linewidth=.4) +
+  theme_bw() +
+  xlab("time") +
+  ylab("N2") +
+  labs(color="Legend") +
+  scale_color_manual(values = colors)
+p1+p2
+```
+
+```{r figs13, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs3}Population size (logarithm) at one time step $N_{t+1}$ as a function of log-population size in the previous time step $N_t$. "}
+dN1 <- rep(NA, (t-1))
+for (i in 1:(t-1)) {
+  dN1[i] <- log(N$N1[i+1])-log(N$N1[i])
+}
+d.dN1 <- as.data.frame(dN1)
+d.dN1$Nt <- log(dat$N1[1:(t-1)])
+d.dN1$Nt_plus_1 <- log(dat$N1[2:t])
+p1 <- ggplot2::ggplot(d.dN1, aes(x=Nt,y=Nt_plus_1)) + geom_point()
+
+d.dN1 <- as.data.frame(dN1)
+d.dN1$Nt <- log(dat$N1[1:(t-1)])
+d.dN1$Nt_plus_1 <- log(dat$N1[2:t])
+d.dN1$N2 <- log(dat$N2[2:t])
+p2 <- ggplot2::ggplot(d.dN1, aes(x=N2,y=Nt_plus_1)) + geom_point()
+p3 <- ggplot2::ggplot(d.dN1, aes(Nt, dN1)) + geom_point()
+p4 <- ggplot2::ggplot(d.dN1, aes(N2, dN1)) + geom_point()
+
+p1+p2+p3+p4
+```
+
+XXXXX
+
+```{r}
+df <- data.frame(cbind(log(dat$N1[2:t]),log(dat$N1[1:(t-1)]),log(dat$N2[1:(t-1)])))
+colnames(df) <- c("Nt1","N1","N2")
+m.3.lm <- lm(Nt1 ~ N1 + N2,data=df)
+```
+
+```{r figs9, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs3}Population size (logarithm) at one time step $N_{t+1}$ as a function of log-population size in the previous time step $N_t$. "}
+jtools::effect_plot(m.3.lm,pred=N2,plot.points = TRUE)
+ggplot(data = df, aes(x = N2, y = Nt1)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ x)
+```
+UH OH !!!!
+
+## Bayesian linear statistical model: HMSC
+We can estimate the same model parameters using HMSC:
+
+```{r}
+# prepare data in HMSC format
+Y <- as.matrix(log(dat$N[2:t]))
+XData <- df
+m.2.hmsc <- Hmsc(Y=Y,XData=XData,XFormula=~Nt+E+Esq)
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 1000
+transient <- 500*thin
+verbose <- 500*thin
+# sample MCMC
+m.2.sample <- sampleMcmc(m.2.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+```
+
+```{r}
+m2.post.hmsc <- convertToCodaObject(m.2.sample)
+summary(m2.post.hmsc$Beta)
+bayesplot::mcmc_trace(m2.post.hmsc$Beta)
+bayesplot::mcmc_areas(m2.post.hmsc$Beta,area_method = c("equal height"))
+```
+
+These estimates match well with those from the AR1 and linear model:
+
+```{r}
+# AR1 coefficients (recall that the intercept is the term below multipled by 1 - phi1)
+m.2.ar$coef
+m.2.ar$coef[2]*(1-m.2.ar$coef[1])
+# linear model
+summary(m.2.lm)$coefficients[1:4,1:2]
+# Bayesian estimates
+summary(m2.post.hmsc$Beta)$statistics[1:4,1:2]
+```
+
+We recall that the interpretation of the coefficients in an arimaX (arima with covariates) model is difficult. They do not give the impact on $N_t$ per unit increase in X as in a regression. So we do not interpret the causation implied by the coefficient in the arimaX model. In the regression model, we can see that $E$ has a positive impact on $N_t$.
+
+
+```{r figs10, fig.pos = "H", fig.show="hold", fig.cap = "\\label{fig:figs5} Observed (grey) and model-fit (blue) values for population size at time t (x-axis) and t+1 (y-axis).",results='hide',fig.keep='all'}
+Gradient <- constructGradient(m.2.sample,focalVariable="E",non.focalVariables=list(Nt=list(2),Esq=list(2)),ngrid=39)
+predY <- predict(m.2.sample,XData=Gradient$XDataNew,expected=TRUE)
+plotGradient(m.2.sample,Gradient,pred=predY,showData=T,measure="Y",main="",xlab="E_t",ylab="predicted N_t+1")
+# Can't figure out curved gradient using E and E^2
+#pr <- predict(m.2.hmsc,m.2.sample,)
+```
+
+
 ## Bayesian linear statistical model: HMSC
 XX
 ## Conclusions
