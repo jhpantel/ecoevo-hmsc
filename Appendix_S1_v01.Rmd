@@ -301,7 +301,7 @@ m.2.lm <- lm(Nt1 ~ Nt + E + Esq,data=df)
 
 ```{r figs9, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs3}Population size (logarithm) at one time step $N_{t+1}$ as a function of log-population size in the previous time step $N_t$. "}
 jtools::effect_plot(m.2.lm,pred=E,plot.points = TRUE)
-ggplot(data = blah, aes(x = E, y = Nt1)) +
+ggplot(data = df, aes(x = E, y = Nt1)) +
   geom_point() +
   geom_smooth(method = "lm", formula = y ~ x + I(x^2))
 ```
@@ -346,18 +346,16 @@ summary(m2.post.hmsc$Beta)$statistics[1:4,1:2]
 We recall that the interpretation of the coefficients in an arimaX (arima with covariates) model is difficult. They do not give the impact on $N_t$ per unit increase in X as in a regression. So we do not interpret the causation implied by the coefficient in the arimaX model. In the regression model, we can see that $E$ has a positive impact on $N_t$.
 
 
-```{r figs9, fig.pos = "H", fig.show="hold", fig.cap = "\\label{fig:figs5} Observed (grey) and model-fit (blue) values for population size at time t (x-axis) and t+1 (y-axis).",results='hide',fig.keep='all'}
+```{r figs10, fig.pos = "H", fig.show="hold", fig.cap = "\\label{fig:figs5} Observed (grey) and model-fit (blue) values for population size at time t (x-axis) and t+1 (y-axis).",results='hide',fig.keep='all'}
 Gradient <- constructGradient(m.2.sample,focalVariable="E",non.focalVariables=list(Nt=list(2),Esq=list(2)),ngrid=39)
 predY <- predict(m.2.sample,XData=Gradient$XDataNew,expected=TRUE)
 plotGradient(m.2.sample,Gradient,pred=predY,showData=T,measure="Y",main="",xlab="E_t",ylab="predicted N_t+1")
-# Can't figure out curved gradient
-pr <- predict(m.2.hmsc,m.2.sample,)
+# Can't figure out curved gradient using E and E^2
+#pr <- predict(m.2.hmsc,m.2.sample,)
 ```
 
 ## Conclusions
-In this example, the linear regression again works well to describe the impact of $E_t$ for $N_t$. We can see the response of course depends on the population size value, as the gradient plot is generally linear 
-
-a first-order auto-regressive model works well, bypassing the need to estimate logistic growth parameters $r_i$ and $\alpha_{ii}$. The density-dependence dynamics ($\Delta N \sim f(N_t)$) show an overall declining trend over time. The Bayesian estimation implemented in HMSC gives good parameter estimates.
+In this example, the linear regression again works well to describe the impact of $E_t$ for $N_t$ when using the quadratic formulation. The arimaX model works well for fitting and subsequent prediction, but less well for inference about the impacts of $E$. From the quadratic regression terms for $E$, we correctly see that the population size is maximal at the species trait value and decreases away from that value. We will continue to use log-transformed abundance and now introduce quadratic terms for the environmental parameter.
 
 ```{r}
 knitr::knit_exit()

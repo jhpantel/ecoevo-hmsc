@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.5.2)  2 MAY 2024 20:52
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.5.2)  4 MAY 2024 14:41
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -491,6 +491,9 @@ LaTeX Warning: Label `fig:figs2' multiply defined.
 LaTeX Warning: Label `fig:figs3' multiply defined.
 
 
+LaTeX Warning: Label `fig:figs3' multiply defined.
+
+
 LaTeX Warning: Label `fig:figs5' multiply defined.
 
 )
@@ -880,21 +883,36 @@ File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-6-1.pdf Graphic file (typ
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-6-1.pdf>
 File: Appendix_S1_v01_files/figure-latex/figs5-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/figs5-1.pdf>
-[5] [6]
+[5]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-8-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-8-1.pdf>
+[6]
 File: Appendix_S1_v01_files/figure-latex/figs6-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/figs6-1.pdf>
+[7]
 File: Appendix_S1_v01_files/figure-latex/figs7-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/figs7-1.pdf>
-[7]
 File: Appendix_S1_v01_files/figure-latex/figs8-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/figs8-1.pdf>
 [8]
-File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-11-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-11-1.pdf>
-[9]
 File: Appendix_S1_v01_files/figure-latex/figs9-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/figs9-1.pdf>
-[10] [11] (./Appendix_S1_v01.aux)
+File: Appendix_S1_v01_files/figure-latex/figs9-2.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/figs9-2.pdf>
+
+Overfull \hbox (2.221pt too wide) in paragraph at lines 445--445
+[][] [] 
+ []
+
+[9]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-13-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-13-1.pdf>
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-13-2.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-13-2.pdf>
+[10]
+File: Appendix_S1_v01_files/figure-latex/figs10-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/figs10-1.pdf>
+[11] [12] (./Appendix_S1_v01.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-04-11>
@@ -904,12 +922,12 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 18805 strings out of 476705
- 345388 string characters out of 5800164
+ 18852 strings out of 476705
+ 347832 string characters out of 5800164
  1939403 words of memory out of 5000000
- 40634 multiletter control sequences out of 15000+600000
+ 40677 multiletter control sequences out of 15000+600000
  564536 words of font info for 91 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 90i,11n,121p,583b,527s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,12n,121p,935b,527s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on Appendix_S1_v01.pdf (11 pages).
+Output written on Appendix_S1_v01.pdf (12 pages).
