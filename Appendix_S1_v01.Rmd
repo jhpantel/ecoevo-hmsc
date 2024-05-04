@@ -40,6 +40,7 @@ library(coda)
 library(patchwork)
 library(jtools)
 library(bayesplot)
+library(reshape2)
 ```
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
 # Wrap long lines
@@ -357,146 +358,54 @@ plotGradient(m.2.sample,Gradient,pred=predY,showData=T,measure="Y",main="",xlab=
 ## Conclusions
 In this example, the linear regression again works well to describe the impact of $E_t$ for $N_t$ when using the quadratic formulation. The arimaX model works well for fitting and subsequent prediction, but less well for inference about the impacts of $E$. From the quadratic regression terms for $E$, we correctly see that the population size is maximal at the species trait value and decreases away from that value. We will continue to use log-transformed abundance and now introduce quadratic terms for the environmental parameter.
 
+# Two species, logistic growth, competition
+XXXXX
+## Interspecific competition
+The growth equation for each species now becomes:
+
+$$ N_{i,t+1} = \frac{r_i N_{i,t}}{1 + \alpha_{ii} N_{i,t} + \alpha_{ij} N_{j,t}}$$
+We use a distinct growth rate for the 2nd species and introduce the interspecific interaction coefficient $\alpha_{ij}$.
+
 ```{r}
-knitr::knit_exit()
-```
-
-
-
-
-# Simulate initial species population growth
-N1.0 <- rpois(1,10)
+# Simulate initial species population growth with environment fluctuations
+N1.0 <- 10
+N2.0 <- 10
 r1.0 <- 1.67
+r2.0 <- 1.7
 alpha.11 <- 0.00125
-
-equation becomes:
-
-$$ N_{i,t+1} = \frac{r_i N_{i,t}}{1 + \alpha_{ii} N_{i,t}}$$
-
-
-
-
-We make this not linked to then linked to growth and in each instance run a linear model to show no effect is detected or is detected as it should be. E can vary randomly, as long as it links to growth.
-
-```{r}
-# Simulate initial species population growth
-N1.0 <- rpois(1,10)
-r1.0 <- 1.67
-alpha.11 <- 0.00125
+alpha.22 <- 0.00125
+alpha.12 <- 0.008
+alpha.21 <- 0.008725
 # model function
-disc_log <- function(r, N0, alpha) {
-    Nt1 <- (r*N0) / (1+alpha*N0)
-    return(Nt1)
+disc_LV_comp <- function(r1,r2,N1.0,N2.0,alpha.11,alpha.22,alpha.12,alpha.21) {
+    Nt1 <- (r1*N1.0) / (1+alpha.11*N1.0+alpha.12*N2.0)
+    Nt2 <- (r2*N2.0) / (1+alpha.22*N2.0+alpha.21*N1.0)
+    return(c(Nt1,Nt2))
 }
 # Simulation of model for t time steps
-t <- 30
-N <- rep(NA, t)
-N[1] <- N1.0
+t <- 40
+N <- array(NA,dim=c(t,2))
+N <- as.data.frame(N)
+colnames(N) <- c("N1","N2")
+N$N1[1] <- N1.0
+N$N2[1] <- N2.0
 for (i in 2:t) {
-  N[i] <- disc_log(r=r1.0, N0=N[i-1], alpha=alpha.11)
+  res <- disc_LV_comp(r1=r1.0,r2=r2.0,N1.0=N[i-1,1],N2.0=N[i-1,2],alpha.11=alpha.11,alpha.22=alpha.22,alpha.12=alpha.12,alpha.21=alpha.21)
+  N$N1[i] <- res[1]
+  N$N2[i] <- res[2]
 }
 ```
-
-
-
-In the metacommunity simulation in the main text, a species $i$ resides in a site $k$ with an environmental optimum trait value $E_k \sim unif(0,1)$, an initial population size $N_{i,0} \sim Pois(10)$, and an initial degree of maladaptation $\beta_{0,i} \sim Gamma(0.75,1)$. From this \(\beta_{0,i}\), the initial distance to the local patch's optimum phenotype was calculated as $d_{0,i}=\sqrt{B_{0,i}(w+P)}$ and the initial trait value for each species $x_{0,i}$ is calculated by subtracting $d_{0,i}$ from the local environmental optimum value $E_k$. Here I simulate a species that is initially suited for the environment ($d_{0,i}$)
-
-Internal question 1 - how does the $\alpha$ version compared to the $K$ version?
-
-```{r}
-set.seed(42)
-# Simulate initial species population growth
-N1.0 <- rpois(1,10)
-# Behind-the-scenes initial r1.0
-E1 <- runif(1,0,1)
-beta1.0 <- rgamma(1,0.75,1)
-w <- 10
-P <- 1
-Wmax <- 2
-What <- Wmax*sqrt(w / (P+w))
-h2 <- 0
-d1.0 <- sqrt(beta1.0*(w+P))
-x1.0 <- E1 - d1.0
-# Emergent initial r1.0
-r1.0 <- What*exp( -(((w+(1-h2)*P)/(P+w))*(E1-x1.0))^2/ (2*(P+w)))
-alpha.11 <- 0.00125
-
-# model function
-disc_log <- function(r, N0, alpha) {
-    Nt1 <- (r*N0) / (1+alpha*N0)
-    return(Nt1)
-}
-
-# Simulation of model for t time steps
-N <- rep(NA, t)
-N[1] <- N1.0
-t <- 30
-for (i in 2:t) {
-  N[i] <- disc_log(r=r1.0, N0=N[i-1], alpha=alpha.11)
-    N0 <- N[i]
-}
+```{r figs11, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs1}Population size \\textit{N} over time \\textit{t} for a discrete-time logistic growth model, with parameters $r_i$ = 1.67, $N_{1,0}$ = 14, and $\\alpha_{11}$ = 0.00125. Relationship between E and Nt is also shown."}
 # Plot simulation: ggplot
-dat <- as.data.frame(N)
-dat$time <- as.numeric(rownames(dat))
-ggplot2::ggplot(dat, aes(time, N)) + geom_point() + geom_hline(yintercept = (1/alpha.11),
-    linetype = "dashed", color = "gray")
-# Additional plot: how does growth rate change with time?
-range <- seq(0,800,by=0.01)
-rec <- rep(NA, length(range))
-for (i in 1:length(range)) {
-    rec[i] <- r1.0 / (1+alpha.11*range[i])
-}
-plot(y=rec,x=range,ylim=c(-1,2))
+N$time <- 1:t
+dat <- melt(N, id.vars="time")
+ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray")
 ```
-
-
-```{r}
-# Parameter values to use for simulation
-r <- 1.21
-K <- 1400
-N0 <- 4
-t <- 30
-# model function
-disc_log <- function(r, N0, K) {
-    Nt1 <- N0 + r * N0 * (1 - N0/K)
-    return(Nt1)
-}
-# Simulation of model for t time steps
-N <- rep(NA, t)
-for (i in 1:t) {
-    N[i] <- disc_log(r, N0, K)
-    N0 <- N[i]
-}
-# Plot simulation: ggplot
-dat <- as.data.frame(N)
-dat$time <- as.numeric(rownames(dat))
-ggplot2::ggplot(dat, aes(time, N)) + geom_point() + geom_hline(yintercept = K,
-    linetype = "dashed", color = "gray")
-```
-
-
-
-$$ N_{i,t+1} =\frac{\hat{W}e^ \frac{-[(\frac{w+(1-h^2)P} {P+w})(E-x_{i,t})]^2}{2(P+w)}N_{i,t}} {1 + \alpha_{ii}N_{i,t} + \sum_{j \neq i}^{S} \alpha_{ij}N_{j,t}} $$
-
-```{r}
-
-```
-
-
-
-## Generating the data frames
-For the diagnosis first need to convert the chains into a coda object and extract the effective sample size (ESS), which denotes how many MCMC iteration were independent (e.g. having no autocorrelation) from previous iterations, and  potential scale reduction factors (PSRF), which describe how well the MCMC chains converged around a value and if the two chains differ from each other. Therefore a high value for ESS (close to the number of actual iterations multiplied by the number of chains) is preferable and a PSRF value of 1 represents both chains converging on the same mean.
-Note we do not check the predictive and explanatory power of the model, as we have a perfect data set by the time series data of the simulations, which leads to $R^2$ > .98.
-```{r eval=FALSE}
-load("../../output/h_01_d_minus3_hmsc_v01.RData")
-m.post <- convertToCodaObject(m.1)
-ess.beta<- effectiveSize(m.post$Beta)
-psrf.beta <- gelman.diag(m.post$Beta, multivariate=FALSE)$psrf
-```
+## Linear statistical model with environmental covariate
+XX
+## Bayesian linear statistical model: HMSC
+XX
+## Conclusions
+XX
 
 # References
-
-
-
-
-
