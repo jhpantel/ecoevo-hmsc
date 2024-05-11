@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.5.2)  4 MAY 2024 15:22
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.5.2)  11 MAY 2024 08:43
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -499,6 +499,18 @@ LaTeX Warning: Label `fig:figs5' multiply defined.
 
 LaTeX Warning: Label `fig:figs1' multiply defined.
 
+
+LaTeX Warning: Label `fig:figs1' multiply defined.
+
+
+LaTeX Warning: Label `fig:figs2' multiply defined.
+
+
+LaTeX Warning: Label `fig:figs3' multiply defined.
+
+
+LaTeX Warning: Label `fig:figs3' multiply defined.
+
 )
 \openout1 = `Appendix_S1_v01.aux'.
 
@@ -858,15 +870,15 @@ LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
 (Font)              scaled to size 4.99947pt on input line 170.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 7.0pt on input line 175.
+(Font)              scaled to size 7.0pt on input line 173.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 10.00092pt on input line 175.
+(Font)              scaled to size 10.00092pt on input line 173.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 7.00064pt on input line 175.
+(Font)              scaled to size 7.00064pt on input line 173.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 9.99893pt on input line 175.
+(Font)              scaled to size 9.99893pt on input line 173.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 6.99925pt on input line 175.
+(Font)              scaled to size 6.99925pt on input line 173.
 LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <10> not available
 (Font)              Font shape `TU/lmtt/b/n' tried instead on input line 188.
 [1
@@ -918,7 +930,74 @@ File: Appendix_S1_v01_files/figure-latex/figs10-1.pdf Graphic file (type pdf)
 [11] [12]
 File: Appendix_S1_v01_files/figure-latex/figs11-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/figs11-1.pdf>
-[13] (./Appendix_S1_v01.aux)
+File: Appendix_S1_v01_files/figure-latex/figs12-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/figs12-1.pdf>
+[13]
+
+LaTeX Font Warning: Font shape `TU/lmtt/bx/it' in size <10> not available
+(Font)              Font shape `TU/lmtt/b/sl' tried instead on input line 628.
+
+File: Appendix_S1_v01_files/figure-latex/figs13-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/figs13-1.pdf>
+File: Appendix_S1_v01_files/figure-latex/figs14-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/figs14-1.pdf>
+[14]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-17-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-17-1.pdf>
+[15]
+File: Appendix_S1_v01_files/figure-latex/figs15-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/figs15-1.pdf>
+File: Appendix_S1_v01_files/figure-latex/figs15-2.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/figs15-2.pdf>
+
+Overfull \hbox (2.221pt too wide) in paragraph at lines 706--706
+[][] [] 
+ []
+
+[16] [17]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-19-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-19-1.pdf>
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-19-2.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-19-2.pdf>
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-19-3.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-19-3.pdf>
+[18] [19]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-22-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-22-1.pdf>
+[20]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-24-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-24-1.pdf>
+[21]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-24-2.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-24-2.pdf>
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-24-3.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-24-3.pdf>
+[22]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-26-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-26-1.pdf>
+[23]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-28-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-28-1.pdf>
+[24]
+Underfull \vbox (badness 1596) detected at line 1131
+ []
+
+[25]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-30-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-30-1.pdf>
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-30-2.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-30-2.pdf>
+[26]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-32-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-32-1.pdf>
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-33-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-33-1.pdf>
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-33-2.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-33-2.pdf>
+[27]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-33-3.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-33-3.pdf>
+[28] [29] (./Appendix_S1_v01.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-04-11>
@@ -928,12 +1007,12 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 18870 strings out of 476705
- 348522 string characters out of 5800164
+ 19121 strings out of 476705
+ 362235 string characters out of 5800164
  1939403 words of memory out of 5000000
- 40694 multiletter control sequences out of 15000+600000
- 564536 words of font info for 91 fonts, out of 8000000 for 9000
+ 40922 multiletter control sequences out of 15000+600000
+ 564544 words of font info for 92 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 90i,12n,121p,935b,527s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,12n,121p,1013b,527s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on Appendix_S1_v01.pdf (13 pages).
+Output written on Appendix_S1_v01.pdf (29 pages).
