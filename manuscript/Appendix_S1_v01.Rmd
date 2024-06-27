@@ -349,10 +349,10 @@ We recall that the interpretation of the coefficients in an arimaX (arima with c
 
 ```{r figs10, fig.pos = "H", fig.show="hold", fig.cap = "\\label{fig:figs5} Observed (grey) and model-fit (blue) values for population size at time t (x-axis) and t+1 (y-axis).",results='hide',fig.keep='all'}
 Gradient <- constructGradient(m.2.sample,focalVariable="E",non.focalVariables=list(Nt=list(2),Esq=list(2)),ngrid=39)
+# Esq is manually constructed as gradient-produced E^2
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
 predY <- predict(m.2.sample,XData=Gradient$XDataNew,expected=TRUE)
 plotGradient(m.2.sample,Gradient,pred=predY,showData=T,measure="Y",main="",xlab="E_t",ylab="predicted N_t+1")
-# Can't figure out curved gradient using E and E^2
-#pr <- predict(m.2.hmsc,m.2.sample,)
 ```
 
 ## Conclusions
