@@ -197,9 +197,102 @@ p1 + p2
 
 # Statistical model for evolution as a driver of species abundances
 
+We hypothesize that \( \lvert E_t - x_{i,t} \rvert \) will be the best predictor of species abundances, and that \( \lvert x_{t+1} - x_{i,t} \rvert \) will have similar explanatory power.
+
+```{r}
+# prepare data in HMSC format
+dat <- as.data.frame(cbind(log(N$N1),log(N$N2),x$x1,x$x2))
+colnames(dat) <- c("N1","N2","x1","x2")
+dat$time <- 1:t
+df <- data.frame(cbind(dat$N1[2:t],dat$N2[2:t],dat$x1[2:t],dat$x2[2:t]))
+colnames(df) <- c("Nt1","Nt2","xt1","xt2")
+df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t-1)])
+df$dx2 <- abs(dat$x2[2:t] - dat$x2[1:(t-1)])
+# Y matrix
+Y <- as.matrix(cbind(df$Nt1,df$Nt2))
+# X matrix
+XData <- data.frame(cbind(dat$N1[1:(t-1)],dat$N2[1:(t-1)]),E[1:(t-1)],E[1:(t-1)]^2,dat$x1[1:(t-1)],dat$x2[1:(t-1)],abs(dat$x1[2:t] - dat$x1[1:(t-1)]),abs(dat$x2[2:t] - dat$x2[1:(t-1)]),abs(E[1:(t-1)] - dat$x1[1:(t-1)]),abs(E[1:(t-1)] - dat$x2[1:(t-1)]))
+colnames(XData) <- c("n1","n2","E","Esq","x1","x2","dx1","dx2","dEx1","dEx2")
+# Prepare HMSC model
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+# Design and fit 4 alternative HMSC models
+models = list()
+for(i in 1:4){
+  XFormula = switch(i, ~1, ~E+Esq+x1+x2, ~E+Esq+dEx1+dEx2, ~E+Esq+dx1+dx2)
+  m = Hmsc(Y = Y, XData = XData, XFormula = XFormula, studyDesign = studyDesign, ranLevels = list(sample = rL))
+  models[[i]] = m
+}
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 100*thin
+verbose <- 500*thin
+for(i in 1:4){
+  models[[i]] = sampleMcmc(models[[i]],thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+}
+```
+
+We check the explanatory and predictive power of each model using cross-validation.
+
+```{r}
+# After Ovaskainen & Abrego 2020, Chapter 7
+partition = createPartition(m,nfolds=2,column="sample")
+partition.sp = c(1,2)
+result = matrix(NA,nrow=3,ncol=4)
+for(i in 1:4){
+  m = models[[i]]
+  # Explanatory power
+  preds = computePredictedValues(m)
+  MF = evaluateModelFit(hM=m,predY=preds)
+  result[1,i] = mean(MF$R2)
+  # Predictive power based on cross-validation
+  preds = computePredictedValues(m,partition=partition)
+  MF = evaluateModelFit(hM=m,predY=preds)
+  result[2,i] <- mean(MF$R2)
+  # Predictive power based on conditional cross-validation
+  preds = computePredictedValues(m,partition=partition,partition.sp=partition.sp,mcmcStep=100)
+  MF = evaluateModelFit(hM=m,predY=preds)
+  result[3,i] = mean(MF$R2)
+}
+```
+
+
+```{r}
+result
+```
+
+We can see that the \( \lvert E_t - x_{i,t} \rvert \) and \( \lvert x_{t+1} - x_{i,t} \rvert \) do have similar explanatory power, however, the species traits were in fact the stronger predictor of species abundances. I finally ask whether a model with raw trait values and change in trait values has imprived explanatory power (if the magnitude of evolutionary change has any additional explanatory role).
+
+```{r}
+# Design and fit 4 alternative HMSC models
+XFormula = ~E+Esq+x1+x2+dx1+dx2
+models[[5]] = Hmsc(Y = Y, XData = XData, XFormula = XFormula, studyDesign = studyDesign, ranLevels = list(sample = rL))
+models[[5]] =sampleMcmc(models[[5]],thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+# Explanatory power
+result2 <- matrix(NA,nrow=3,ncol=5)
+result2[,1:4] <- result
+for(i in 5){
+  m = models[[i]]
+  # Explanatory power
+  preds = computePredictedValues(m)
+  MF = evaluateModelFit(hM=m,predY=preds)
+  result2[1,i] = mean(MF$R2)
+  # Predictive power based on cross-validation
+  preds = computePredictedValues(m,partition=partition)
+  MF = evaluateModelFit(hM=m,predY=preds)
+  result2[2,i] <- mean(MF$R2)
+  # Predictive power based on conditional cross-validation
+  preds = computePredictedValues(m,partition=partition,partition.sp=partition.sp,mcmcStep=100)
+  MF = evaluateModelFit(hM=m,predY=preds)
+  result2[3,i] = mean(MF$R2)
+}
+```
 ```{r}
 knitr::knit_exit()
 ```
+
 
 
 ```{r}
