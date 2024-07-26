@@ -781,7 +781,18 @@ b <- plotGradient(m.5.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,
 postBeta = getPostEstimate(m.5.sample, parName = "Beta")
 plotBeta(m.5.sample, post = postBeta, param = "Mean", supportLevel = 0.7)
 ```
-We can see that the Environment has an overall negative impact for both species as $E$ drifts randomly towards more positive values (where Species 2 is closer because it has a higher trait value). We also see that the residual species association effects are strongly positive. We evaluate this by greatly increasing the effects if interspecific competition (while decreasing the strength of environmental variation).
+We can see that the Environment has an overall negative impact for both species as $E$ drifts randomly towards more positive values (where Species 2 is closer because it has a higher trait value). We also see that the residual species association effects are strongly positive.
+
+We use variation partition to estimate the relative importance of environment and species associations for species abundances.
+
+```{r warning=FALSE}
+VP <- computeVariancePartitioning(m.5.sample,group=c(1,1,1),groupnames="Env")
+plotVariancePartitioning(m.5.sample,VP,args.legend=list(cex=0.75,bg="transparent"))
+```
+
+
+
+We evaluate this by greatly increasing the effects if interspecific competition (while decreasing the strength of environmental variation).
 
 ```{r}
 # Simulate initial species population growth with environment fluctuations
@@ -867,6 +878,189 @@ plotBeta(m.6.sample, post = postBeta, param = "Mean", supportLevel = 0.7)
 ```
 With the reduced impact of the environment, we now see the strong negative associations between the two competing species. We also correctly see no impact of environment for species abundances.
 
+```{r warning=FALSE}
+VP <- computeVariancePartitioning(m.6.sample,group=c(1,1,1),groupnames="Env")
+plotVariancePartitioning(m.6.sample,VP,args.legend=list(cex=0.75,bg="transparent"))
+```
+
 # Species growth, competition, environmental change, and trait evolution
+
+We now consider that trait evolution can occur, with an impact on the species growth rate / fitness in the context of the environment.
+
+## Trait evolution
+
+Previously the population growth rate was fixed as \( r_i = \hat{W}e^{-(E-x_{i,t})^2}\). However, we now introduce the quantitative genetic model of evolutionary rescue [@Gomulkiewicz1995].
+
+The growth equation for each species now becomes:
+
+$$ N_{i,t+1} =\frac{\hat{W}e^ \frac{-[(\frac{w+(1-h^2)P} {P+w})(E-x_{i,t})]^2}{2(P+w)}N_{i,t}} {1 + \alpha_{ii}N_{i,t} + \alpha_{ij} N_{j,t}} $$
+
+where \( \hat{W} \) is calculated as \( \hat{W}=W_{max}\sqrt(\frac{w}{P+w}) \), \(W_{max}\) is the species' maximum per-capita growth rate, *w* is the width of the Gaussian fitness function (which determines the strength of selection, as increasing values indicate a weaker reduction in fitness with distance from optimum trait value), *P* is the width of the distribution of the phenotype *x*, and $h^2$ is the heritability of the trait *x*. For the simulation we use \(W_{max}\) = 2, *P* = 1, and *w* = 10.
+
+The change in the average trait value each time step is given by:
+
+$$ d_{i,t+1} = k d_{i,t} $$
+where \( k = \frac{w + (1-h^2) P}{w + P} \) and \( d_{i,t} = E_t - x_{i,t} \).
+
+## Population dynamics simulation
+
+We use the same examples as above, with weaker then stronger strength of interspecific interactions.
+
+```{r}
+# Case 1: Weaker interactions, stronger environment
+# Simulate initial species population growth with environment fluctuations
+N1.0 <- 10
+N2.0 <- 10
+alpha.11 <- 0.01
+alpha.22 <- 0.01
+alpha.12 <- 0.005
+alpha.21 <- 0.01
+E.0 <- 0.8
+x1.0 <- 0.6
+x2.0 <- 0.8
+P <- 1
+w <- 10
+Wmax <- 2
+h2 <- 0.1
+k <- (w+(1-h2)*P)/(P+w)
+
+# model function
+disc_LV_evol <- function(N1.0,N2.0,alpha.11,alpha.22,alpha.12,alpha.21,E,x1.0,x2.0,P,w,Wmax,h2) {
+  What <- Wmax*sqrt(w/(P+w))
+  r1 <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E-x1.0))^2)/(2*(P+w)))
+  Nt1 <- (r1*N1.0) / (1+alpha.11*N1.0+alpha.12*N2.0)
+  r2 <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E-x2.0))^2)/(2*(P+w)))
+  Nt2 <- (r2*N2.0) / (1+alpha.22*N2.0+alpha.21*N1.0)
+  return(c(Nt1,Nt2,r1,r2))
+}
+# Simulation of model for t time steps
+t <- 40
+N <- array(NA,dim=c(t,2))
+N <- as.data.frame(N)
+colnames(N) <- c("N1","N2")
+x <- array(NA,dim=c(t,2))
+x <- as.data.frame(x)
+colnames(x) <- c("x1","x2")
+r <- array(NA,dim=c(t,2))
+r <- as.data.frame(r)
+colnames(r) <- c("r1","r2")
+N$N1[1] <- N1.0
+N$N2[1] <- N2.0
+x$x1[1] <- x1.0
+x$x2[1] <- x2.0
+r$r1[1] <- exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x1.0))^2)/(2*(P+w)))
+r$r2[1] <- exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x2.0))^2)/(2*(P+w)))
+E <- rep(NA, t)
+E[1] <- E.0
+for (i in 2:t) {
+  res <- disc_LV_evol(N1.0=N[i-1,1],N2.0=N[i-1,2],alpha.11=alpha.11,alpha.22=alpha.22,alpha.12=alpha.12,alpha.21=alpha.21,E=E[i-1],x1=x[i-1,1],x2=x[i-1,2],P=P,w=w,Wmax=Wmax,h2=h2)
+  N$N1[i] <- res[1]
+  N$N2[i] <- res[2]
+  r$r1[i] <- res[3]
+  r$r2[i] <- res[4]
+  # trait change
+  d1 <- E[i-1] - x[i-1,1]
+  d2 <- E[i-1] - x[i-1,2]
+  d1.1 <- k*d1
+  d2.1 <- k*d2
+  x$x1[i] <- E[i-1] - d1.1
+  x$x2[i] <- E[i-1] - d2.1
+  # environmental change
+  E[i] <- E[i-1] + rnorm(1,0,.01)
+}
+```
+```{r}
+# Plot simulation: ggplot
+N$time <- 1:t
+dat <- melt(N, id.vars="time")
+ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray")
+```
+
+The overall research goal is to determine the effect of trait evolution for species abundances. We use the absolute value of the change in trait value from one time point to the next (the total amount of trait change, regardless of direction) as a fixed effect in the HMSC.
+
+```{r}
+# Plot simulation: ggplot
+dat <- as.data.frame(cbind(log(N$N1),log(N$N2),x$x1,x$x2))
+colnames(dat) <- c("N1","N2","x1","x2")
+dat$time <- 1:t
+df <- data.frame(cbind(dat$N1[2:t],dat$N2[2:t],dat$x1[2:t],dat$x2[2:t]))
+colnames(df) <- c("Nt1","Nt2","xt1","xt2")
+# prepare data in HMSC format
+Y <- as.matrix(cbind(df$Nt1,df$Nt2))
+XData <- data.frame(cbind(dat$N1[1:(t-1)],dat$N2[1:(t-1)]),E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)]),abs(dat$x2[2:t] - dat$x2[1:(t-1)]))
+colnames(XData) <- c("n1","n2","E","Esq","dx1","dx2")
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+m.7.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 100*thin
+verbose <- 500*thin
+# sample MCMC
+m.7.sample <- sampleMcmc(m.7.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+```
+```{r}
+m7.post.hmsc <- convertToCodaObject(m.7.sample)
+summary(m7.post.hmsc$Beta)
+bayesplot::mcmc_trace(m7.post.hmsc$Beta)
+bayesplot::mcmc_areas(m7.post.hmsc$Beta,area_method = c("equal height"))
+```
+
+```{r}
+# Bayesian estimates
+summary(m7.post.hmsc$Beta)$statistics[1:10,1:2]
+```
+
+```{r}
+OmegaCor = computeAssociations(m.7.sample)
+supportLevel = 0.7
+toPlot = ((OmegaCor[[1]]$support>supportLevel)
++ (OmegaCor[[1]]$support<(1-supportLevel))>0)*OmegaCor[[1]]$mean
+corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.7.sample$rLNames[1]), mar=c(0,0,1,0))
+OmegaCor
+```
+
+```{r}
+Gradient <- constructGradient(m.7.sample,focalVariable="E",non.focalVariables=list(Esq=list(2)),ngrid=39)
+predY <- predict(m.7.sample,XData=Gradient$XDataNew,expected=TRUE)
+a <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="E_t",ylab="predicted N1_t+1")
+b <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1")
+
+postBeta = getPostEstimate(m.7.sample, parName = "Beta")
+plotBeta(m.7.sample, post = postBeta, param = "Mean", supportLevel = 0.7)
+```
+```{r warning=FALSE}
+VP <- computeVariancePartitioning(m.7.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
+plotVariancePartitioning(m.7.sample,VP,cols=c("white","skyblue","darkgrey","orange"),args.legend=list(cex=0.75,bg="transparent"))
+```
+We can also look at a gradient plot for the effect of evolution in Species 1 for abundance in Species 1 and Species 2.
+
+```{r}
+Gradient <- constructGradient(m.7.sample,focalVariable="dx1",non.focalVariables=list(E=list(2),Esq=list(2),dx2=list(2)),ngrid=39)
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.7.sample,XData=Gradient$XDataNew,expected=TRUE)
+a <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx1_t",ylab="predicted N1_t+1")
+b <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="dx1_t",ylab="predicted N2_t+1")
+
+postBeta = getPostEstimate(m.7.sample, parName = "Beta")
+plotBeta(m.7.sample, post = postBeta, param = "Mean", supportLevel = 0.7)
+```
+
+We repeat this plot for the effect of evolution in Species 2 for abundance in Species 1 and Species 2.
+
+```{r}
+Gradient <- constructGradient(m.7.sample,focalVariable="dx2",non.focalVariables=list(E=list(2),Esq=list(2),dx1=list(2)),ngrid=39)
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.7.sample,XData=Gradient$XDataNew,expected=TRUE)
+a <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx2_t",ylab="predicted N1_t+1")
+b <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="dx2_t",ylab="predicted N2_t+1")
+```
+
+THESE SHOULD NOT BE THE SAME
+
+We repeat the analysis for 
+
 
 # References

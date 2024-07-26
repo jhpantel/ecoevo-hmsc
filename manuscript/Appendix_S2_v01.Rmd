@@ -1,0 +1,267 @@
+---
+title: "Appendix S2. Evolutionary drivers of species and community dynamics"
+author:
+  - Jelena H. Pantel^[Laboratoire Chrono-environnement,UMR 6249 CNRS-UFC, 16 Route de Gray, 25030 Besançon cedex, France, jelena.pantel@univ-fcomte.fr]
+  - Ruben J. Hermann^[University of Duisburg-Essen, Universitätsstraße 5, 45141 Essen, Germany, ruben.hermann@uni-due.de]
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::pdf_document2:
+    toc: no
+    fig_caption: yes
+    latex_engine: xelatex
+    extra_dependencies: ["float"]
+  bookdown::html_document2: default
+  word_document:
+    reference_docx: docx_template.docx
+header-includes:
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead[L]{Author Pantel and Hermann}
+- \fancyhead[R]{Detection of ecoevo dynamics}
+- \usepackage{lineno}
+- \linenumbers
+link-citations: yes
+linkcolor: blue
+csl: the-american-naturalist.csl
+bibliography: refs.bib
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+```{r setup,echo=FALSE,message=FALSE}
+library(Hmsc)
+library(ggplot2)
+library(tidyr)
+library(coda)
+library(patchwork)
+library(jtools)
+library(bayesplot)
+library(reshape2)
+```
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+# Wrap long lines
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE,out.width="50%")
+```
+
+# Background
+
+In Appendix S1.5, we evaluated the ability of the statistical model to estimate the impact of trait evolution for species abundances. Trait evolution's impact for species abundances can be modeled as a predictor in different ways. Here we derive the numerical form of the trait $x_i$ that we hypothesize has the most impact on species abundances.
+
+# Model for population growth, competition, environmental change, and evolution
+
+The growth equation for each species is:
+
+$$ N_{i,t+1} =\frac{\hat{W}e^ \frac{-[(\frac{w+(1-h^2)P} {P+w})(E-x_{i,t})]^2}{2(P+w)}N_{i,t}} {1 + \alpha_{ii}N_{i,t} + \alpha_{ij} N_{j,t}} $$
+
+We simulate population growth under particular parameter values, to generate population dynamics where species interactions, environment, and trait evolution all drive population dynamics.
+
+```{r}
+# Case 1: Weaker interactions, stronger environment
+# Simulate initial species population growth with environment fluctuations
+N1.0 <- 10
+N2.0 <- 10
+alpha.11 <- 0.01
+alpha.22 <- 0.01
+alpha.12 <- 0.005
+alpha.21 <- 0.01
+E.0 <- 0.8
+x1.0 <- 0.6
+x2.0 <- 0.8
+P <- 1
+w <- 10
+Wmax <- 2
+h2 <- 0.1
+k <- (w+(1-h2)*P)/(P+w)
+
+# model function
+disc_LV_evol <- function(N1.0,N2.0,alpha.11,alpha.22,alpha.12,alpha.21,E,x1.0,x2.0,P,w,Wmax,h2) {
+  What <- Wmax*sqrt(w/(P+w))
+  r1 <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E-x1.0))^2)/(2*(P+w)))
+  Nt1 <- (r1*N1.0) / (1+alpha.11*N1.0+alpha.12*N2.0)
+  r2 <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E-x2.0))^2)/(2*(P+w)))
+  Nt2 <- (r2*N2.0) / (1+alpha.22*N2.0+alpha.21*N1.0)
+  return(c(Nt1,Nt2,r1,r2))
+}
+# Simulation of model for t time steps
+t <- 40
+N <- array(NA,dim=c(t,2))
+N <- as.data.frame(N)
+colnames(N) <- c("N1","N2")
+x <- array(NA,dim=c(t,2))
+x <- as.data.frame(x)
+colnames(x) <- c("x1","x2")
+r <- array(NA,dim=c(t,2))
+r <- as.data.frame(r)
+colnames(r) <- c("r1","r2")
+N$N1[1] <- N1.0
+N$N2[1] <- N2.0
+x$x1[1] <- x1.0
+x$x2[1] <- x2.0
+r$r1[1] <- exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x1.0))^2)/(2*(P+w)))
+r$r2[1] <- exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x2.0))^2)/(2*(P+w)))
+E <- rep(NA, t)
+E[1] <- E.0
+for (i in 2:t) {
+  res <- disc_LV_evol(N1.0=N[i-1,1],N2.0=N[i-1,2],alpha.11=alpha.11,alpha.22=alpha.22,alpha.12=alpha.12,alpha.21=alpha.21,E=E[i-1],x1=x[i-1,1],x2=x[i-1,2],P=P,w=w,Wmax=Wmax,h2=h2)
+  N$N1[i] <- res[1]
+  N$N2[i] <- res[2]
+  r$r1[i] <- res[3]
+  r$r2[i] <- res[4]
+  # trait change
+  d1 <- E[i-1] - x[i-1,1]
+  d2 <- E[i-1] - x[i-1,2]
+  d1.1 <- k*d1
+  d2.1 <- k*d2
+  x$x1[i] <- E[i-1] - d1.1
+  x$x2[i] <- E[i-1] - d2.1
+  # environmental change
+  E[i] <- E[i-1] + rnorm(1,0,.01)
+}
+```
+```{r}
+# Plot simulation: ggplot
+N$time <- 1:t
+dat <- melt(N, id.vars="time")
+ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = (1/alpha.11),linetype = "dashed", color = "gray")
+```
+
+# Hypotheses for evolution as a driver of species abundances
+
+The growth equation is not linear, yet we fit abundance data to a heirarchical model with linear predictors because in most natural systems, a single theoretical growth model can't adequately capture the complexity in a given system. Linear models don't capture mechanistic relationships, but instead correlative. They are useful for inferring direction and magnitude of effect sizes. In Appendix S1, we explore how non-linear dynamics are captured when fit to a linear model. Here, we explore different forms to encode evolution in the trait $x$ that determines the organism's fitness in this system.
+
+## H1. Raw trait value drives species abundances
+
+```{r}
+# Plot simulation: ggplot
+dat <- as.data.frame(cbind(log(N$N1),log(N$N2),x$x1,x$x2))
+colnames(dat) <- c("N1","N2","x1","x2")
+dat$time <- 1:t
+df <- data.frame(cbind(dat$N1[2:t],dat$N2[2:t],dat$x1[2:t],dat$x2[2:t]))
+colnames(df) <- c("Nt1","Nt2","xt1","xt2")
+# Plot
+p1 <- ggplot2::ggplot(df, aes(xt1, Nt1)) + geom_point()
+p2 <- ggplot2::ggplot(df, aes(xt2, Nt1)) + geom_point()
+p3 <- ggplot2::ggplot(df, aes(xt1, Nt2)) + geom_point()
+p4 <- ggplot2::ggplot(df, aes(xt2, Nt2)) + geom_point()
+p1 + p2 + p3 + p4
+```
+
+We do not hypothesize that the raw trait value is the best predictor of species abundances, because the impacts of this evolved trait depend on the context of the environment.
+
+## H2. Absolute value of trait distance from optimum drives species abundances
+
+```{r}
+# Plot simulation: ggplot
+df$E <- E[2:t]
+df$abs_Ex1 <- abs(df$E - df$xt1)
+df$abs_Ex2 <- abs(df$E - df$xt2)
+# Plot
+p1 <- ggplot2::ggplot(df, aes(abs_Ex1, Nt1)) + geom_point()
+p2 <- ggplot2::ggplot(df, aes(abs_Ex2, Nt1)) + geom_point()
+p3 <- ggplot2::ggplot(df, aes(abs_Ex1, Nt2)) + geom_point()
+p4 <- ggplot2::ggplot(df, aes(abs_Ex2, Nt2)) + geom_point()
+p1 + p2 + p3 + p4
+```
+
+We hypothesize that this represents the true impact on species abundances, via the direct impact this measure has on fitness and consequent population growth. However, we also acknowledge this is likely difficult to measure in most empirical systems.
+
+## H3. Absolute value of trait change from one time to the next drives species abundances
+
+We now onsider the magnitude of trait change from one time step to the next as a driver for species abundances.
+
+```{r}
+df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t-1)])
+df$dx2 <- abs(dat$x2[2:t] - dat$x2[1:(t-1)])
+# Plot
+p1 <- ggplot2::ggplot(df, aes(dx1, Nt1)) + geom_point()
+p2 <- ggplot2::ggplot(df, aes(dx2, Nt1)) + geom_point()
+p3 <- ggplot2::ggplot(df, aes(dx1, Nt2)) + geom_point()
+p4 <- ggplot2::ggplot(df, aes(dx2, Nt2)) + geom_point()
+p1 + p2 + p3 + p4
+```
+
+The measures correlate highly with one another, as the amount of trait change (the amount of evolution) is determined by the distance to the optimum trait value (given that P and w remain constant in the simulation).
+
+```{r}
+cor(df$dx1, df$abs_Ex1)
+cor(df$dx2, df$abs_Ex2)
+# Plot
+p1 <- ggplot2::ggplot(df, aes(abs_Ex1,dx1)) + geom_point()
+p2 <- ggplot2::ggplot(df, aes(abs_Ex2,dx2)) + geom_point()
+p1 + p2
+```
+
+# Statistical model for evolution as a driver of species abundances
+
+```{r}
+knitr::knit_exit()
+```
+
+
+```{r}
+m7.post.hmsc <- convertToCodaObject(m.7.sample)
+summary(m7.post.hmsc$Beta)
+bayesplot::mcmc_trace(m7.post.hmsc$Beta)
+bayesplot::mcmc_areas(m7.post.hmsc$Beta,area_method = c("equal height"))
+```
+
+```{r}
+# Bayesian estimates
+summary(m7.post.hmsc$Beta)$statistics[1:10,1:2]
+```
+
+```{r}
+OmegaCor = computeAssociations(m.7.sample)
+supportLevel = 0.7
+toPlot = ((OmegaCor[[1]]$support>supportLevel)
++ (OmegaCor[[1]]$support<(1-supportLevel))>0)*OmegaCor[[1]]$mean
+corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.7.sample$rLNames[1]), mar=c(0,0,1,0))
+OmegaCor
+```
+
+```{r}
+Gradient <- constructGradient(m.7.sample,focalVariable="E",non.focalVariables=list(Esq=list(2)),ngrid=39)
+predY <- predict(m.7.sample,XData=Gradient$XDataNew,expected=TRUE)
+a <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="E_t",ylab="predicted N1_t+1")
+b <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1")
+
+postBeta = getPostEstimate(m.7.sample, parName = "Beta")
+plotBeta(m.7.sample, post = postBeta, param = "Mean", supportLevel = 0.7)
+```
+```{r warning=FALSE}
+VP <- computeVariancePartitioning(m.7.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
+plotVariancePartitioning(m.7.sample,VP,cols=c("white","skyblue","darkgrey","orange"),args.legend=list(cex=0.75,bg="transparent"))
+```
+We can also look at a gradient plot for the effect of evolution in Species 1 for abundance in Species 1 and Species 2.
+
+```{r}
+Gradient <- constructGradient(m.7.sample,focalVariable="dx1",non.focalVariables=list(E=list(2),Esq=list(2),dx2=list(2)),ngrid=39)
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.7.sample,XData=Gradient$XDataNew,expected=TRUE)
+a <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx1_t",ylab="predicted N1_t+1")
+b <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="dx1_t",ylab="predicted N2_t+1")
+
+postBeta = getPostEstimate(m.7.sample, parName = "Beta")
+plotBeta(m.7.sample, post = postBeta, param = "Mean", supportLevel = 0.7)
+```
+
+We repeat this plot for the effect of evolution in Species 2 for abundance in Species 1 and Species 2.
+
+```{r}
+Gradient <- constructGradient(m.7.sample,focalVariable="dx2",non.focalVariables=list(E=list(2),Esq=list(2),dx1=list(2)),ngrid=39)
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.7.sample,XData=Gradient$XDataNew,expected=TRUE)
+a <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx2_t",ylab="predicted N1_t+1")
+b <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="dx2_t",ylab="predicted N2_t+1")
+```
+
+THESE SHOULD NOT BE THE SAME
+
+We repeat the analysis for 
+
+
+# References
