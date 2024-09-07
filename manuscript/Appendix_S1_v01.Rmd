@@ -904,7 +904,7 @@ where \( k = \frac{w + (1-h^2) P}{w + P} \) and \( d_{i,t} = E_t - x_{i,t} \).
 
 ## Population dynamics simulation
 
-We use the same examples as above, with weaker then stronger strength of interspecific interactions.
+We use one of the same examples as above, with weak strength of interspecific interactions.
 
 ```{r}
 # Case 1: Weaker interactions, stronger environment
@@ -973,22 +973,57 @@ for (i in 2:t) {
 # Plot simulation: ggplot
 N$time <- 1:t
 dat <- melt(N, id.vars="time")
-ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray")
+ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point()
 ```
 
-The overall research goal is to determine the effect of trait evolution for species abundances. We use the absolute value of the change in trait value from one time point to the next (the total amount of trait change, regardless of direction) as a fixed effect in the HMSC.
+The overall research goal is to determine the effect of trait evolution for species abundances. We hypothesize that \( \lvert x_{t+1} - x_{i,t} \rvert \) is an important driver of species abundances, alongside the environment and species interactions. We plan to fit a statistical model to estimate the impact of $E$, $E^2$, and \( \lvert x_{t+1} - x_{i,t} \rvert \) as fixed effects, and time points as a random effect (to estimate species-to-species associations). However, we first plot the effects of interest as scatter plots with species abundances.
+
+```{r}
+dat2 <- as.data.frame(cbind(log(N$N1),log(N$N2),x$x1,x$x2))
+colnames(dat2) <- c("N1","N2","x1","x2")
+dat2$time <- 1:t
+df <- data.frame(cbind(dat2$N1[2:t],dat2$N2[2:t],dat2$x1[2:t],dat2$x2[2:t]))
+colnames(df) <- c("Nt1","Nt2","xt1","xt2")
+df$dx1 <- abs(dat2$x1[2:t] - dat2$x1[1:(t-1)])
+df$dx2 <- abs(dat2$x2[2:t] - dat2$x2[1:(t-1)])
+# Plot
+p1 <- ggplot2::ggplot(df, aes(dx1, Nt1)) + geom_point()
+p2 <- ggplot2::ggplot(df, aes(dx2, Nt1)) + geom_point()
+p3 <- ggplot2::ggplot(df, aes(dx1, Nt2)) + geom_point()
+p4 <- ggplot2::ggplot(df, aes(dx2, Nt2)) + geom_point()
+p1 + p2 + p3 + p4
+```
+We see that the effects are not going to be well described by regression coefficients, as there are distinct impacts of change in trait values for population abundances at low vs. high change in trait value. We consider instead the impacts of trait change for species growth rates.
+
+```{r}
+dat2$r1 <- r$r1
+dat2$r2 <- r$r2
+df$r1 <- dat2$r1[2:t]
+df$r2 <- dat2$r2[2:t]
+
+df$dr1 <- abs(dat2$r1[2:t] - dat2$r1[1:(t-1)])
+df$dr2 <- abs(dat2$r2[2:t] - dat2$r2[1:(t-1)])
+# Plot
+p1 <- ggplot2::ggplot(df, aes(dx1, r1)) + geom_point()
+p2 <- ggplot2::ggplot(df, aes(dx2, r1)) + geom_point()
+p3 <- ggplot2::ggplot(df, aes(dx1, r2)) + geom_point()
+p4 <- ggplot2::ggplot(df, aes(dx2, r2)) + geom_point()
+p1 + p2 + p3 + p4
+```
+
+We now use the species growth rates as the response variable in the model, with $E$, $E^2$, and \( \lvert x_{t+1} - x_{i,t} \rvert \) as fixed effects, and time points as a random effect (to estimate species-to-species associations). We use the absolute value of the change in trait value from one time point to the next (the total amount of trait change, regardless of direction) as a fixed effect in the HMSC.
 
 ```{r}
 # Plot simulation: ggplot
-dat <- as.data.frame(cbind(log(N$N1),log(N$N2),x$x1,x$x2))
-colnames(dat) <- c("N1","N2","x1","x2")
+dat <- as.data.frame(cbind(r$r1,r$r2,x$x1,x$x2))
+colnames(dat) <- c("r1","r2","x1","x2")
 dat$time <- 1:t
-df <- data.frame(cbind(dat$N1[2:t],dat$N2[2:t],dat$x1[2:t],dat$x2[2:t]))
-colnames(df) <- c("Nt1","Nt2","xt1","xt2")
+df <- data.frame(cbind(dat$r1[2:t],dat$r2[2:t],dat$x1[2:t],dat$x2[2:t]))
+colnames(df) <- c("rt1","rt2","xt1","xt2")
 # prepare data in HMSC format
-Y <- as.matrix(cbind(df$Nt1,df$Nt2))
-XData <- data.frame(cbind(dat$N1[1:(t-1)],dat$N2[1:(t-1)]),E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)]),abs(dat$x2[2:t] - dat$x2[1:(t-1)]))
-colnames(XData) <- c("n1","n2","E","Esq","dx1","dx2")
+Y <- as.matrix(cbind(df$rt1,df$rt2))
+XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)]),abs(dat$x2[2:t] - dat$x2[1:(t-1)])))
+colnames(XData) <- c("E","Esq","dx1","dx2")
 studyDesign = data.frame(sample = as.factor(1:(t-1)))
 rL = HmscRandomLevel(units = studyDesign$sample)
 m.7.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list(sample = rL))
@@ -996,7 +1031,7 @@ m.7.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = s
 nChains <- 2
 thin <- 5
 samples <- 2000
-transient <- 100*thin
+transient <- 1000*thin
 verbose <- 500*thin
 # sample MCMC
 m.7.sample <- sampleMcmc(m.7.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)

@@ -260,101 +260,57 @@ for(i in 1:4){
 
 
 ```{r}
+colnames(result) <- c("null","xt","dEx","dx")
+rownames(result) <- c("R2_expl","R2_pred","R2_pred_cross")
 result
 ```
 
-We can see that the \( \lvert E_t - x_{i,t} \rvert \) and \( \lvert x_{t+1} - x_{i,t} \rvert \) do have similar explanatory power, however, the species traits were in fact the stronger predictor of species abundances. I finally ask whether a model with raw trait values and change in trait values has imprived explanatory power (if the magnitude of evolutionary change has any additional explanatory role).
+An important conclusion from this analysis is that the \( \lvert E_t - x_{i,t} \rvert \) and \( \lvert x_{t+1} - x_{i,t} \rvert \) do have similar explanatory power, and that - even though the species traits were the stronger predictor of species abundances - the model with total change in trait value can be used to assess the question "How does evolution impact species abundances?"
 
 ```{r}
-# Design and fit 4 alternative HMSC models
-XFormula = ~E+Esq+x1+x2+dx1+dx2
-models[[5]] = Hmsc(Y = Y, XData = XData, XFormula = XFormula, studyDesign = studyDesign, ranLevels = list(sample = rL))
-models[[5]] =sampleMcmc(models[[5]],thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
-# Explanatory power
-result2 <- matrix(NA,nrow=3,ncol=5)
-result2[,1:4] <- result
-for(i in 5){
-  m = models[[i]]
-  # Explanatory power
-  preds = computePredictedValues(m)
-  MF = evaluateModelFit(hM=m,predY=preds)
-  result2[1,i] = mean(MF$R2)
-  # Predictive power based on cross-validation
-  preds = computePredictedValues(m,partition=partition)
-  MF = evaluateModelFit(hM=m,predY=preds)
-  result2[2,i] <- mean(MF$R2)
-  # Predictive power based on conditional cross-validation
-  preds = computePredictedValues(m,partition=partition,partition.sp=partition.sp,mcmcStep=100)
-  MF = evaluateModelFit(hM=m,predY=preds)
-  result2[3,i] = mean(MF$R2)
-}
-```
-```{r}
-knitr::knit_exit()
-```
-
-
-
-```{r}
-m7.post.hmsc <- convertToCodaObject(m.7.sample)
-summary(m7.post.hmsc$Beta)
-bayesplot::mcmc_trace(m7.post.hmsc$Beta)
-bayesplot::mcmc_areas(m7.post.hmsc$Beta,area_method = c("equal height"))
+m.post.hmsc <- convertToCodaObject(models[[4]])
+bayesplot::mcmc_trace(m.post.hmsc$Beta)
+bayesplot::mcmc_areas(m.post.hmsc$Beta,area_method = c("equal height"))
 ```
 
 ```{r}
 # Bayesian estimates
-summary(m7.post.hmsc$Beta)$statistics[1:10,1:2]
+summary(m.post.hmsc$Beta)$statistics[1:10,1:2]
 ```
 
 ```{r}
-OmegaCor = computeAssociations(m.7.sample)
+OmegaCor = computeAssociations(models[[4]])
 supportLevel = 0.7
 toPlot = ((OmegaCor[[1]]$support>supportLevel)
 + (OmegaCor[[1]]$support<(1-supportLevel))>0)*OmegaCor[[1]]$mean
-corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.7.sample$rLNames[1]), mar=c(0,0,1,0))
+corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", models[[4]]$rLNames[1]), mar=c(0,0,1,0))
 OmegaCor
-```
-
-```{r}
-Gradient <- constructGradient(m.7.sample,focalVariable="E",non.focalVariables=list(Esq=list(2)),ngrid=39)
-predY <- predict(m.7.sample,XData=Gradient$XDataNew,expected=TRUE)
-a <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="E_t",ylab="predicted N1_t+1")
-b <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1")
-
-postBeta = getPostEstimate(m.7.sample, parName = "Beta")
-plotBeta(m.7.sample, post = postBeta, param = "Mean", supportLevel = 0.7)
-```
-```{r warning=FALSE}
-VP <- computeVariancePartitioning(m.7.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
-plotVariancePartitioning(m.7.sample,VP,cols=c("white","skyblue","darkgrey","orange"),args.legend=list(cex=0.75,bg="transparent"))
 ```
 We can also look at a gradient plot for the effect of evolution in Species 1 for abundance in Species 1 and Species 2.
 
 ```{r}
-Gradient <- constructGradient(m.7.sample,focalVariable="dx1",non.focalVariables=list(E=list(2),Esq=list(2),dx2=list(2)),ngrid=39)
+Gradient <- constructGradient(models[[4]],focalVariable="dx1",non.focalVariables=list(E=list(2),Esq=list(2),dx2=list(2)),ngrid=39)
 Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
-predY <- predict(m.7.sample,XData=Gradient$XDataNew,expected=TRUE)
-a <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx1_t",ylab="predicted N1_t+1")
-b <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="dx1_t",ylab="predicted N2_t+1")
+predY <- predict(models[[4]],XData=Gradient$XDataNew,expected=TRUE)
+a <- plotGradient(models[[4]],Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx1_t",ylab="predicted N1_t+1")
+b <- plotGradient(models[[4]],Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="dx1_t",ylab="predicted N2_t+1")
 
-postBeta = getPostEstimate(m.7.sample, parName = "Beta")
-plotBeta(m.7.sample, post = postBeta, param = "Mean", supportLevel = 0.7)
+postBeta = getPostEstimate(models[[4]], parName = "Beta")
+plotBeta(models[[4]], post = postBeta, param = "Mean", supportLevel = 0.7)
 ```
-
 We repeat this plot for the effect of evolution in Species 2 for abundance in Species 1 and Species 2.
 
 ```{r}
-Gradient <- constructGradient(m.7.sample,focalVariable="dx2",non.focalVariables=list(E=list(2),Esq=list(2),dx1=list(2)),ngrid=39)
+Gradient <- constructGradient(models[[4]],focalVariable="dx2",non.focalVariables=list(E=list(2),Esq=list(2),dx1=list(2)),ngrid=39)
 Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
-predY <- predict(m.7.sample,XData=Gradient$XDataNew,expected=TRUE)
-a <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx2_t",ylab="predicted N1_t+1")
-b <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="dx2_t",ylab="predicted N2_t+1")
+predY <- predict(models[[4]],XData=Gradient$XDataNew,expected=TRUE)
+a <- plotGradient(models[[4]],Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx2_t",ylab="predicted N1_t+1")
+b <- plotGradient(models[[4]],Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="dx2_t",ylab="predicted N2_t+1")
 ```
+To evaluate the relative importance of evolution for species abundances, we use variation partition:
 
-THESE SHOULD NOT BE THE SAME
-
-We repeat the analysis for 
-
-
-# References
+```{r warning=FALSE}
+VP <- computeVariancePartitioning(models[[4]],group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
+plotVariancePartitioning(models[[4]],VP,cols=c("white","skyblue","darkgrey","orange"),args.legend=list(cex=0.75,bg="transparent"))
+```
+We see that trait evolution in Species 1 is an important driver of abundances in both Species 1 and Species 2.
