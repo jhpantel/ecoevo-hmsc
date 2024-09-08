@@ -60,6 +60,7 @@ $$ N_{i,t+1} =\frac{\hat{W}e^ \frac{-[(\frac{w+(1-h^2)P} {P+w})(E-x_{i,t})]^2}{2
 We simulate population growth under particular parameter values, to generate population dynamics where species interactions, environment, and trait evolution all drive population dynamics.
 
 ```{r}
+set.seed(42)
 # Case 1: Weaker interactions, stronger environment
 # Simulate initial species population growth with environment fluctuations
 N1.0 <- 10
@@ -69,13 +70,13 @@ alpha.22 <- 0.01
 alpha.12 <- 0.005
 alpha.21 <- 0.01
 E.0 <- 0.8
-x1.0 <- 0.6
+x1.0 <- 0.1
 x2.0 <- 0.8
 P <- 1
-w <- 10
+w <- 2
 Wmax <- 2
-h2 <- 0.1
-k <- (w+(1-h2)*P)/(P+w)
+h2 <- 1
+k <- (w + (1 - h2) * P)/(P + w)
 
 # model function
 disc_LV_evol <- function(N1.0,N2.0,alpha.11,alpha.22,alpha.12,alpha.21,E,x1.0,x2.0,P,w,Wmax,h2) {
@@ -101,8 +102,9 @@ N$N1[1] <- N1.0
 N$N2[1] <- N2.0
 x$x1[1] <- x1.0
 x$x2[1] <- x2.0
-r$r1[1] <- exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x1.0))^2)/(2*(P+w)))
-r$r2[1] <- exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x2.0))^2)/(2*(P+w)))
+What <- Wmax*sqrt(w/(P+w))
+r$r1[1] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x1.0))^2)/(2*(P+w))))
+r$r2[1] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x2.0))^2)/(2*(P+w))))
 E <- rep(NA, t)
 E[1] <- E.0
 for (i in 2:t) {
@@ -119,7 +121,7 @@ for (i in 2:t) {
   x$x1[i] <- E[i-1] - d1.1
   x$x2[i] <- E[i-1] - d2.1
   # environmental change
-  E[i] <- E[i-1] + rnorm(1,0,.01)
+  E[i] <- E[i-1] + abs(rnorm(1,0,0.05))
 }
 ```
 ```{r}
@@ -129,9 +131,51 @@ dat <- melt(N, id.vars="time")
 ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = (1/alpha.11),linetype = "dashed", color = "gray")
 ```
 
+We can check the impact evolution had for this system by re-running dynamics with $h^2 = 0$:
+
+```{r echo = FALSE}
+h2 <- 0
+k <- (w+(1-h2)*P)/(P+w)
+# Simulation of model for t time steps
+Na <- array(NA,dim=c(t,2))
+Na <- as.data.frame(Na)
+colnames(Na) <- c("N1","N2")
+xa <- array(NA,dim=c(t,2))
+xa <- as.data.frame(xa)
+colnames(xa) <- c("x1","x2")
+ra <- array(NA,dim=c(t,2))
+ra <- as.data.frame(ra)
+colnames(ra) <- c("r1","r2")
+Na$N1[1] <- N1.0
+Na$N2[1] <- N2.0
+xa$x1[1] <- x1.0
+xa$x2[1] <- x2.0
+What <- Wmax*sqrt(w/(P+w))
+ra$r1[1] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x1.0))^2)/(2*(P+w))))
+ra$r2[1] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x2.0))^2)/(2*(P+w))))
+for (i in 2:t) {
+  res <- disc_LV_evol(N1.0=Na[i-1,1],N2.0=Na[i-1,2],alpha.11=alpha.11,alpha.22=alpha.22,alpha.12=alpha.12,alpha.21=alpha.21,E=E[i-1],x1=xa[i-1,1],x2=xa[i-1,2],P=P,w=w,Wmax=Wmax,h2=h2)
+  Na$N1[i] <- res[1]
+  Na$N2[i] <- res[2]
+  ra$r1[i] <- res[3]
+  ra$r2[i] <- res[4]
+  # trait change
+  d1 <- E[i-1] - xa[i-1,1]
+  d2 <- E[i-1] - xa[i-1,2]
+  d1.1 <- k*d1
+  d2.1 <- k*d2
+  xa$x1[i] <- E[i-1] - d1.1
+  xa$x2[i] <- E[i-1] - d2.1
+}
+# Plot simulation: ggplot
+Na$time <- 1:t
+data <- melt(Na, id.vars="time")
+ggplot2::ggplot(data, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = (1/alpha.11),linetype = "dashed", color = "gray")
+```
+
 # Hypotheses for evolution as a driver of species abundances
 
-The growth equation is not linear, yet we fit abundance data to a heirarchical model with linear predictors because in most natural systems, a single theoretical growth model can't adequately capture the complexity in a given system. Linear models don't capture mechanistic relationships, but instead correlative. They are useful for inferring direction and magnitude of effect sizes. In Appendix S1, we explore how non-linear dynamics are captured when fit to a linear model. Here, we explore different forms to encode evolution in the trait $x$ that determines the organism's fitness in this system.
+The growth equation is not linear, yet we fit abundance data to a hierarchical model with linear predictors because in most natural systems, a single theoretical growth model can't adequately capture the complexity in a given system. Linear models don't capture mechanistic relationships, but instead correlative. They are useful for inferring direction and magnitude of effect sizes. In Appendix S1, we explore how non-linear dynamics are captured when fit to a linear model. Here, we explore different forms to encode evolution in the trait $x$ that determines the organism's fitness in this system.
 
 ## H1. Raw trait value drives species abundances
 
@@ -275,7 +319,7 @@ bayesplot::mcmc_areas(m.post.hmsc$Beta,area_method = c("equal height"))
 
 ```{r}
 # Bayesian estimates
-summary(m.post.hmsc$Beta)$statistics[1:10,1:2]
+cbind(summary(m.post.hmsc$Beta)$statistics[1:10,1],summary(m.post.hmsc$Beta)$quantiles[,c(1,5)])
 ```
 
 ```{r}
