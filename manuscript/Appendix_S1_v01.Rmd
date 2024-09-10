@@ -41,6 +41,7 @@ library(patchwork)
 library(jtools)
 library(bayesplot)
 library(reshape2)
+library(MASS)
 ```
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
 # Wrap long lines
@@ -1191,5 +1192,164 @@ VP <- computeVariancePartitioning(m.8.sample,group=c(1,1,1,2,3),groupnames=c("En
 plotVariancePartitioning(m.8.sample,VP,cols=c("white","skyblue","darkgrey","orange"),args.legend=list(cex=0.75,bg="transparent"))
 ```
 Here we can see that trait evolution in Species 1 had a strong positive relationship with the *change* in population size for both species. Trait evolution in Species 2 had much less of an effect.
+
+# Species growth, competition, environmental change, and trait evolution in a spatially structured environment
+
+We now consider that trait evolution can occur, with an impact on the species growth rate / fitness in the context of the environment.
+
+A final consideration to add to the model is the existence of multiple sites that may have correlation structure in the variance of species abundances. We consider this in our simulation by adding multiple (10) sites, with no vs. high spatial covariance. We then consider spatial random effects in HMSC, where covariance is considered as a function of distance between sites.
+
+## Population dynamics simulation
+
+We use the same example as above, but now with 10 sites. To illustrate how HMSC can estimate the impacts of distance-dependent spatial covariance, we duplicate the population time series obtained in the example above, but we add in site variance and among-site covariance.
+
+```{r}
+# Case 1: Weaker interactions, stronger environment
+# Simulate initial species population growth with environment fluctuations
+N1.0 <- 10
+N2.0 <- 10
+alpha.11 <- 0.01
+alpha.22 <- 0.01
+alpha.12 <- 0.005
+alpha.21 <- 0.01
+E.0 <- 0.8
+x1.0 <- 0.1
+x2.0 <- 0.8
+P <- 1
+w <- 2
+Wmax <- 2
+h2 <- 1
+k <- (w + (1 - h2) * P)/(P + w)
+
+# model function
+disc_LV_evol <- function(N1.0,N2.0,alpha.11,alpha.22,alpha.12,alpha.21,E,x1.0,x2.0,P,w,Wmax,h2) {
+  What <- Wmax*sqrt(w/(P+w))
+  r1 <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E-x1.0))^2)/(2*(P+w)))
+  Nt1 <- (r1*N1.0) / (1+alpha.11*N1.0+alpha.12*N2.0)
+  r2 <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E-x2.0))^2)/(2*(P+w)))
+  Nt2 <- (r2*N2.0) / (1+alpha.22*N2.0+alpha.21*N1.0)
+  return(c(Nt1,Nt2,r1,r2))
+}
+# Simulation of model for t time steps, i sites
+j <- 10
+t <- 40
+N <- array(NA,dim=c(j*t,2))
+N <- as.data.frame(N)
+colnames(N) <- c("N1","N2")
+x <- array(NA,dim=c(j*t,2))
+x <- as.data.frame(x)
+colnames(x) <- c("x1","x2")
+r <- array(NA,dim=c(j*t,2))
+r <- as.data.frame(r)
+colnames(r) <- c("r1","r2")
+N$N1[1:j] <- N1.0
+N$N2[1:j] <- N2.0
+x$x1[1:j] <- x1.0
+x$x2[1:j] <- x2.0
+What <- Wmax*sqrt(w/(P+w))
+r$r1[1:j] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x1.0))^2)/(2*(P+w))))
+r$r2[1:j] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x2.0))^2)/(2*(P+w))))
+E <- rep(NA, t)
+E[1] <- E.0
+# Keep track of site and time
+study <- array(NA,dim=c(j*t,3))
+study <- as.data.frame(study)
+colnames(study) <- c("obs","site","time")
+study$obs <- 1:dim(study)[1]
+study$site <- rep(1:j,times=t)
+study$time <- rep(1:t,each=j)
+
+for (i in 2:t) {
+  for(z in 1:j){
+    res <- disc_LV_evol(N1.0=N[study$site==z & study$time==i-1,1],N2.0=N[study$site==z & study$time==i-1,2],alpha.11=alpha.11,alpha.22=alpha.22,alpha.12=alpha.12,alpha.21=alpha.21,E=E[i-1],x1=x[study$site==z & study$time==i-1,1],x2=x[study$site==z & study$time==i-1,2],P=P,w=w,Wmax=Wmax,h2=h2)
+    N$N1[study$site==z & study$time==i] <- res[1]
+    N$N2[study$site==z & study$time==i] <- res[2]
+    r$r1[study$site==z & study$time==i] <- res[3]
+    r$r2[study$site==z & study$time==i] <- res[4]
+    # trait change
+    d1 <- E[i-1] - x[study$site==z & study$time==i-1,1]
+    d2 <- E[i-1] - x[study$site==z & study$time==i-1,2]
+    d1.1 <- k*d1
+    d2.1 <- k*d2
+    x$x1[study$site==z & study$time==i] <- E[i-1] - d1.1
+    x$x2[study$site==z & study$time==i] <- E[i-1] - d2.1
+  }
+  # site-level random effect
+  sigma <- 0
+  sigma.spatial <- 2
+  alpha.spatial <- 0.5
+  # random site locations
+  xycoords = matrix(runif(2*j), ncol = 2)
+  Sigma = sigma.spatial^2*exp(-as.matrix(dist(xycoords))/alpha.spatial)
+  # draw from covariance matrix
+  a = mvrnorm(mu=rep(0,j), Sigma = Sigma)
+  N$N1[study$time==i] <- N$N1[study$time==i] + a
+  a = mvrnorm(mu=rep(0,j), Sigma = Sigma)
+  N$N2[study$time==i] <- N$N2[study$time==i] + a
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0.05))
+}
+```
+```{r}
+# Plot simulation: ggplot
+N$site <- study$site
+N$time <- study$time
+dat <- melt(N, id.vars=c("site","time"))
+ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + facet_wrap(~site,nrow=2)
+```
+
+The overall research goal is to determine the effect of trait evolution for species abundances. We hypothesize that \( \lvert x_{t+1} - x_{i,t} \rvert \) is an important driver of species abundances, alongside the environment and species interactions. We plan to fit a statistical model to estimate the impact of $E$, $E^2$, and \( \lvert x_{t+1} - x_{i,t} \rvert \) as fixed effects, and time points as a random effect (to estimate species-to-species associations). We first plot the effects of interest as scatter plots with species abundances.
+
+```{r}
+dat2 <- as.data.frame(cbind(log(N$N1),log(N$N2),x$x1,x$x2))
+colnames(dat2) <- c("N1","N2","x1","x2")
+dat2$time <- 1:t
+df <- data.frame(cbind(dat2$N1[2:t],dat2$N2[2:t],dat2$x1[2:t],dat2$x2[2:t]))
+colnames(df) <- c("Nt1","Nt2","xt1","xt2")
+df$dx1 <- abs(dat2$x1[2:t] - dat2$x1[1:(t-1)])
+df$dx2 <- abs(dat2$x2[2:t] - dat2$x2[1:(t-1)])
+# Plot
+p1 <- ggplot2::ggplot(df, aes(dx1, Nt1)) + geom_point()
+p2 <- ggplot2::ggplot(df, aes(dx2, Nt1)) + geom_point()
+p3 <- ggplot2::ggplot(df, aes(dx1, Nt2)) + geom_point()
+p4 <- ggplot2::ggplot(df, aes(dx2, Nt2)) + geom_point()
+p1 + p2 + p3 + p4
+```
+We expect that change in traits in Species 1 will have an effect on Species abundances, and we do not expect a strong impact of change in traits in Species 2.
+
+We now use the species abundances as the response variable in the model, with $E$, $E^2$, and \( \lvert x_{t+1} - x_{i,t} \rvert \) as fixed effects, and time points as a random effect (to estimate species-to-species associations). We use the absolute value of the change in trait value from one time point to the next (the total amount of trait change, regardless of direction) as a fixed effect in the HMSC.
+
+```{r}
+# Plot simulation: ggplot
+dat <- as.data.frame(cbind(log(N$N1), log(N$N2), x$x1, x$x2))
+colnames(dat) <- c("N1", "N2", "x1", "x2")
+dat$time <- 1:t
+df <- data.frame(cbind(dat$N1[2:t], dat$N2[2:t], dat$x1[2:t], dat$x2[2:t]))
+colnames(df) <- c("Nt1", "Nt2", "xt1", "xt2")
+df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t - 1)])
+df$dx2 <- abs(dat$x2[2:t] - dat$x2[1:(t - 1)])
+# prepare data in HMSC format
+Y <- as.matrix(cbind(df$Nt1, df$Nt2))
+XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)]),abs(dat$x2[2:t] - dat$x2[1:(t-1)])))
+colnames(XData) <- c("E","Esq","dx1","dx2")
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+m.7.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.7.sample <- sampleMcmc(m.7.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+```
+
+
+
+
+
+
+Previously the population growth rate was fixed as \( r_i = \hat{W}e^{-(E-x_{i,t})^2}\). However, we now introduce the quantitative genetic model of evolutionary rescue [@Gomulkiewicz1995].
 
 # References
