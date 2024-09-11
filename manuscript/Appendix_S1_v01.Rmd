@@ -518,15 +518,16 @@ We can already see that the linear model does not provide a useful fit to the da
 Instead of further exploring techniques to fit to time-series derived from non-linear competition processes, we look more closely at how HMSC manages to fit data emerging from competition dynamics and make inference about species interactions. Instead of estimating full interaction coefficients, or assuming sparse interactions, they instead assume that a reduced number of linear combinations of species abundances that are most relevant to determining future growth rates for species in the community can bypass the 'curse of dimensionality' problem. This is well presented in @Ovaskainen2017. We apply that approach here:
 
 ## Bayesian linear statistical model: HMSC
-We can fit the data to a linear model using HMSC, with latent variables to capture the species associations. These are implemented by including a random effect at the time level.
+We can fit the data to a linear model using HMSC, with latent variables to capture the species associations. These are implemented by including a random effect at the time level. For this analysis, we do not expect the impact of Species 1 and 2 that results from competition to vary over time - competition will always have negative impacts for species abundances. Our goal is to estimate the overall impact of species covariance across all of the time points. We do not estimate these impacts as a function of the lag in time points. In other words, we assume that each time point has random variance and that species may covary in their response at each time point. We do not consider that species covariance is a function of distance between sampled time points (see @Ovaskainen2020, equation 5.9). We instead assume that site loadings $\eta$ are independent among the sampled time points.
 
 ```{r}
 # prepare data in HMSC format
 Y <- as.matrix(cbind(log(dat$N1[2:t]),log(dat$N2[2:t])))
 XData <- df[,2:3]
 studyDesign = data.frame(sample = as.factor(1:(t-1)))
-rL = HmscRandomLevel(units = studyDesign$sample)
-m.3.hmsc = Hmsc(Y = Y, XData = XData, studyDesign = studyDesign, ranLevels = list(sample = rL))
+studyDesign$sample <- as.factor(studyDesign$sample)
+rL.sample = HmscRandomLevel(units = studyDesign$sample)
+m.3.hmsc = Hmsc(Y = Y, XData = XData, studyDesign = studyDesign, ranLevels = list(sample = rL.sample))
 # Bayesian model parameters
 nChains <- 2
 thin <- 5
@@ -554,7 +555,7 @@ toPlot = ((OmegaCor[[1]]$support>supportLevel)
 corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.3.sample$rLNames[1]), mar=c(0,0,1,0))
 ```
 
-The model fixed effect estimates match well with those from the AR1 and linear model. However, the model up to this point includes $N_{t1}$ and $N_{t2}$ as fixed predictors. I change that here, as it better matches what can be done in large multi-species models, and the residual associations will better match the effects species have on one another.
+The model fixed effect estimates match well with those from the AR1 and linear model.
 
 ```{r}
 # AR1 coefficients (recall that the intercept is the term below multipled by 1 - phi1)
@@ -615,8 +616,9 @@ colnames(df) <- c("Nt1","Nt2")
 Y <- as.matrix(cbind(df$Nt1,df$Nt2))
 XData <- data.frame(cbind(log(dat$N1[1:(t-1)]),log(dat$N2[1:(t-1)])))
 studyDesign = data.frame(sample = as.factor(1:(t-1)))
-rL = HmscRandomLevel(units = studyDesign$sample)
-m.4.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~1, studyDesign = studyDesign, ranLevels = list(sample = rL))
+studyDesign$sample <- as.factor(studyDesign$sample)
+rL.sample = HmscRandomLevel(units = studyDesign$sample)
+m.4.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~1, studyDesign = studyDesign, ranLevels = list(sample = rL.sample))
 # Bayesian model parameters
 nChains <- 2
 thin <- 5
@@ -640,7 +642,7 @@ toPlot = ((OmegaCor[[1]]$support>supportLevel)
 corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.4.sample$rLNames[1]), mar=c(0,0,1,0))
 ```
 
-The HMSC model correctly shows the negative association between the species (shown here as correlations - JSDM CHapter 7 tells us the intr-specific correlation is always 1).
+The HMSC model correctly shows the negative association between the species (shown here as correlations - JSDM CHapter 7 tells us the intra-specific correlation is always 1).
 
 ```{r}
 # explanatory power
@@ -791,9 +793,7 @@ VP <- computeVariancePartitioning(m.5.sample,group=c(1,1,1),groupnames="Env")
 plotVariancePartitioning(m.5.sample,VP,args.legend=list(cex=0.75,bg="transparent"))
 ```
 
-
-
-We evaluate this by greatly increasing the effects if interspecific competition (while decreasing the strength of environmental variation).
+We evaluate this by greatly increasing the effects of interspecific competition (while decreasing the strength of environmental variation).
 
 ```{r}
 # Simulate initial species population growth with environment fluctuations
@@ -1012,9 +1012,18 @@ df$dx2 <- abs(dat$x2[2:t] - dat$x2[1:(t - 1)])
 Y <- as.matrix(cbind(df$Nt1, df$Nt2))
 XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)]),abs(dat$x2[2:t] - dat$x2[1:(t-1)])))
 colnames(XData) <- c("E","Esq","dx1","dx2")
-studyDesign = data.frame(sample = as.factor(1:(t-1)))
-rL = HmscRandomLevel(units = studyDesign$sample)
-m.7.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# studyDesign = data.frame(sample = as.factor(1:(t-1)))
+# rL = HmscRandomLevel(units = studyDesign$sample)
+time1 <- 1:t
+time1 <- as.data.frame(time1)
+time1 <- subset(time1,time1>1)
+rownames(XData) <- row.names(time1)
+studyDesign = data.frame(sample = as.factor(1:(t-1)),time = row.names(XData))
+studyDesign$time <- as.factor(studyDesign$time)
+studyDesign$sample <- as.factor(studyDesign$sample)
+rL.time = HmscRandomLevel(sData=time1)
+rL.sample = HmscRandomLevel(units = studyDesign$sample)
+m.7.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list(sample = rL.sample,time=rL.time))
 # Bayesian model parameters
 nChains <- 2
 thin <- 5
@@ -1058,7 +1067,7 @@ plotBeta(m.7.sample, post = postBeta, param = "Mean", supportLevel = 0.95)
 ```
 ```{r warning=FALSE}
 VP <- computeVariancePartitioning(m.7.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
-plotVariancePartitioning(m.7.sample,VP,cols=c("white","skyblue","darkgrey","orange"),args.legend=list(cex=0.75,bg="transparent"))
+plotVariancePartitioning(m.7.sample,VP,cols=c("white","skyblue","darkgrey","orange","black"),args.legend=list(cex=0.75,bg="transparent"))
 ```
 We can also look at a gradient plot for the effect of evolution in Species 1 for abundance in Species 1 and Species 2.
 
@@ -1147,9 +1156,21 @@ df$dx2 <- abs(dat$x2[2:t] - dat$x2[1:(t - 1)])
 Y <- as.matrix(cbind(df$dN1, df$dN2))
 XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)]),abs(dat$x2[2:t] - dat$x2[1:(t-1)])))
 colnames(XData) <- c("E","Esq","dx1","dx2")
-studyDesign = data.frame(sample = as.factor(1:(t-1)))
-rL = HmscRandomLevel(units = studyDesign$sample)
-m.8.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# studyDesign = data.frame(sample = as.factor(1:(t-1)))
+# rL = HmscRandomLevel(units = studyDesign$sample)
+
+time1 <- 1:t
+time1 <- as.data.frame(time1)
+time1 <- subset(time1,time1>1)
+rownames(XData) <- row.names(time1)
+studyDesign = data.frame(sample = as.factor(1:(t-1)),time = row.names(XData))
+studyDesign$time <- as.factor(studyDesign$time)
+studyDesign$sample <- as.factor(studyDesign$sample)
+rL.time = HmscRandomLevel(sData=time1)
+rL.sample = HmscRandomLevel(units = studyDesign$sample)
+
+
+m.8.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list(sample = rL.sample,time=rL.time))
 # Bayesian model parameters
 nChains <- 2
 thin <- 5
@@ -1189,9 +1210,14 @@ b <- plotGradient(m.8.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,
 
 ```{r warning=FALSE}
 VP <- computeVariancePartitioning(m.8.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
-plotVariancePartitioning(m.8.sample,VP,cols=c("white","skyblue","darkgrey","orange"),args.legend=list(cex=0.75,bg="transparent"))
+plotVariancePartitioning(m.8.sample,VP,cols=c("white","skyblue","darkgrey","orange","black"),args.legend=list(cex=0.75,bg="transparent"))
 ```
 Here we can see that trait evolution in Species 1 had a strong positive relationship with the *change* in population size for both species. Trait evolution in Species 2 had much less of an effect.
+
+```{r}
+knitr::knit_exit()
+```
+
 
 # Species growth, competition, environmental change, and trait evolution in a spatially structured environment
 

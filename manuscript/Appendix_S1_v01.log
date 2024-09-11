@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.7.26)  8 SEP 2024 13:10
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.7.26)  11 SEP 2024 17:55
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -964,11 +964,10 @@ File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-23-1.pdf Graphic file (ty
 
 
 [20]
-File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-25-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-25-1.pdf>
-
 
 [21]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-25-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-25-1.pdf>
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-25-2.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-25-2.pdf>
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-25-3.pdf Graphic file (type pdf)
@@ -981,34 +980,34 @@ File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-27-1.pdf Graphic file (ty
 
 
 [23]
+
+[24]
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-29-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-29-1.pdf>
 
 
-[24]
-
 [25]
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-31-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-31-1.pdf>
-File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-31-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-31-2.pdf>
 
 
 [26]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-31-2.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-31-2.pdf>
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-33-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-33-1.pdf>
-File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-34-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-34-1.pdf>
 
 
 [27]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-34-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-34-1.pdf>
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-34-2.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-34-2.pdf>
-File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-34-3.pdf Graphic file (type pdf)
-<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-34-3.pdf>
 
 
 [28]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-34-3.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-34-3.pdf>
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-35-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-35-1.pdf>
 
@@ -1016,100 +1015,108 @@ File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-35-1.pdf Graphic file (ty
 [29]
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-37-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-37-1.pdf>
-File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-39-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-39-1.pdf>
 
 
 [30]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-39-1.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-39-1.pdf>
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-40-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-40-1.pdf>
-File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-40-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-40-2.pdf>
 
 
 [31]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-40-2.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-40-2.pdf>
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-40-3.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-40-3.pdf>
+
+
+[32]
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-41-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-41-1.pdf>
 
 
-[32]
-
 [33]
-Underfull \vbox (badness 3407) detected at line 1471
- []
-
-
 
 [34]
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-43-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-43-1.pdf>
+
+
+[35]
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-44-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-44-1.pdf>
 
 
-[35]
-
 [36]
+Underfull \vbox (badness 1655) detected at line 1596
+ []
+
+
+
+[37]
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-46-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-46-1.pdf>
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-46-2.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-46-2.pdf>
 
 
-[37]
+[38]
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-48-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-48-1.pdf>
 
+Overfull \vbox (0.76701pt too high) detected at line 1679
+ []
 
-[38]
+
+
+[39]
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-49-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-49-1.pdf>
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-49-2.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-49-2.pdf>
-
-
-[39]
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-49-3.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-49-3.pdf>
+
+
+[40]
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-50-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-50-1.pdf>
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-51-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-51-1.pdf>
-
-
-[40]
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-51-2.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-51-2.pdf>
-File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-51-3.pdf Graphic file (type pdf)
-<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-51-3.pdf>
 
 
 [41]
+File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-51-3.pdf Graphic file (type pdf)
+<use Appendix_S1_v01_files/figure-latex/unnamed-chunk-51-3.pdf>
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-52-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-52-1.pdf>
+
+
+[42]
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-52-2.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-52-2.pdf>
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-53-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-53-1.pdf>
 
 
-[42]
-
 [43]
+
+[44]
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-55-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-55-1.pdf>
 
 
-[44]
+[45]
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-55-2.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-55-2.pdf>
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-56-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-56-1.pdf>
 
 
-[45]
+[46]
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-56-2.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-56-2.pdf>
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-56-3.pdf Graphic file (type pdf)
@@ -1118,16 +1125,16 @@ File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-57-1.pdf Graphic file (ty
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-57-1.pdf>
 
 
-[46]
+[47]
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-57-2.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-57-2.pdf>
 File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-58-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/unnamed-chunk-58-1.pdf>
 
 
-[47]
+[48]
 
-[48] (./Appendix_S1_v01.aux)
+[49] (./Appendix_S1_v01.aux)
  ***********
 LaTeX2e <2024-06-01> patch level 2
 L3 programming layer <2024-05-27>
@@ -1137,12 +1144,12 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 19386 strings out of 476239
- 380647 string characters out of 5786228
- 1946557 words of memory out of 5000000
- 41627 multiletter control sequences out of 15000+600000
+ 19384 strings out of 476239
+ 380629 string characters out of 5786228
+ 1943557 words of memory out of 5000000
+ 41625 multiletter control sequences out of 15000+600000
  564544 words of font info for 92 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  90i,12n,123p,1057b,527s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on Appendix_S1_v01.pdf (48 pages).
+Output written on Appendix_S1_v01.pdf (49 pages).
