@@ -1232,6 +1232,9 @@ disc_LV_evol <- function(N1.0,N2.0,alpha.11,alpha.22,alpha.12,alpha.21,E,x1.0,x2
 }
 # Simulation of model for t time steps, i sites
 j <- 10
+# random site locations
+xycoords = matrix(runif(2*j), ncol = 2)
+rownames(xycoords) <- 1:j
 t <- 40
 N <- array(NA,dim=c(j*t,2))
 N <- as.data.frame(N)
@@ -1278,8 +1281,6 @@ for (i in 2:t) {
   sigma <- 0
   sigma.spatial <- 2
   alpha.spatial <- 0.5
-  # random site locations
-  xycoords = matrix(runif(2*j), ncol = 2)
   Sigma = sigma.spatial^2*exp(-as.matrix(dist(xycoords))/alpha.spatial)
   # draw from covariance matrix
   a = mvrnorm(mu=rep(0,j), Sigma = Sigma)
@@ -1297,44 +1298,30 @@ N$time <- study$time
 dat <- melt(N, id.vars=c("site","time"))
 ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + facet_wrap(~site,nrow=2)
 ```
-
-The overall research goal is to determine the effect of trait evolution for species abundances. We hypothesize that \( \lvert x_{t+1} - x_{i,t} \rvert \) is an important driver of species abundances, alongside the environment and species interactions. We plan to fit a statistical model to estimate the impact of $E$, $E^2$, and \( \lvert x_{t+1} - x_{i,t} \rvert \) as fixed effects, and time points as a random effect (to estimate species-to-species associations). We first plot the effects of interest as scatter plots with species abundances.
-
-```{r}
-dat2 <- as.data.frame(cbind(log(N$N1),log(N$N2),x$x1,x$x2))
-colnames(dat2) <- c("N1","N2","x1","x2")
-dat2$time <- 1:t
-df <- data.frame(cbind(dat2$N1[2:t],dat2$N2[2:t],dat2$x1[2:t],dat2$x2[2:t]))
-colnames(df) <- c("Nt1","Nt2","xt1","xt2")
-df$dx1 <- abs(dat2$x1[2:t] - dat2$x1[1:(t-1)])
-df$dx2 <- abs(dat2$x2[2:t] - dat2$x2[1:(t-1)])
-# Plot
-p1 <- ggplot2::ggplot(df, aes(dx1, Nt1)) + geom_point()
-p2 <- ggplot2::ggplot(df, aes(dx2, Nt1)) + geom_point()
-p3 <- ggplot2::ggplot(df, aes(dx1, Nt2)) + geom_point()
-p4 <- ggplot2::ggplot(df, aes(dx2, Nt2)) + geom_point()
-p1 + p2 + p3 + p4
-```
-We expect that change in traits in Species 1 will have an effect on Species abundances, and we do not expect a strong impact of change in traits in Species 2.
-
-We now use the species abundances as the response variable in the model, with $E$, $E^2$, and \( \lvert x_{t+1} - x_{i,t} \rvert \) as fixed effects, and time points as a random effect (to estimate species-to-species associations). We use the absolute value of the change in trait value from one time point to the next (the total amount of trait change, regardless of direction) as a fixed effect in the HMSC.
+We now fit a spatial random effect, and add that to the HMSC model.
 
 ```{r}
 # Plot simulation: ggplot
+#N[N <0] <- 0
 dat <- as.data.frame(cbind(log(N$N1), log(N$N2), x$x1, x$x2))
 colnames(dat) <- c("N1", "N2", "x1", "x2")
 dat$time <- 1:t
-df <- data.frame(cbind(dat$N1[2:t], dat$N2[2:t], dat$x1[2:t], dat$x2[2:t]))
+df <- data.frame(cbind(dat$N1[dat$time !=1], dat$N2[dat$time !=1], dat$x1[dat$time !=1], dat$x2[dat$time !=1]))
 colnames(df) <- c("Nt1", "Nt2", "xt1", "xt2")
-df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t - 1)])
-df$dx2 <- abs(dat$x2[2:t] - dat$x2[1:(t - 1)])
+df$dx1 <- abs(dat$x1[dat$time != 1] - dat$x1[dat$time != t])
+df$dx2 <- abs(dat$x2[dat$time != 1] - dat$x2[dat$time != t])
 # prepare data in HMSC format
 Y <- as.matrix(cbind(df$Nt1, df$Nt2))
-XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)]),abs(dat$x2[2:t] - dat$x2[1:(t-1)])))
+XData <- data.frame(cbind(rep(E[1:(t-1)],times=j),rep(E[1:(t-1)],times=j)^2,abs(dat$x1[dat$time != 1] - dat$x1[dat$time != t]),abs(dat$x2[dat$time != 1] - dat$x2[dat$time != t])))
 colnames(XData) <- c("E","Esq","dx1","dx2")
-studyDesign = data.frame(sample = as.factor(1:(t-1)))
-rL = HmscRandomLevel(units = studyDesign$sample)
-m.7.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# Update study design to include spatial random effects
+studyDesign = data.frame(sample = as.factor(1:(j*(t-1))),time=rep(1:(t-1),each=j),site=rep(1:j,times=(t-1)))
+studyDesign$time <- as.factor(studyDesign$time)
+studyDesign$site <- as.factor(studyDesign$site)
+rL.time = HmscRandomLevel(units = studyDesign$time)
+rL.spatial = HmscRandomLevel(sData = xycoords)
+# Fit HMSC model
+m.9.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list("time" = rL.time,"site"=rL.spatial))
 # Bayesian model parameters
 nChains <- 2
 thin <- 5
@@ -1342,10 +1329,19 @@ samples <- 2000
 transient <- 1000*thin
 verbose <- 500*thin
 # sample MCMC
-m.7.sample <- sampleMcmc(m.7.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+m.9.sample <- sampleMcmc(m.9.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
 ```
 
-
+```{r}
+m9.post.hmsc <- convertToCodaObject(m.9.sample)
+summary(m9.post.hmsc$Beta)
+bayesplot::mcmc_trace(m9.post.hmsc$Beta)
+bayesplot::mcmc_areas(m9.post.hmsc$Beta,area_method = c("equal height"))
+```
+```{r warning=FALSE}
+VP <- computeVariancePartitioning(m.9.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
+plotVariancePartitioning(m.9.sample,VP,cols=c("white","skyblue","darkgrey","orange","black"),args.legend=list(cex=0.75,bg="transparent"))
+```
 
 
 
