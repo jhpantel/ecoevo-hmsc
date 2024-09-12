@@ -527,7 +527,7 @@ XData <- df[,2:3]
 studyDesign = data.frame(sample = as.factor(1:(t-1)))
 studyDesign$sample <- as.factor(studyDesign$sample)
 rL.sample = HmscRandomLevel(units = studyDesign$sample)
-m.3.hmsc = Hmsc(Y = Y, XData = XData, studyDesign = studyDesign, ranLevels = list(sample = rL.sample))
+m.3.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~1, studyDesign = studyDesign, ranLevels = list(sample = rL.sample))
 # Bayesian model parameters
 nChains <- 2
 thin <- 5
@@ -564,7 +564,7 @@ m.3.ar.n1$coef[2]*(1-m.3.ar.n1$coef[1])
 # linear model
 summary(m.3.lm.n1)$coefficients[1:3,1:2]
 # Bayesian estimates
-summary(m3.post.hmsc$Beta)$statistics[1:3,1:2]
+summary(m3.post.hmsc$Beta)$statistics[1:2,1:2]
 ```
 
 I try again with a next example where the only difference between species is the $\alpha_{ij}$.
@@ -618,7 +618,7 @@ XData <- data.frame(cbind(log(dat$N1[1:(t-1)]),log(dat$N2[1:(t-1)])))
 studyDesign = data.frame(sample = as.factor(1:(t-1)))
 studyDesign$sample <- as.factor(studyDesign$sample)
 rL.sample = HmscRandomLevel(units = studyDesign$sample)
-m.4.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~1, studyDesign = studyDesign, ranLevels = list(sample = rL.sample))
+m.4.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~1,studyDesign = studyDesign, ranLevels = list(sample = rL.sample))
 # Bayesian model parameters
 nChains <- 2
 thin <- 5
@@ -769,7 +769,7 @@ summary(m5.post.hmsc$Beta)$statistics[1:4,1:2]
 
 ```{r}
 OmegaCor = computeAssociations(m.5.sample)
-supportLevel = 0.7
+supportLevel = 0.95
 toPlot = ((OmegaCor[[1]]$support>supportLevel)
 + (OmegaCor[[1]]$support<(1-supportLevel))>0)*OmegaCor[[1]]$mean
 corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.5.sample$rLNames[1]), mar=c(0,0,1,0))
@@ -792,7 +792,6 @@ We use variation partition to estimate the relative importance of environment an
 VP <- computeVariancePartitioning(m.5.sample,group=c(1,1,1),groupnames="Env")
 plotVariancePartitioning(m.5.sample,VP,args.legend=list(cex=0.75,bg="transparent"))
 ```
-
 We evaluate this by greatly increasing the effects of interspecific competition (while decreasing the strength of environmental variation).
 
 ```{r}
@@ -837,7 +836,7 @@ N$time <- 1:t
 dat <- melt(N, id.vars="time")
 ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray")
 ```
-```{r echo=FALSE}
+```{r}
 # Plot simulation: ggplot
 dat <- as.data.frame(cbind(log(N$N1),log(N$N2)))
 colnames(dat) <- c("N1","N2")
@@ -862,7 +861,7 @@ m.6.sample <- sampleMcmc(m.6.hmsc,thin=thin,sample=samples,transient=transient,n
 ```
 ```{r}
 OmegaCor = computeAssociations(m.6.sample)
-supportLevel = 0.7
+supportLevel = 0.95
 toPlot = ((OmegaCor[[1]]$support>supportLevel)
 + (OmegaCor[[1]]$support<(1-supportLevel))>0)*OmegaCor[[1]]$mean
 corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.6.sample$rLNames[1]), mar=c(0,0,1,0))
@@ -877,7 +876,7 @@ b <- plotGradient(m.6.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,
 postBeta = getPostEstimate(m.6.sample, parName = "Beta")
 plotBeta(m.6.sample, post = postBeta, param = "Mean", supportLevel = 0.7)
 ```
-With the reduced impact of the environment, we now see the strong negative associations between the two competing species. We also correctly see no impact of environment for species abundances.
+With the reduced impact of the environment, we now see the strong negative associations between the two competing species. We also correctly see a relatively weak impact of environment for species abundances.
 
 ```{r warning=FALSE}
 VP <- computeVariancePartitioning(m.6.sample,group=c(1,1,1),groupnames="Env")
@@ -1012,18 +1011,9 @@ df$dx2 <- abs(dat$x2[2:t] - dat$x2[1:(t - 1)])
 Y <- as.matrix(cbind(df$Nt1, df$Nt2))
 XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)]),abs(dat$x2[2:t] - dat$x2[1:(t-1)])))
 colnames(XData) <- c("E","Esq","dx1","dx2")
-# studyDesign = data.frame(sample = as.factor(1:(t-1)))
-# rL = HmscRandomLevel(units = studyDesign$sample)
-time1 <- 1:t
-time1 <- as.data.frame(time1)
-time1 <- subset(time1,time1>1)
-rownames(XData) <- row.names(time1)
-studyDesign = data.frame(sample = as.factor(1:(t-1)),time = row.names(XData))
-studyDesign$time <- as.factor(studyDesign$time)
-studyDesign$sample <- as.factor(studyDesign$sample)
-rL.time = HmscRandomLevel(sData=time1)
-rL.sample = HmscRandomLevel(units = studyDesign$sample)
-m.7.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list(sample = rL.sample,time=rL.time))
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+m.7.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list(sample = rL.sample))
 # Bayesian model parameters
 nChains <- 2
 thin <- 5
@@ -1067,7 +1057,7 @@ plotBeta(m.7.sample, post = postBeta, param = "Mean", supportLevel = 0.95)
 ```
 ```{r warning=FALSE}
 VP <- computeVariancePartitioning(m.7.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
-plotVariancePartitioning(m.7.sample,VP,cols=c("white","skyblue","darkgrey","orange","black"),args.legend=list(cex=0.75,bg="transparent"))
+plotVariancePartitioning(m.7.sample,VP,cols=c("white","skyblue","darkgrey","orange"),args.legend=list(cex=0.75,bg="transparent"))
 ```
 We can also look at a gradient plot for the effect of evolution in Species 1 for abundance in Species 1 and Species 2.
 
@@ -1156,21 +1146,9 @@ df$dx2 <- abs(dat$x2[2:t] - dat$x2[1:(t - 1)])
 Y <- as.matrix(cbind(df$dN1, df$dN2))
 XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)]),abs(dat$x2[2:t] - dat$x2[1:(t-1)])))
 colnames(XData) <- c("E","Esq","dx1","dx2")
-# studyDesign = data.frame(sample = as.factor(1:(t-1)))
-# rL = HmscRandomLevel(units = studyDesign$sample)
-
-time1 <- 1:t
-time1 <- as.data.frame(time1)
-time1 <- subset(time1,time1>1)
-rownames(XData) <- row.names(time1)
-studyDesign = data.frame(sample = as.factor(1:(t-1)),time = row.names(XData))
-studyDesign$time <- as.factor(studyDesign$time)
-studyDesign$sample <- as.factor(studyDesign$sample)
-rL.time = HmscRandomLevel(sData=time1)
-rL.sample = HmscRandomLevel(units = studyDesign$sample)
-
-
-m.8.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list(sample = rL.sample,time=rL.time))
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+m.8.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list(sample = rL.sample))
 # Bayesian model parameters
 nChains <- 2
 thin <- 5
@@ -1210,14 +1188,9 @@ b <- plotGradient(m.8.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,
 
 ```{r warning=FALSE}
 VP <- computeVariancePartitioning(m.8.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
-plotVariancePartitioning(m.8.sample,VP,cols=c("white","skyblue","darkgrey","orange","black"),args.legend=list(cex=0.75,bg="transparent"))
+plotVariancePartitioning(m.8.sample,VP,cols=c("white","skyblue","darkgrey","orange"),args.legend=list(cex=0.75,bg="transparent"))
 ```
 Here we can see that trait evolution in Species 1 had a strong positive relationship with the *change* in population size for both species. Trait evolution in Species 2 had much less of an effect.
-
-```{r}
-knitr::knit_exit()
-```
-
 
 # Species growth, competition, environmental change, and trait evolution in a spatially structured environment
 
@@ -1303,18 +1276,22 @@ for (i in 2:t) {
     x$x1[study$site==z & study$time==i] <- E[i-1] - d1.1
     x$x2[study$site==z & study$time==i] <- E[i-1] - d2.1
   }
-  # site-level random effect
-  sigma <- 0
-  sigma.spatial <- 2
-  alpha.spatial <- 0.5
-  Sigma = sigma.spatial^2*exp(-as.matrix(dist(xycoords))/alpha.spatial)
-  # draw from covariance matrix
-  a = mvrnorm(mu=rep(0,j), Sigma = Sigma)
-  N$N1[study$time==i] <- N$N1[study$time==i] + a
-  a = mvrnorm(mu=rep(0,j), Sigma = Sigma)
-  N$N2[study$time==i] <- N$N2[study$time==i] + a
   # environmental change
   E[i] <- E[i-1] + abs(rnorm(1, 0, 0.05))
+}
+# site-level random effect
+sigma <- 0
+sigma.spatial <- 2
+alpha.spatial <- 0.5
+Sigma = sigma.spatial^2*exp(-as.matrix(dist(xycoords))/alpha.spatial)
+# draw from covariance matrix
+a = mvrnorm(mu=rep(0,j), Sigma = Sigma)
+for(i in 1:t){
+  N$N1[study$time==i] <- N$N1[study$time==i] + a
+}
+a = mvrnorm(mu=rep(0,j), Sigma = Sigma)
+for(i in 1:t){
+  N$N2[study$time==i] <- N$N2[study$time==i] + a
 }
 ```
 ```{r}
@@ -1328,7 +1305,7 @@ We now fit a spatial random effect, and add that to the HMSC model.
 
 ```{r}
 # Plot simulation: ggplot
-#N[N <0] <- 0
+#N[N <0] <- 0.01
 dat <- as.data.frame(cbind(log(N$N1), log(N$N2), x$x1, x$x2))
 colnames(dat) <- c("N1", "N2", "x1", "x2")
 dat$time <- 1:t
@@ -1341,13 +1318,17 @@ Y <- as.matrix(cbind(df$Nt1, df$Nt2))
 XData <- data.frame(cbind(rep(E[1:(t-1)],times=j),rep(E[1:(t-1)],times=j)^2,abs(dat$x1[dat$time != 1] - dat$x1[dat$time != t]),abs(dat$x2[dat$time != 1] - dat$x2[dat$time != t])))
 colnames(XData) <- c("E","Esq","dx1","dx2")
 # Update study design to include spatial random effects
-studyDesign = data.frame(sample = as.factor(1:(j*(t-1))),time=rep(1:(t-1),each=j),site=rep(1:j,times=(t-1)))
-studyDesign$time <- as.factor(studyDesign$time)
+samp1 <- 1:(j*t)
+samp1 <- as.data.frame(samp1)
+samp1 <- subset(samp1,samp1>10)
+rownames(XData) <- row.names(samp1)
+studyDesign = data.frame(sample=1:(j*(t-1)),site=study$site[study$time > 1])
+studyDesign$sample <- as.factor(studyDesign$sample)
 studyDesign$site <- as.factor(studyDesign$site)
-rL.time = HmscRandomLevel(units = studyDesign$time)
-rL.spatial = HmscRandomLevel(sData = xycoords)
+rL.spatial = HmscRandomLevel(sData = xycoords)  
+rL.sample = HmscRandomLevel(units = studyDesign$sample)
 # Fit HMSC model
-m.9.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list("time" = rL.time,"site"=rL.spatial))
+m.9.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list("sample"=rL.sample,"site"=rL.spatial))
 # Bayesian model parameters
 nChains <- 2
 thin <- 5
@@ -1366,12 +1347,178 @@ bayesplot::mcmc_areas(m9.post.hmsc$Beta,area_method = c("equal height"))
 ```
 ```{r warning=FALSE}
 VP <- computeVariancePartitioning(m.9.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
-plotVariancePartitioning(m.9.sample,VP,cols=c("white","skyblue","darkgrey","orange","black"),args.legend=list(cex=0.75,bg="transparent"))
+plotVariancePartitioning(m.9.sample,VP,cols=c("white","skyblue","darkgrey","orange","pink"),args.legend=list(cex=0.75,bg="transparent"))
 ```
 
+```{r}
+OmegaCor = computeAssociations(m.9.sample)
+supportLevel = 0.95
+toPlot = ((OmegaCor[[1]]$support>supportLevel)
++ (OmegaCor[[1]]$support<(1-supportLevel))>0)*OmegaCor[[1]]$mean
+corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.9.sample$rLNames[1]), mar=c(0,0,1,0))
+OmegaCor
+toPlot = ((OmegaCor[[2]]$support>supportLevel)
++ (OmegaCor[[2]]$support<(1-supportLevel))>0)*OmegaCor[[2]]$mean
+corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.9.sample$rLNames[2]), mar=c(0,0,1,0))
+```
+We can see that the model considers spatial random effects by removing the spatial covariance, and only including spatial variance.
 
+```{r}
+# Case 1: Weaker interactions, stronger environment
+# Simulate initial species population growth with environment fluctuations
+N1.0 <- 10
+N2.0 <- 10
+alpha.11 <- 0.01
+alpha.22 <- 0.01
+alpha.12 <- 0.005
+alpha.21 <- 0.01
+E.0 <- 0.8
+x1.0 <- 0.1
+x2.0 <- 0.8
+P <- 1
+w <- 2
+Wmax <- 2
+h2 <- 1
+k <- (w + (1 - h2) * P)/(P + w)
 
+# model function
+disc_LV_evol <- function(N1.0,N2.0,alpha.11,alpha.22,alpha.12,alpha.21,E,x1.0,x2.0,P,w,Wmax,h2) {
+  What <- Wmax*sqrt(w/(P+w))
+  r1 <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E-x1.0))^2)/(2*(P+w)))
+  Nt1 <- (r1*N1.0) / (1+alpha.11*N1.0+alpha.12*N2.0)
+  r2 <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E-x2.0))^2)/(2*(P+w)))
+  Nt2 <- (r2*N2.0) / (1+alpha.22*N2.0+alpha.21*N1.0)
+  return(c(Nt1,Nt2,r1,r2))
+}
+# Simulation of model for t time steps, i sites
+j <- 10
+# random site locations
+xycoords = matrix(runif(2*j), ncol = 2)
+rownames(xycoords) <- 1:j
+t <- 40
+N <- array(NA,dim=c(j*t,2))
+N <- as.data.frame(N)
+colnames(N) <- c("N1","N2")
+x <- array(NA,dim=c(j*t,2))
+x <- as.data.frame(x)
+colnames(x) <- c("x1","x2")
+r <- array(NA,dim=c(j*t,2))
+r <- as.data.frame(r)
+colnames(r) <- c("r1","r2")
+N$N1[1:j] <- N1.0
+N$N2[1:j] <- N2.0
+x$x1[1:j] <- x1.0
+x$x2[1:j] <- x2.0
+What <- Wmax*sqrt(w/(P+w))
+r$r1[1:j] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x1.0))^2)/(2*(P+w))))
+r$r2[1:j] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x2.0))^2)/(2*(P+w))))
+E <- rep(NA, t)
+E[1] <- E.0
+# Keep track of site and time
+study <- array(NA,dim=c(j*t,3))
+study <- as.data.frame(study)
+colnames(study) <- c("obs","site","time")
+study$obs <- 1:dim(study)[1]
+study$site <- rep(1:j,times=t)
+study$time <- rep(1:t,each=j)
 
-Previously the population growth rate was fixed as \( r_i = \hat{W}e^{-(E-x_{i,t})^2}\). However, we now introduce the quantitative genetic model of evolutionary rescue [@Gomulkiewicz1995].
+for (i in 2:t) {
+  for(z in 1:j){
+    res <- disc_LV_evol(N1.0=N[study$site==z & study$time==i-1,1],N2.0=N[study$site==z & study$time==i-1,2],alpha.11=alpha.11,alpha.22=alpha.22,alpha.12=alpha.12,alpha.21=alpha.21,E=E[i-1],x1=x[study$site==z & study$time==i-1,1],x2=x[study$site==z & study$time==i-1,2],P=P,w=w,Wmax=Wmax,h2=h2)
+    N$N1[study$site==z & study$time==i] <- res[1]
+    N$N2[study$site==z & study$time==i] <- res[2]
+    r$r1[study$site==z & study$time==i] <- res[3]
+    r$r2[study$site==z & study$time==i] <- res[4]
+    # trait change
+    d1 <- E[i-1] - x[study$site==z & study$time==i-1,1]
+    d2 <- E[i-1] - x[study$site==z & study$time==i-1,2]
+    d1.1 <- k*d1
+    d2.1 <- k*d2
+    x$x1[study$site==z & study$time==i] <- E[i-1] - d1.1
+    x$x2[study$site==z & study$time==i] <- E[i-1] - d2.1
+  }
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0.05))
+}
+# site-level random effect
+sigma <- 0
+sigma.spatial <- 10
+alpha.spatial <- 0.5
+Sigma = sigma.spatial^2*exp(-as.matrix(dist(xycoords))/alpha.spatial)
+# draw from covariance matrix
+a = mvrnorm(mu=rep(0,j), Sigma = Sigma)
+for(i in 1:t){
+  N$N1[study$time==i] <- N$N1[study$time==i] + a
+}
+a = mvrnorm(mu=rep(0,j), Sigma = Sigma)
+for(i in 1:t){
+  N$N2[study$time==i] <- N$N2[study$time==i] + a
+}
+```
+```{r}
+# Plot simulation: ggplot
+N$site <- study$site
+N$time <- study$time
+dat <- melt(N, id.vars=c("site","time"))
+ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + facet_wrap(~site,nrow=2)
+```
+```{r}
+# Plot simulation: ggplot
+N[N <0] <- 0.01
+dat <- as.data.frame(cbind(log(N$N1), log(N$N2), x$x1, x$x2))
+colnames(dat) <- c("N1", "N2", "x1", "x2")
+dat$time <- 1:t
+df <- data.frame(cbind(dat$N1[dat$time !=1], dat$N2[dat$time !=1], dat$x1[dat$time !=1], dat$x2[dat$time !=1]))
+colnames(df) <- c("Nt1", "Nt2", "xt1", "xt2")
+df$dx1 <- abs(dat$x1[dat$time != 1] - dat$x1[dat$time != t])
+df$dx2 <- abs(dat$x2[dat$time != 1] - dat$x2[dat$time != t])
+# prepare data in HMSC format
+Y <- as.matrix(cbind(df$Nt1, df$Nt2))
+XData <- data.frame(cbind(rep(E[1:(t-1)],times=j),rep(E[1:(t-1)],times=j)^2,abs(dat$x1[dat$time != 1] - dat$x1[dat$time != t]),abs(dat$x2[dat$time != 1] - dat$x2[dat$time != t])))
+colnames(XData) <- c("E","Esq","dx1","dx2")
+# Update study design to include spatial random effects
+samp1 <- 1:(j*t)
+samp1 <- as.data.frame(samp1)
+samp1 <- subset(samp1,samp1>10)
+rownames(XData) <- row.names(samp1)
+studyDesign = data.frame(sample=1:(j*(t-1)),site=study$site[study$time > 1])
+studyDesign$sample <- as.factor(studyDesign$sample)
+studyDesign$site <- as.factor(studyDesign$site)
+rL.spatial = HmscRandomLevel(sData = xycoords)  
+rL.sample = HmscRandomLevel(units = studyDesign$sample)
+# Fit HMSC model
+m.10.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list("sample"=rL.sample,"site"=rL.spatial))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.10.sample <- sampleMcmc(m.10.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+```
+```{r}
+m10.post.hmsc <- convertToCodaObject(m.10.sample)
+summary(m10.post.hmsc$Beta)
+bayesplot::mcmc_trace(m10.post.hmsc$Beta)
+bayesplot::mcmc_areas(m10.post.hmsc$Beta,area_method = c("equal height"))
+```
+```{r warning=FALSE}
+VP <- computeVariancePartitioning(m.10.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
+plotVariancePartitioning(m.10.sample,VP,cols=c("white","skyblue","darkgrey","orange","pink"),args.legend=list(cex=0.75,bg="transparent"))
+```
+
+```{r}
+OmegaCor = computeAssociations(m.9.sample)
+supportLevel = 0.95
+toPlot = ((OmegaCor[[1]]$support>supportLevel)
++ (OmegaCor[[1]]$support<(1-supportLevel))>0)*OmegaCor[[1]]$mean
+corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.9.sample$rLNames[1]), mar=c(0,0,1,0))
+OmegaCor
+toPlot = ((OmegaCor[[2]]$support>supportLevel)
++ (OmegaCor[[2]]$support<(1-supportLevel))>0)*OmegaCor[[2]]$mean
+corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.9.sample$rLNames[2]), mar=c(0,0,1,0))
+```
+
 
 # References
