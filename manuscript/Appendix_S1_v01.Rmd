@@ -567,6 +567,32 @@ summary(m.3.lm.n1)$coefficients[1:3,1:2]
 summary(m3.post.hmsc$Beta)$statistics[1:2,1:2]
 ```
 
+The HMSC model correctly shows the negative association between the species (shown here as correlations - JSDM CHapter 7 tells us the intra-specific correlation is always 1).
+
+```{r}
+preds = computePredictedValues(m.3.sample)
+df <- data.frame(cbind(log(dat$N1[2:t]),log(dat$N2[2:t]),log(dat$N1[1:(t-1)]),log(dat$N2[1:(t-1)])))
+colnames(df) <- c("Nt1","Nt2","N1","N2")
+df$n1_25 <- NA
+df$n1_975 <- NA
+df$n2_25 <- NA
+df$n2_975 <- NA
+for(i in 1:39){
+  red <- preds[i,,]
+  a <- apply(red,1,quantile,probs=c(.025,.975))
+  df$n1_25[i] <- a[1,1]
+  df$n1_975[i] <- a[2,1]
+  df$n2_25[i] <- a[1,2]
+  df$n2_975[i] <- a[2,2]
+}
+plot(df$Nt1,pch=19,col="black",ylim=c(0,5))
+points(df$Nt2,pch=19,col="orange")
+lines(df$n1_25,col="black")
+lines(df$n1_975,col="black")
+lines(df$n2_25,col="orange")
+lines(df$n2_975,col="orange")
+```
+
 I try again with a next example where the only difference between species is the $\alpha_{ij}$.
 
 ```{r}
@@ -881,6 +907,27 @@ With the reduced impact of the environment, we now see the strong negative assoc
 ```{r warning=FALSE}
 VP <- computeVariancePartitioning(m.6.sample,group=c(1,1,1),groupnames="Env")
 plotVariancePartitioning(m.6.sample,VP,args.legend=list(cex=0.75,bg="transparent"))
+```
+```{r}
+preds = computePredictedValues(m.6.sample)
+df$n1_25 <- NA
+df$n1_975 <- NA
+df$n2_25 <- NA
+df$n2_975 <- NA
+for(i in 1:39){
+  red <- preds[i,,]
+  a <- apply(red,1,quantile,probs=c(.025,.975))
+  df$n1_25[i] <- a[1,1]
+  df$n1_975[i] <- a[2,1]
+  df$n2_25[i] <- a[1,2]
+  df$n2_975[i] <- a[2,2]
+}
+plot(df$Nt1,pch=19,col="black",ylim=c(0,5))
+points(df$Nt2,pch=19,col="orange")
+lines(df$n1_25,col="black")
+lines(df$n1_975,col="black")
+lines(df$n2_25,col="orange")
+lines(df$n2_975,col="orange")
 ```
 
 # Species growth, competition, environmental change, and trait evolution
@@ -1519,6 +1566,5 @@ toPlot = ((OmegaCor[[2]]$support>supportLevel)
 + (OmegaCor[[2]]$support<(1-supportLevel))>0)*OmegaCor[[2]]$mean
 corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.9.sample$rLNames[2]), mar=c(0,0,1,0))
 ```
-
 
 # References
