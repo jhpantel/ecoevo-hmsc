@@ -4,7 +4,7 @@
 ## Scenario 1. Weak selection, fixed environment, all dispersal and heritability levels
 ## # P = 1, w = 10, v[E] = 0
   
-#set.seed(1)
+set.seed(1)
 
 ###################################
 ## Step 0. Small functions    ##
@@ -35,12 +35,12 @@ up_trait <- function(x){
 ###################################
 ## Step 1. Initialize species    ##
 ###################################
-patch = 30   # Number of patches in the landscape
-spec = 10    # Number of species in the community
+patch = 50   # Number of patches in the landscape
+spec = 15    # Number of species in the community
 time = 1000  # Number of time steps to run the simulation
 N = array(numeric(),c(patch,spec,time))   # Record of abundances of all species over time patch x spec x time
 P = array(1,c(1,spec))    # Phenotypic variances for all species
-w = array(10,c(1,spec))   # Width of fitness curve
+w = array(2,c(1,spec))   # Width of fitness curve
 Wmax = 2    # Maximum population growth rate for all species
 Wt = array(numeric(),c(patch,spec,time))   # Record of fitness vlaues over time, patch x spec x time
 dt = array(numeric(),c(patch,spec,time))   # Record of distance from optimum value over time, patch x spec x time
@@ -153,15 +153,15 @@ k = ((w+((1-h2)*P))/(w+P))
 d = array(d_vals[8],c(1,spec))  #which d_value do you want to use? - just using 3 to test
 
 
-save.image(file="C:/Users/Ruben Hermann/Nextcloud/Shared_with_me/ruben.hermann/Projects/project #1 HMSC/code/R/init_comm.Rdata")
+save.image(file="././output/init_comm.Rdata")
 
 
-load("C:/Users/Ruben Hermann/Nextcloud/Shared_with_me/ruben.hermann/Projects/project #1 HMSC/code/R/init_comm.Rdata")
+load("././output/init_comm.Rdata")
 ###################################################
 ## Step 3. Evolving metacommunity simulations    ##
 ###################################################
 
-for (t in 2:200) {
+for (t in 2:time) {
     t
     pop = N[,,t] # Write this generation's population size into a temporary record 
     pop[N[,,t-1]==0] = 0 # Carry over all extinct species
@@ -287,8 +287,9 @@ for (t in 2:200) {
 ## Will have to figure out how to update dt and Wt at the new site (given the species has adapted to the old site in some way)
 ## update N matrix, end round
 
-#### Step 4. Plot results
-save.image("C:/Users/Ruben Hermann/Nextcloud/Shared_with_me/ruben.hermann/Projects/project #1 HMSC/code/R/h_02_d_08_res.RData")
-
-
-
+#### Step 4. Save results
+z <- 2
+f <- 8
+print(paste(h2_names[z],d_names[f],sep=""))
+result <- paste(h_lev[z],d_lev[f],sep="")
+save.image(paste("././output/",result,"_res.RData",sep=""))
