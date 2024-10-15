@@ -12,6 +12,9 @@ library(tidyverse)
 library(bayesplot)
 
 #### Checking the MCMC chains --------------
+#### Step 0 Load the data --------------
+load("./data/h_01_d_minus3_hmsc_v01.RData")
+
 #### Step 1 Create the necessary data.frame --------------
 
 #To determine the convergence of the chains we need to check two things, first off how we will check how each chain converges on itself (hence for example no autocorrelation) and second how well they converge both chains converge with each other. This can be done with the effective sample size and potential scale reduction factors.

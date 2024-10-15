@@ -8,6 +8,9 @@ library(bayesplot)
 library(tidyverse)
 library(gridExtra)
 
+#### Step 0 Load the data --------------
+load("./data/h_01_d_minus3_hmsc_v01.RData")
+
 #### Step 1. Evaluate posteriors --------------
 m.post = Hmsc::convertToCodaObject(m.1)
 m.df <- as.data.frame(rbind(m.post$Beta[[1]],m.post$Beta[[2]]))
@@ -41,41 +44,15 @@ for(i in 1:ncol(B.int)) xc[i]<-as.numeric(sum(colnames(B.int)[i]==not0))+1
 theme_set(theme_grey())
 bayesplot::mcmc_areas(B.int,rhat=xc) + legend_none() +  theme(text = element_text(size = 20))
 
-# N ~ Nt-1 values ##########
-# All values
-B.N <- m.df[,2:(1+s)]
-for(i in 1:(s-1)){
-  B.N <- cbind(B.N,m.df[,2+(i*npred):(s+(i*npred-1))])
-}
-bayesplot::mcmc_areas(B.N)
-# All values, colored by overlap of HPDI with 0
-xd=NULL
-for (k in 1:s) xd[k] <- as.numeric(sum(colnames(B.N)[k]==not0))+1
-for(i in 1:(s-1)){
-  test <- m.df[,2+(i*npred):(s+(i*npred-1))]
-  for(k in 1:s) xc[k]<-as.numeric(sum(colnames(test)[k]==not0))+1
-  xd <- c(xd,xc)
-}
-bayesplot::mcmc_areas(B.N,rhat=xd) + legend_none()
-
-# by species
-id <- as.numeric(sub("y","",colnames(m.1$Y)))
-plist <- list()
-for(i in 1:s){
-  blah <- B.N[,(seq(i,dim(B.N)[2],by=s))]
-  assign(paste0("B.", id[i], sep = ""), blah)
-  plist[[i]] <- bayesplot::mcmc_areas(eval(parse(text=paste0("B.", id[i], sep = "")))) +legend_none()
-}
-gridExtra::grid.arrange(grobs=plist,nrow=round(s/3))
-
 # N ~ Environment ##########
-B.E <- m.df[,13]
+B.E <- m.df[,2]
 for(i in 1:(s-1)){
-  B.E <- cbind(B.E,m.df[,13+(i*npred)])
+  B.E <- cbind(B.E,m.df[,2+(i*npred)])
   colnames(B.E)[i+1] <- paste0("E", (i+1), sep = "")
 }
 colnames(B.E)[1] <- "E1"
 bayesplot::mcmc_areas(B.E)
+
 
 # N ~ |deltaX| values ####
 B.dX <- m.df[,14:(14+s-1)]
@@ -113,40 +90,6 @@ for(i in 1:s){
 }
 gridExtra::grid.arrange(grobs=plist,nrow=round(s/3))
 
-# N ~ Nt-1 x |deltaX| values ####
-B.NdX <- m.df[,25:(25+s-1)]
-for(i in 1:(s-1)){
-  B.NdX <- cbind(B.NdX,m.df[,((25+(i*npred)):(25+(i*npred)+s-1))])
-}
-bayesplot::mcmc_areas(B.NdX)
-# by species
-plist.NdX <- list()
-for(i in 1:s){
-  blah <- B.NdX[,(seq(i,dim(B.NdX)[2],by=s))]
-  assign(paste0("B.NdX.", id[i], sep = ""), blah)
-  plist.NdX[[i]] <- bayesplot::mcmc_areas(eval(parse(text=paste0("B.NdX.", id[i], sep = ""))))
-}
-gridExtra::grid.arrange(grobs=plist.NdX,nrow=round(s/3))
-# All values, colored by overlap of HPDI with 0
-xd=NULL
-for(k in 1:s) xd[k]<-as.numeric(sum(colnames(B.NdX)[k]==not0))+1
-for(i in 1:(s-1)){
-  test <- m.df[,((14+(i*npred)):(14+(i*npred)+s-1))]
-  for(k in 1:s) xc[k]<-as.numeric(sum(colnames(test)[k]==not0))+1
-  xd <- c(xd,xc)
-}
-bayesplot::mcmc_areas(B.NdX,rhat=xd) + legend_none()
-# by species
-## RH, I cannot get this to work. Error with R. ##
-plist.NdX <- list()
-for(i in 1:s){
-  blah <- B.NdX[,(seq(i,dim(B.NdX)[2],by=s))]
-  assign(paste0("B.NdX.", id[i], sep = ""), blah)
-  for(k in 1:(s)) r[k]<-as.numeric(sum(colnames(blah)[k]==not0))+1
-  plist.NdX[[i]] <- bayesplot::mcmc_areas(eval(parse(text=paste0("B.NdX.", id[i], sep = ""))),rhat=r) + legend_none()
-}
-gridExtra::grid.arrange(grobs=plist.NdX,nrow=round(s/3))
-## RH, I cannot get this to work. Error with R. ##
 
 # All large coefficients where HPDI doesn't include 0 ####
 B.giant <- B.not0[,colMeans(B.not0) > 0.5 | colMeans(B.not0) < -0.5]
