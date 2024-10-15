@@ -54,14 +54,10 @@ for (i in 1:s) {
   y <- x-(npred-1)
   ess_effects[y,1] <- unname(ess.beta)[y]
   ess_effects[y,2] <- "intercept"
-  ess_effects[(y+1):(y+s),1] <- unname(ess.beta)[(y+1):(y+s)]
-  ess_effects[(y+1):(y+s),2] <- rep("N_t-1",s)
-  ess_effects[(y+s+1),1] <- unname(ess.beta)[(y+s+1)]
-  ess_effects[(y+s+1),2] <- "environment"
-  ess_effects[(y+s+2):(y+(s*2)+1),1] <- unname(ess.beta)[(y+s+2):(y+(s*2)+1)]
-  ess_effects[(y+s+2):(y+(s*2)+1),2] <- rep("x_t-1",s)
-  ess_effects[(y+(s*2)+2):(y+(s*3)+1),1] <- unname(ess.beta)[(y+(s*2)+2):(y+(s*3)+1)]
-  ess_effects[(y+(s*2)+2):(y+(s*3)+1),2] <- rep("x_t-1*N_t-1",s)
+  ess_effects[(y+1),1] <- unname(ess.beta)[(y+1)]
+  ess_effects[(y+1),2] <- "environment"
+  ess_effects[(y+2):(y+s+1),1] <- unname(ess.beta)[(y+2):(y+s+1)]
+  ess_effects[(y+2):(y+s+1),2] <- rep("x_t-1",s)
 }
 
 
@@ -76,14 +72,10 @@ for (i in 1:s) {
   y <- x-(npred-1)
   psrf_effects[y,1] <- unname(psrf.beta)[y,1]
   psrf_effects[y,2] <- "intercept"
-  psrf_effects[(y+1):(y+s),1] <- unname(psrf.beta)[(y+1):(y+s),1]
-  psrf_effects[(y+1):(y+s),2] <- rep("N_t-1",s)
-  psrf_effects[(y+s+1),1] <- unname(psrf.beta)[(y+s+1),1]
-  psrf_effects[(y+s+1),2] <- "environment"
-  psrf_effects[(y+s+2):(y+(s*2)+1),1] <- unname(psrf.beta)[(y+s+2):(y+(s*2)+1),1]
-  psrf_effects[(y+s+2):(y+(s*2)+1),2] <- rep("x_t-1",s)
-  psrf_effects[(y+(s*2)+2):(y+(s*3)+1),1] <- unname(psrf.beta)[(y+(s*2)+2):(y+(s*3)+1),1]
-  psrf_effects[(y+(s*2)+2):(y+(s*3)+1),2] <- rep("x_t-1*N_t-1",s)
+  psrf_effects[(y+1),1] <- unname(psrf.beta)[(y+1),1]
+  psrf_effects[(y+1),2] <- "environment"
+  psrf_effects[(y+2):(y+s+1),1] <- unname(psrf.beta)[(y+2):(y+s+1),1]
+  psrf_effects[(y+2):(y+s+1),2] <- rep("x_t-1",s)
 }
 
 ggplot(psrf_effects,aes(x=effect,y=psrf))+
@@ -127,10 +119,7 @@ ggplot(psrf_species,aes(x=species,y=psrf))+
   geom_boxplot(aes(fill=species))+
   ylab("Potenital scale reduction factors")+xlab("Species")
 
-#### Step 5 Variance partitioning plot --------------
-plotVariancePartitioning(m.1, VP = VP)
-
-#### Step 6 Mean and SD of the Beta --------------
+#### Step 5 Mean and SD of the Beta --------------
 B.mean = NULL
 B.sd = NULL
 m.df <- as.data.frame(rbind(m.post$Beta[[1]],m.post$Beta[[2]]))
@@ -167,21 +156,21 @@ ggplot(B.sd,aes(x=Sp_y,y=Beta))+
   scale_x_discrete(limits=sp)+
   ggtitle("SD of Beta")
 
-#### Step 7 Further detailed checks --------------
+#### Step 6 Further detailed checks --------------
 #To check autocorrelation on specific predictors
-#Nt-1 influnce of species 1 on all other
+#Environmental influence on all species
 mcmc_acf(m.post$Beta[,seq(2,(s*npred),by=npred)])
 #Intercept
 mcmc_acf(m.post$Beta[,seq(1,(s*npred),by=npred)])
-#To plot the Nt-1 Betas for a specific species
+#Plotting xt-1 from species 15 on all other species
 mcmc_acf(m.post$Beta[,seq((s+2),(s*npred),by=npred)])
 
 #To plot specific MCMC iterations
-#Nt-1 influnce of species 1 on all other
+#Environmental influence on all species
 plot(m.post$Beta[,seq(2,(s*npred),by=npred)])
 #Intercept
 plot(m.post$Beta[,seq(1,(s*npred),by=npred)])
-#Environment
+#Plotting xt-1 from species 15 on all other species
 plot(m.post$Beta[,seq((s+2),(s*npred),by=npred)])
 
 

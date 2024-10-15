@@ -12,6 +12,13 @@ library(gridExtra)
 m.post = Hmsc::convertToCodaObject(m.1)
 m.df <- as.data.frame(rbind(m.post$Beta[[1]],m.post$Beta[[2]]))
 
+#### Create Variance Paritioning plot
+s <- ncol(m.1$Y)
+VP <- computeVariancePartitioning(m.1, group = c(1,2,rep(3,s)), groupnames = c("Intercept","Env","deltaX"))
+#pdf("./output/vp2.pdf",width=8,height=4)
+plotVariancePartitioning(m.1, VP = VP, args.legend=list(cex=0.75,bg="transparent"))
+#dev.off()
+
 # All beta coefficients where HPDI doesn't include 0 ####
 a <- apply(m.df,2,function(x) quantile(x,probs=c(0.025,0.975)))
 b <- apply(a,2,function(x) prod(x[1],x[2]) < 0)
