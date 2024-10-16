@@ -8,31 +8,46 @@ library(Hmsc)
 library(ggplot2)
 library(patchwork)
 library(bayesplot)
+library(reshape2)
 
 ## set random seed
 set.seed(42)
 
-# 1a. Sim: One species, logistic growth + environmental covariate ---------
-### Sim1. One species, logistic growth ###
-# Simulate initial species population growth
-N1.0 <- 10
-r1.0 <- 1.67
-alpha.11 <- 0.00125
+# 1a. Sim: Two species, logistic growth + competition, environmental covariate ---------
+### Sim1. Two species, Leslie-Gower competition, environmental covariate
+# Initial conditions
+N0 <- c(10,10)
+r <- c(1.7,1.7)
+alpha.11 <- 0.01
+alpha.22 <- 0.01
+alpha.12 <- 0.005
+alpha.21 <- 0.01
+alpha <- matrix(c(alpha.11,alpha.21,alpha.12,alpha.22),nrow=2,byrow=FALSE) # careful to make sure you have correct interaction matrix
+E.0 <- 0.8
+x <- c(0.6,0.8)
 # Simulation of model for t time steps
 t <- 40
-N <- rep(NA, t)
-N[1] <- N1.0
+N <- array(NA,dim=c(t,length(r)))
+N <- as.data.frame(N)
+colnames(N) <- paste0("N",1:length(r))
+N[1,] <- N0
+E <- rep(NA, t)
+E[1] <- E.0
 for (i in 2:t) {
-  N[i] <- disc_log(r=r1.0, N0=N[i-1], alpha=alpha.11)
+  N[i,] <- disc_LV_E(r=r,N0=N[i-1,],alpha=alpha,E=E[i-1],x=x)
+  E[i] <- E[i-1] + rnorm(1,0,.1)
 }
 ### Mod1: HMSC model fit 1 ###
 # prepare data in HMSC format
-# Plot simulation: ggplot
-dat <- as.data.frame(N)
+dat <- as.data.frame(log(N))
 dat$time <- 1:t
-Y <- as.matrix(log(dat$N[2:t]))
-XData <- data.frame(x=log(dat$N[1:(t-1)]))
-m.1.hmsc <- Hmsc(Y=Y,XData=XData,XFormula=~x)
+df <- data.frame(dat[(2:t),-3])
+Y <- as.matrix(df)
+XData <- data.frame(dat[1:(t-1),-3],E[1:(t-1)],E[1:(t-1)]^2)
+colnames(XData) <- c(paste0("n",1:length(r)),"E","Esq")
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+m.1.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq, studyDesign = studyDesign, ranLevels = list(sample = rL))
 # Bayesian model parameters
 nChains <- 2
 thin <- 5
@@ -43,51 +58,21 @@ verbose <- 500*thin
 m.1.sample <- sampleMcmc(m.1.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
 # prepare for plot
 pred <- predict(m.1.sample)
-y <- as.numeric(XData[,1])
-yrep <- matrix(unlist(pred), nrow=length(pred), byrow=TRUE)
-## Sim2. One species, logistic growth, fluctuating environmental covariate
-# Simulate initial species population growth with environment fluctuations
-N1.0 <- 10
-r1.0 <- 1.67
-alpha.11 <- 0.00125
-E.0 <- 0.8
-x1.0 <- 0.8
-# Simulation of model for t time steps
-t <- 40
-N2 <- rep(NA, t)
-N2[1] <- N1.0
-E <- rep(NA, t)
-E[1] <- E.0
-for (i in 2:t) {
-  N2[i] <- disc_log_E(r=r1.0, N0=N2[i-1], alpha=alpha.11, E=E[i-1], x=x1.0)
-  E[i] <- E[i-1] + rnorm(1,0,.1)
+hold1 <- list()
+hold2 <- list()
+#y <- array(NA,length(r)*(t-1))
+#yrep <- array(NA,dim=c(length(pred),length(r)*(t-1)))
+for(i in 1:length(r)){
+  hold1[[i]] <- as.numeric(Y[,i])
+  data <- lapply(pred, function(x) x[, colnames(df)[i], drop = FALSE])
+  hold2[[i]] <- matrix(unlist(data), nrow=length(pred), byrow=TRUE)
 }
-### Mod2: HMSC model fit 1 ###
-# prepare data in HMSC format
-dat <- as.data.frame(cbind(N2,E))
-dat$time <- 1:t
-df <- data.frame(cbind(log(dat$N2[2:t]),log(dat$N2[1:(t-1)]),E[1:(t-1)],E[1:(t-1)]^2))
-colnames(df) <- c("Nt1","Nt","E","Esq")
-Y <- as.matrix(log(dat$N2[2:t]))
-XData <- df
-m.2.hmsc <- Hmsc(Y=Y,XData=XData,XFormula=~Nt+E+Esq)
-# Bayesian model parameters
-nChains <- 2
-thin <- 5
-samples <- 1000
-transient <- 500*thin
-verbose <- 500*thin
-# sample MCMC
-m.2.sample <- sampleMcmc(m.2.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
-# prepare for plot
-pred <- predict(m.2.sample)
-y <- c(y,as.numeric(XData[,1]))
-yrep2 <- matrix(unlist(pred), nrow=length(pred), byrow=TRUE)
-yrep <- cbind(yrep,yrep2)
-### Mod1 and 2 plot ###
+y <- unlist(hold1) # vector of each species' observed N across time points
+yrep <- as.matrix(data.frame(hold2))
+### Mod1 plot ###
 color_scheme_set("brightblue")
 #ppc_dens_overlay(y, yrep[1:50, ])
-ppc_intervals(y,yrep,x=rep(dat$time[1:(t-1)],times=2),prob = 0.95) +
+ppc_intervals(y,yrep,x=rep(dat$time[1:(t-1)],times=2),prob = 0.50) +
   labs(x = "time",y = "N",)
 
 
