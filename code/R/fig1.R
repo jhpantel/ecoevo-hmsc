@@ -9,6 +9,7 @@ library(ggplot2)
 library(patchwork)
 library(bayesplot)
 library(reshape2)
+library(cowplot)
 
 ## set random seed
 set.seed(42)
@@ -20,8 +21,8 @@ N0 <- c(10,10)
 r <- c(1.7,1.7)
 alpha.11 <- 0.01
 alpha.22 <- 0.01
-alpha.12 <- 0.005
-alpha.21 <- 0.01
+alpha.12 <- 0.015
+alpha.21 <- 0.02
 alpha <- matrix(c(alpha.11,alpha.21,alpha.12,alpha.22),nrow=2,byrow=FALSE) # careful to make sure you have correct interaction matrix
 E.0 <- 0.8
 x <- c(0.6,0.8)
@@ -60,8 +61,6 @@ m.1.sample <- sampleMcmc(m.1.hmsc,thin=thin,sample=samples,transient=transient,n
 pred <- predict(m.1.sample)
 hold1 <- list()
 hold2 <- list()
-#y <- array(NA,length(r)*(t-1))
-#yrep <- array(NA,dim=c(length(pred),length(r)*(t-1)))
 for(i in 1:length(r)){
   hold1[[i]] <- as.numeric(Y[,i])
   data <- lapply(pred, function(x) x[, colnames(df)[i], drop = FALSE])
@@ -70,12 +69,33 @@ for(i in 1:length(r)){
 y <- unlist(hold1) # vector of each species' observed N across time points
 yrep <- as.matrix(data.frame(hold2))
 ### Mod1 plot ###
+par(mgp=c(2.2,0.45,0), tcl=-0.4, mar=c(3.3,3.6,1.1,1.1))
 color_scheme_set("brightblue")
 #ppc_dens_overlay(y, yrep[1:50, ])
-ppc_intervals(y,yrep,x=rep(dat$time[1:(t-1)],times=2),prob = 0.50) +
-  labs(x = "time",y = "N",)
-
-
-
-
+a <- ppc_intervals(y,yrep,x=rep(dat$time[1:(t-1)],times=2),prob = 0.95) +
+  labs(x = "time",y = "ln(N)",) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm"))
+### Gradient plot ###
+Gradient <- constructGradient(m.1.sample,focalVariable="E",non.focalVariables=list(Esq=list(2)),ngrid=39)
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.1.sample,XData=Gradient$XDataNew,expected=TRUE)
+plotGradient(m.1.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="E_t",ylab="predicted N1_t+1")
+b <- recordPlot()
+plotGradient(m.1.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1")
+c <- recordPlot()
+### Beta posterior plot ###
+#m.post = Hmsc::convertToCodaObject(m.1.sample)
+#m.beta <- as.data.frame(rbind(m.post$Beta[[1]],m.post$Beta[[2]]))
+#d <- bayesplot::mcmc_areas(m.beta)
+postBeta = getPostEstimate(m.1.sample, parName = "Beta")
+plotBeta(m.1.sample, post = postBeta, param = "Mean", supportLevel = 0.7)
+d <- recordPlot()
+### variance partitioning ###
+VP <- computeVariancePartitioning(m.1.sample, group = c(1, 1, 1), groupnames = "Env")
+plotVariancePartitioning(m.1.sample, VP, args.legend = list(cex = 0.75, bg = "transparent"))
+e <- recordPlot()
+### ### ### ### ### ### ###
+### all plots together ###
+### ### ### ### ### ### ###
+plot_grid(a,plot_grid(b,c,nrow=2),d,e,nrow=1,rel_widths=c(2,1,1,1))
 
