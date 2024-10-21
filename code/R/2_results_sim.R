@@ -421,6 +421,7 @@ hist(fit_x_m[,,1],breaks=15,xlab="Average fitness of each species",main="Average
 
 hist((abs(fit_x_m[,,1])-abs(fit_x_m[,,dim(fit_x_m)[3]])),breaks=15,xlab="Average fitness increase of each species",main="Average fitness increase of each species during the simulation")
 
+par(mfrow=c(1,1))
 #### Step 7. Specific plots
 #Here you can plot specific plots that you want to check
 

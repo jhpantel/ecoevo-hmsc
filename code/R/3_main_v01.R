@@ -137,10 +137,16 @@ sp <- s[-e]
 XFormula = ~env1+x1+x3+x4+x6+x7+x8+x9+x10+x12+x13+x14+x15
 m <- Hmsc::Hmsc(Y=Y,XData=X,XFormula = XFormula,studyDesign=Random,ranLevels=list("site"=rL.spatial,"year"=rL.time),distr="normal",XScale=TRUE,YScale=TRUE)
 tic()
-m.1 <- Hmsc::sampleMcmc(m,2000,transient=100,nChains=2,nParallel=2,verbose=10,thin=5,updater = list(GammaEta = FALSE))
+
+nChains <- 4
+thin <- 100
+samples <- 250
+transient <- 250*thin
+verbose <- 50*thin
+
+m.1 <- Hmsc::sampleMcmc(m,samples=samples,transient=transient,nChains=nChains,nParallel=nChains,verbose=verbose,thin=thin,updater = list(GammaEta = FALSE))
 a <- toc()
-setwd("./output")
-save.image(file=file.path(paste(h_lev[z],d_lev[f],"_hmsc_v01.RData",sep=""))) # Scenario 1
+save.image(file=file.path(paste("./data/",h_lev[z],d_lev[f],"_hmsc_v01.RData",sep=""))) # Scenario 1
 # save.image(file=file.path(paste(h_lev[z],d_lev[f],"_hmsc_v02.RData",sep=""))) # Scenario 2
 # save.image(file=file.path(paste(h_lev[z],d_lev[f],"_hmsc_v03.RData",sep=""))) # Scenario 3
 # save.image(file=file.path(paste(h_lev[z],d_lev[f],"_hmsc_v04.RData",sep=""))) # Scenario 4
