@@ -10,6 +10,7 @@ library(patchwork)
 library(bayesplot)
 library(reshape2)
 library(cowplot)
+library(MASS)
 
 ## set random seed
 set.seed(8)
@@ -179,9 +180,6 @@ transient <- 1000*thin
 verbose <- 500*thin
 # sample MCMC
 m.2.sample <- sampleMcmc(m.2.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
-
-
-
 # prepare for plot
 pred2 <- predict(m.2.sample)
 hold1 <- list()
@@ -193,7 +191,7 @@ for(i in 1:length(r)){
 }
 y <- unlist(hold1) # vector of each species' observed N across time points
 yrep <- as.matrix(data.frame(hold2))
-### Mod1 plot ###
+### Mod2 plot ###
 par(mgp=c(2.2,0.45,0), tcl=-0.4, mar=c(2,2,1,1))
 color_scheme_set("brightblue")
 #ppc_dens_overlay(y, yrep[1:50, ])
@@ -229,6 +227,153 @@ plot_grid(a,plot_grid(b,c,nrow=2),d,e,nrow=1,rel_widths=c(2,1,1,1))
 # 3. Sim: Two species, logistic growth + competition, environmental covariate in spatially structured environment ---------
 ### Sim3. Two species, Leslie-Gower competition, environmental covariate, evolution, multiple sites
 # Initial conditions
+# Simulation of model for t time steps, i sites
+j <- 10
+# random site locations
+xycoords = matrix(runif(2*j), ncol = 2)
+rownames(xycoords) <- 1:j
+t <- 40
+N <- array(NA,dim=c(j*t,length(r0)))
+N <- as.data.frame(N)
+colnames(N) <- paste0("N",1:length(r0))
+x <- array(NA,dim=c(j*t,length(r0)))
+x <- as.data.frame(x)
+colnames(x) <- paste0("x",1:length(r0))
+r <- array(NA,dim=c(j*t,length(r0)))
+r <- as.data.frame(r)
+colnames(r) <- paste0("r",1:length(r0))
+N[1:j,] <- rep(N0,each=j)
+E <- rep(NA, t)
+E[1] <- E.0
+x[1:j,] <- rep(x.0,each=j)
+What <- Wmax*sqrt(w/(P+w))
+r0 <- as.numeric(What*exp((-(((w+(1-h2)*P)/(P+w))*(E[1]-x[1,]))^2)/(2*(P+w))))
+r[1:j,] <- rep(r0,each=j)
+# Keep track of site and time
+study <- array(NA,dim=c(j*t,3))
+study <- as.data.frame(study)
+colnames(study) <- c("obs","site","time")
+study$obs <- 1:dim(study)[1]
+study$site <- rep(1:j,times=t)
+study$time <- rep(1:t,each=j)
+
+for (i in 2:t) {
+  for(z in 1:j){
+    res <- disc_LV_evol(N0=N[study$site==z & study$time==i-1,],alpha=alpha,E=E[i-1],x=x[study$site==z & study$time==i-1,],P=P,w=w,Wmax=Wmax,h2=h2)
+    N[study$site==z & study$time==i,] <- res$Nt1
+    r[study$site==z & study$time==i,] <- res$r
+    # trait change
+    d <- E[i-1] - x[study$site==z & study$time==i-1,]
+    d1 <- k*d
+    x[study$site==z & study$time==i,] <- E[i-1] - d1
+  }
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0.05))
+}
+# site-level random effect
+sigma <- 0
+sigma.spatial <- 10
+alpha.spatial <- 0.5
+Sigma = sigma.spatial^2*exp(-as.matrix(dist(xycoords))/alpha.spatial)
+# draw from covariance matrix
+a = mvrnorm(mu=rep(0,j), Sigma = Sigma)
+for(i in 1:t){
+  N$N1[study$time==i] <- N$N1[study$time==i] + a
+}
+a = mvrnorm(mu=rep(0,j), Sigma = Sigma)
+for(i in 1:t){
+  N$N2[study$time==i] <- N$N2[study$time==i] + a
+}
+
+# Plot simulation: ggplot
+N$site <- study$site
+N$time <- study$time
+dat <- melt(N, id.vars=c("site","time"))
+a <- ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + facet_wrap(~site,nrow=2)
+
+### Mod3: HMSC model fit 3 ###
+# prepare data in HMSC format
+N[N <0] <- 0.01
+# prepare data in HMSC format
+dat <- as.data.frame(cbind(log(N[,1:2]),x))
+dat$time <- 1:t
+df <- data.frame(cbind(dat$N1[dat$time !=1], dat$N2[dat$time !=1], dat$x1[dat$time !=1], dat$x2[dat$time !=1]))
+colnames(df) <- c("Nt1", "Nt2", "xt1", "xt2")
+df$dx1 <- abs(dat$x1[dat$time != 1] - dat$x1[dat$time != t])
+df$dx2 <- abs(dat$x2[dat$time != 1] - dat$x2[dat$time != t])
+Y <- as.matrix(cbind(df$Nt1, df$Nt2))
+XData <- data.frame(cbind(rep(E[1:(t-1)],times=j),rep(E[1:(t-1)],times=j)^2,abs(dat$x1[dat$time != 1] - dat$x1[dat$time != t]),abs(dat$x2[dat$time != 1] - dat$x2[dat$time != t])))
+colnames(XData) <- c("E","Esq","dx1","dx2")
+# Update study design to include spatial random effects
+samp1 <- 1:(j*t)
+samp1 <- as.data.frame(samp1)
+samp1 <- subset(samp1,samp1>10)
+rownames(XData) <- row.names(samp1)
+studyDesign = data.frame(sample=1:(j*(t-1)),site=study$site[study$time > 1])
+studyDesign$sample <- as.factor(studyDesign$sample)
+studyDesign$site <- as.factor(studyDesign$site)
+rL.spatial = HmscRandomLevel(sData = xycoords)  
+rL.sample = HmscRandomLevel(units = studyDesign$sample)
+# Fit HMSC model
+m.3.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list("sample"=rL.sample,"site"=rL.spatial))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.3.sample <- sampleMcmc(m.3.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+### Gradient plot ###
+Gradient <- constructGradient(m.3.sample,focalVariable="dx2",non.focalVariables=list(E=list(2),Esq=list(2),dx1=list(2)),ngrid=39)
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.3.sample,XData=Gradient$XDataNew,expected=TRUE)
+plotGradient(m.3.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="E_t",ylab="predicted N1_t+1",showPosteriorSupport=FALSE,cex.axis=0.75)
+b <- recordPlot()
+plotGradient(m.3.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1",showPosteriorSupport=FALSE,cex.axis=0.75)
+c <- recordPlot()
+
+
+m3.post.hmsc <- convertToCodaObject(m.3.sample)
+summary(m3.post.hmsc$Beta)
+bayesplot::mcmc_trace(m3.post.hmsc$Beta)
+bayesplot::mcmc_areas(m3.post.hmsc$Beta,area_method = c("equal height"))
+
+VP <- computeVariancePartitioning(m.3.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
+plotVariancePartitioning(m.3.sample,VP,cols=c("white","skyblue","darkgrey","orange","pink"),args.legend=list(cex=0.75,bg="transparent"))
+
+# prepare for plot
+pred3 <- predict(m.3.sample)
+hold1 <- list()
+hold2 <- list()
+for(i in 1:length(r)){
+  hold1[[i]] <- as.numeric(Y[,i])
+  data <- lapply(pred3, function(x) x[, colnames(x)[i], drop = FALSE])
+  hold2[[i]] <- matrix(unlist(data), nrow=length(pred3), byrow=TRUE)
+}
+y <- unlist(hold1) # vector of each species' observed N across time points
+yrep <- as.matrix(data.frame(hold2))
+### Mod2 plot ###
+par(mgp=c(2.2,0.45,0), tcl=-0.4, mar=c(2,2,1,1))
+color_scheme_set("brightblue")
+#ppc_dens_overlay(y, yrep[1:50, ])
+a <- ppc_intervals(y,yrep,x=rep(dat$time[1:(t-1)],each=10,times=2),prob = 0.95) +
+  labs(x = "time",y = "ln(N)",) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+  theme(legend.position = "none")
+
+postBeta = getPostEstimate(m.3.sample, parName = "Beta")
+plotBeta(m.3.sample, post = postBeta, param = "Mean", supportLevel = 0.95)
+
+# Plot simulation: ggplot
+N$site <- study$site
+N$time <- study$time
+dat <- melt(N, id.vars=c("site","time"))
+dat <- dat[dat$time != 1,]
+dat$logN <- log(dat$value)
+dat$pred_975 <- apply(yrep,2,quantile,probs=.975)
+dat$pred_025 <- apply(yrep,2,quantile,probs=.025)
+ggplot2::ggplot(dat, aes(time, logN, col=variable)) + geom_point() + facet_wrap(~site,nrow=2) + geom_ribbon(aes(ymin=pred_025, ymax=pred_975), alpha=0.2)
 
 
 
