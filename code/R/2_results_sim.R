@@ -11,7 +11,7 @@ library(patchwork)
 
 ##
 ####  Step 1. Read in the data and get it into shape --------------
-load("././data/h_01_d_minus3_res_short.RData") # Scenario 1
+load("././data/h_01_d_minus3_res_short_Edirect_sd0.1.RData") # Scenario 1
 ##
 ################### Extinction checks from JP ###################
 # Address extinct species
@@ -32,7 +32,7 @@ for(i in 3:dim(xt)[3]){
 ## fitness of species: -abs(abs(E)-x) --> so that negative values represent low fitness
 fit_x <-  array(NA,c(dim(xt)[1],dim(xt)[2],dim(xt)[3]),dimnames=list(NULL,c(paste("y",1:dim(xt)[2],"",sep="")),NULL))
 for(i in 1:dim(xt)[3]){
-  fit_x[,,i] <- -abs(sweep(abs(xt[,,i]),1,E,"-"))
+  fit_x[,,i] <- -abs(sweep(abs(xt[,,i]),1,Et[,i],"-"))
 }
 
 ## average fitness of patch: -abs(abs(E)-x) --> so that negative values represent low fitness
@@ -128,7 +128,7 @@ mtext("Population dynamics in each plot over time", side = 3, line = 0, outer = 
 par(mfrow=(c(10,5)))
 par(mai=c(0.1,0.1,0.1,0.1),oma=c(2,2,2,1))
 for(j in 1:nrow(xt)){
-  plot(xt[j,1,],col=mycols2[1],ylim=c(min(xt,na.rm=T),1),axes=FALSE,type="n",ylab=NA,xlab=NA,xaxs="i",yaxs="i")
+  plot(xt[j,1,],col=mycols2[1],ylim=c(min(xt,na.rm=T),max(xt,na.rm=T)),axes=FALSE,type="n",ylab=NA,xlab=NA,xaxs="i",yaxs="i")
   if (j %in% c(1,6,11,16,21,26,31,36,41,46))
     axis(2,col="grey40",col.axis="grey20",labels=T)
   if (j %in% c(46,47,48,49,50))
@@ -190,6 +190,20 @@ for(j in 1:nrow(sp_rich)){
 }
 mtext("Species richness in each patch over time", side = 3, line = 0, outer = TRUE)
 
+## Plot of environmental value for given patch over time
+par(mfrow=(c(10,5)))
+par(mar=c(1,1,1,1))
+for(j in 1:nrow(Et)){
+  plot(Et[j,],ylim=c(0,max(Et,na.rm=T)),axes=FALSE,type="n",ylab=NA,xlab=NA,xaxs="i",yaxs="i")
+  if (j %in% c(1,6,11,16,21,26,31,36,41,46))
+    axis(2,col="grey40",col.axis="grey20",labels=T)
+  if (j %in% c(46,47,48,49,50))
+    axis(1,col="grey40",col.axis="grey20",labels=T)
+  points(Et[j,])
+    text(x=(dim(Et)[2]),y=(max(Et,na.rm=T)/2),labels=j,pos=2)
+}
+mtext("Environmental value in each patch over time", side = 3, line = 0, outer = TRUE)
+
 ## Plot of alpha diversity for given patch over time
 par(mfrow=(c(10,5)))
 par(mar=c(1,1,1,1))
@@ -228,7 +242,7 @@ mtext("Population dynamics of each species in its given patch", side = 3, line =
 par(mfrow=(c(3,5)))
 par(mai=c(0.1,0.1,0.1,0.1),oma=c(2,2,2,1))
 for(j in 1:ncol(xt)){
-  plot(xt[1,j,],ylim=c(min(xt,na.rm=T),1),axes=FALSE,type="n",ylab=NA,xlab=NA,xaxs="i",yaxs="i")
+  plot(xt[1,j,],ylim=c(min(xt,na.rm=T),max(xt,na.rm=T)),axes=FALSE,type="n",ylab=NA,xlab=NA,xaxs="i",yaxs="i")
   if (j %in% c(1,6,11))
     axis(2,col="grey40",col.axis="grey20",labels=T)
   if (j %in% 11:15)
