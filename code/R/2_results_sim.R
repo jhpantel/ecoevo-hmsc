@@ -11,7 +11,7 @@ library(patchwork)
 
 ##
 ####  Step 1. Read in the data and get it into shape --------------
-load("././data/h_01_d_minus3_res.RData") # Scenario 1
+load("././data/h_01_d_minus3_res_short.RData") # Scenario 1
 ##
 ################### Extinction checks from JP ###################
 # Address extinct species

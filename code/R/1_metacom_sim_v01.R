@@ -152,12 +152,17 @@ h2 = array(h2_vals[2],c(1,spec)) #which h2_value do you want to use? - just usin
 k = ((w+((1-h2)*P))/(w+P))
 d = array(d_vals[8],c(1,spec))  #which d_value do you want to use? - just using 3 to test
 
+load("./data/h_01_d_minus3_res.RData")
+
 ###################################################
 ## Step 3. Evolving metacommunity simulations    ##
 ###################################################
 
-for (t in 2:time) {
+for (t in 2:200) {
     t
+    #E fluctuation
+    if (t%%10==0) {E = E + abs(rnorm(50,0,0.05))}
+  
     pop = N[,,t] # Write this generation's population size into a temporary record 
     pop[N[,,t-1]==0] = 0 # Carry over all extinct species
 
@@ -289,4 +294,4 @@ z <- 2
 f <- 8
 print(paste(h2_names[z],d_names[f],sep=""))
 result <- paste(h_lev[z],d_lev[f],sep="")
-save.image(paste("././data/",result,"_res.RData",sep=""))
+save.image(paste("././data/",result,"_res_short.RData",sep=""))
