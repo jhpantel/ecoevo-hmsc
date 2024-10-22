@@ -333,14 +333,16 @@ plotGradient(m.3.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main=
 p11 <- recordPlot()
 plotGradient(m.3.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1",showPosteriorSupport=FALSE,cex.axis=0.75)
 p12 <- recordPlot()
-
+### Beta posterior plot ###
 m3.post.hmsc <- convertToCodaObject(m.3.sample)
-summary(m3.post.hmsc$Beta)
+m.beta <- as.data.frame(rbind(m3.post.hmsc$Beta[[1]],m3.post.hmsc$Beta[[2]]))
+colnames(m.beta) <- c("Int1","E1","Esq1","dx1_1","dx1_2","Int2","E2","Esq2","dx2_1","dx2_2")
 p13 <- bayesplot::mcmc_trace(m3.post.hmsc$Beta)
-p14 <- bayesplot::mcmc_areas(m3.post.hmsc$Beta,area_method = c("equal height"))
+p14 <- bayesplot::mcmc_areas(m.beta) + scale_x_continuous(limits=c(-20,30))
 
 VP <- computeVariancePartitioning(m.3.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
-p15 <- plotVariancePartitioning(m.3.sample,VP,cols=c("white","skyblue","darkgrey","orange","pink"),args.legend=list(cex=0.75,bg="transparent"))
+plotVariancePartitioning(m.3.sample,VP,cols=c("white","skyblue","darkgrey","orange","pink"),args.legend=list(cex=0.75,bg="transparent"))
+p15 <- recordPlot()
 
 # prepare for plot
 pred3 <- predict(m.3.sample)
@@ -372,6 +374,18 @@ gg_dat$site <- rep(study$site[study$time !=1],times=2)
 gg_dat$time <- rep(study$time[study$time !=1],times=2)
 gg_dat$ci_025 <- apply(yrep,2,quantile,probs=.025)
 gg_dat$ci_975 <- apply(yrep,2,quantile,probs=.975)
-p16 <- ggplot2::ggplot(gg_dat, aes(time, y, col=species)) + geom_point() + facet_wrap(~site,nrow=2) + geom_errorbar(aes(ymin=ci_025, ymax=ci_975), alpha=0.2)
+p16 <- ggplot2::ggplot(gg_dat, aes(time, y, col=species)) + geom_point() + facet_wrap(~site,nrow=2) + geom_errorbar(aes(ymin=ci_025, ymax=ci_975), alpha=0.2) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+  theme(legend.position = "none")
+
+### ### ### ### ### ### ###
+### all plots together ###
+### ### ### ### ### ### ###
+plot_grid(p16,plot_grid(p11,p12,nrow=2),p14,p15,nrow=1,rel_widths=c(3,1,1,1),rel_heights=c(2,1,1,1))
+
+
+
+
+
 
 
