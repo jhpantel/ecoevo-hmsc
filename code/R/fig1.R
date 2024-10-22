@@ -78,7 +78,7 @@ yrep <- as.matrix(data.frame(hold2))
 par(mgp=c(2.2,0.45,0), tcl=-0.4, mar=c(2,2,1,1))
 color_scheme_set("brightblue")
 #ppc_dens_overlay(y, yrep[1:50, ])
-a <- ppc_intervals(y,yrep,x=rep(dat$time[1:(t-1)],times=2),prob = 0.95) +
+p1 <- ppc_intervals(y,yrep,x=rep(dat$time[1:(t-1)],times=2),prob = 0.95) +
   labs(x = "time",y = "ln(N)",) +
   theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
   theme(legend.position = "none")
@@ -87,25 +87,25 @@ Gradient <- constructGradient(m.1.sample,focalVariable="E",non.focalVariables=li
 Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
 predY <- predict(m.1.sample,XData=Gradient$XDataNew,expected=TRUE)
 plotGradient(m.1.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="E_t",ylab="predicted N1_t+1",showPosteriorSupport=FALSE,cex.axis=0.75)
-b <- recordPlot()
+p2 <- recordPlot()
 plotGradient(m.1.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1",showPosteriorSupport=FALSE,cex.axis=0.75)
-c <- recordPlot()
+p3 <- recordPlot()
 ### Beta posterior plot ###
 m.post = Hmsc::convertToCodaObject(m.1.sample)
 m.beta <- as.data.frame(rbind(m.post$Beta[[1]],m.post$Beta[[2]]))
 colnames(m.beta) <- c("Int1","E1","Esq1","Int2","E2","Esq2")
-d <- bayesplot::mcmc_areas(m.beta) + scale_x_continuous(limits=c(-20,30))
+p4 <- bayesplot::mcmc_areas(m.beta) + scale_x_continuous(limits=c(-20,30))
 #postBeta = getPostEstimate(m.1.sample, parName = "Beta")
 #plotBeta(m.1.sample, post = postBeta, param = "Mean", supportLevel = 0.7)
 #d <- recordPlot()
 ### variance partitioning ###
 VP <- computeVariancePartitioning(m.1.sample, group = c(1, 1, 1), groupnames = "Env")
 plotVariancePartitioning(m.1.sample, VP, args.legend = list(cex = 0.6, bg = "transparent"),cex.axis=0.75)
-e <- recordPlot()
+p5 <- recordPlot()
 ### ### ### ### ### ### ###
 ### all plots together ###
 ### ### ### ### ### ### ###
-plot_grid(a,plot_grid(b,c,nrow=2),d,e,nrow=1,rel_widths=c(2,1,1,1))
+plot_grid(p1,plot_grid(p2,p3,nrow=2),p4,p5,nrow=1,rel_widths=c(2,1,1,1))
 
 # 2. Sim: Two species, logistic growth + competition, environmental covariate, evolution ---------
 ### Sim2. Two species, Leslie-Gower competition, environmental covariate, evolution
@@ -195,7 +195,7 @@ yrep <- as.matrix(data.frame(hold2))
 par(mgp=c(2.2,0.45,0), tcl=-0.4, mar=c(2,2,1,1))
 color_scheme_set("brightblue")
 #ppc_dens_overlay(y, yrep[1:50, ])
-a <- ppc_intervals(y,yrep,x=rep(dat$time[1:(t-1)],times=2),prob = 0.95) +
+p6 <- ppc_intervals(y,yrep,x=rep(dat$time[1:(t-1)],times=2),prob = 0.95) +
   labs(x = "time",y = "ln(N)",) +
   theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
   theme(legend.position = "none")
@@ -204,28 +204,29 @@ Gradient <- constructGradient(m.2.sample,focalVariable="E",non.focalVariables=li
 Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
 predY <- predict(m.2.sample,XData=Gradient$XDataNew,expected=TRUE)
 plotGradient(m.2.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="E_t",ylab="predicted N1_t+1",showPosteriorSupport=FALSE,cex.axis=0.75)
-b <- recordPlot()
+p7 <- recordPlot()
 plotGradient(m.2.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1",showPosteriorSupport=FALSE,cex.axis=0.75)
-c <- recordPlot()
+p8 <- recordPlot()
 ### Beta posterior plot ###
 m.post = Hmsc::convertToCodaObject(m.2.sample)
 m.beta <- as.data.frame(rbind(m.post$Beta[[1]],m.post$Beta[[2]]))
 colnames(m.beta) <- c("Int1","E1","Esq1","dx1_1","dx1_2","Int2","E2","Esq2","dx2_1","dx2_2")
-d <- bayesplot::mcmc_areas(m.beta) + scale_x_continuous(limits=c(-20,30))
+p9 <- bayesplot::mcmc_areas(m.beta) + scale_x_continuous(limits=c(-20,30))
 #postBeta = getPostEstimate(m.1.sample, parName = "Beta")
 #plotBeta(m.1.sample, post = postBeta, param = "Mean", supportLevel = 0.7)
 #d <- recordPlot()
 ### variance partitioning ###
 VP <- computeVariancePartitioning(m.2.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
 plotVariancePartitioning(m.2.sample,VP,cols=c("white","skyblue","darkgrey","orange"),args.legend=list(cex=0.6,bg="transparent"),cex.axis=0.75)
-e <- recordPlot()
+p10 <- recordPlot()
 ### ### ### ### ### ### ###
 ### all plots together ###
 ### ### ### ### ### ### ###
-plot_grid(a,plot_grid(b,c,nrow=2),d,e,nrow=1,rel_widths=c(2,1,1,1))
+plot_grid(p6,plot_grid(p7,p8,nrow=2),p9,p10,nrow=1,rel_widths=c(2,1,1,1))
 
 # 3. Sim: Two species, logistic growth + competition, environmental covariate in spatially structured environment ---------
 ### Sim3. Two species, Leslie-Gower competition, environmental covariate, evolution, multiple sites
+set.seed(42)
 # Initial conditions
 # Simulation of model for t time steps, i sites
 j <- 10
@@ -233,15 +234,15 @@ j <- 10
 xycoords = matrix(runif(2*j), ncol = 2)
 rownames(xycoords) <- 1:j
 t <- 40
-N <- array(NA,dim=c(j*t,length(r0)))
+N <- array(NA,dim=c(j*t,length(r)))
 N <- as.data.frame(N)
-colnames(N) <- paste0("N",1:length(r0))
-x <- array(NA,dim=c(j*t,length(r0)))
+colnames(N) <- paste0("N",1:length(r))
+x <- array(NA,dim=c(j*t,length(r)))
 x <- as.data.frame(x)
-colnames(x) <- paste0("x",1:length(r0))
-r <- array(NA,dim=c(j*t,length(r0)))
+colnames(x) <- paste0("x",1:length(r))
+r <- array(NA,dim=c(j*t,length(r)))
 r <- as.data.frame(r)
-colnames(r) <- paste0("r",1:length(r0))
+colnames(r) <- paste0("r",1:length(r))
 N[1:j,] <- rep(N0,each=j)
 E <- rep(NA, t)
 E[1] <- E.0
@@ -272,7 +273,7 @@ for (i in 2:t) {
 }
 # site-level random effect
 sigma <- 0
-sigma.spatial <- 10
+sigma.spatial <- 4
 alpha.spatial <- 0.5
 Sigma = sigma.spatial^2*exp(-as.matrix(dist(xycoords))/alpha.spatial)
 # draw from covariance matrix
@@ -286,24 +287,24 @@ for(i in 1:t){
 }
 
 # Plot simulation: ggplot
-N$site <- study$site
-N$time <- study$time
-dat <- melt(N, id.vars=c("site","time"))
-a <- ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + facet_wrap(~site,nrow=2)
+# N$site <- study$site
+# N$time <- study$time
+# dat <- melt(N, id.vars=c("site","time"))
+# p11 <- ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + facet_wrap(~site,nrow=2)
 
 ### Mod3: HMSC model fit 3 ###
 # prepare data in HMSC format
-N[N <0] <- 0.01
+#N[N <0] <- 0.01
 # prepare data in HMSC format
 dat <- as.data.frame(cbind(log(N[,1:2]),x))
-dat$time <- 1:t
+dat$time <- study$time
 df <- data.frame(cbind(dat$N1[dat$time !=1], dat$N2[dat$time !=1], dat$x1[dat$time !=1], dat$x2[dat$time !=1]))
 colnames(df) <- c("Nt1", "Nt2", "xt1", "xt2")
-df$dx1 <- abs(dat$x1[dat$time != 1] - dat$x1[dat$time != t])
-df$dx2 <- abs(dat$x2[dat$time != 1] - dat$x2[dat$time != t])
 Y <- as.matrix(cbind(df$Nt1, df$Nt2))
-XData <- data.frame(cbind(rep(E[1:(t-1)],times=j),rep(E[1:(t-1)],times=j)^2,abs(dat$x1[dat$time != 1] - dat$x1[dat$time != t]),abs(dat$x2[dat$time != 1] - dat$x2[dat$time != t])))
-colnames(XData) <- c("E","Esq","dx1","dx2")
+XData <- data.frame(E=rep(E[1:(t-1)],each=j))
+XData$Esq <- XData$E^2
+XData$dx1 <- abs(dat$x1[dat$time != 1] - dat$x1[dat$time != t])
+XData$dx2 <- abs(dat$x2[dat$time != 1] - dat$x2[dat$time != t])
 # Update study design to include spatial random effects
 samp1 <- 1:(j*t)
 samp1 <- as.data.frame(samp1)
@@ -329,18 +330,17 @@ Gradient <- constructGradient(m.3.sample,focalVariable="dx2",non.focalVariables=
 Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
 predY <- predict(m.3.sample,XData=Gradient$XDataNew,expected=TRUE)
 plotGradient(m.3.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="E_t",ylab="predicted N1_t+1",showPosteriorSupport=FALSE,cex.axis=0.75)
-b <- recordPlot()
+p11 <- recordPlot()
 plotGradient(m.3.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1",showPosteriorSupport=FALSE,cex.axis=0.75)
-c <- recordPlot()
-
+p12 <- recordPlot()
 
 m3.post.hmsc <- convertToCodaObject(m.3.sample)
 summary(m3.post.hmsc$Beta)
-bayesplot::mcmc_trace(m3.post.hmsc$Beta)
-bayesplot::mcmc_areas(m3.post.hmsc$Beta,area_method = c("equal height"))
+p13 <- bayesplot::mcmc_trace(m3.post.hmsc$Beta)
+p14 <- bayesplot::mcmc_areas(m3.post.hmsc$Beta,area_method = c("equal height"))
 
 VP <- computeVariancePartitioning(m.3.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
-plotVariancePartitioning(m.3.sample,VP,cols=c("white","skyblue","darkgrey","orange","pink"),args.legend=list(cex=0.75,bg="transparent"))
+p15 <- plotVariancePartitioning(m.3.sample,VP,cols=c("white","skyblue","darkgrey","orange","pink"),args.legend=list(cex=0.75,bg="transparent"))
 
 # prepare for plot
 pred3 <- predict(m.3.sample)
@@ -353,27 +353,25 @@ for(i in 1:length(r)){
 }
 y <- unlist(hold1) # vector of each species' observed N across time points
 yrep <- as.matrix(data.frame(hold2))
-### Mod2 plot ###
-par(mgp=c(2.2,0.45,0), tcl=-0.4, mar=c(2,2,1,1))
-color_scheme_set("brightblue")
+### Mod3 plot ###
+#par(mgp=c(2.2,0.45,0), tcl=-0.4, mar=c(2,2,1,1))
+#color_scheme_set("brightblue")
 #ppc_dens_overlay(y, yrep[1:50, ])
-a <- ppc_intervals(y,yrep,x=rep(dat$time[1:(t-1)],each=10,times=2),prob = 0.95) +
-  labs(x = "time",y = "ln(N)",) +
-  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
-  theme(legend.position = "none")
+#a <- ppc_intervals(y,yrep,x=rep(dat$time[1:(t-1)],each=10,times=2),prob = 0.95) +
+#  labs(x = "time",y = "ln(N)",) +
+#  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+#  theme(legend.position = "none")
 
-postBeta = getPostEstimate(m.3.sample, parName = "Beta")
-plotBeta(m.3.sample, post = postBeta, param = "Mean", supportLevel = 0.95)
+#postBeta = getPostEstimate(m.3.sample, parName = "Beta")
+#plotBeta(m.3.sample, post = postBeta, param = "Mean", supportLevel = 0.95)
 
 # Plot simulation: ggplot
-N$site <- study$site
-N$time <- study$time
-dat <- melt(N, id.vars=c("site","time"))
-dat <- dat[dat$time != 1,]
-dat$logN <- log(dat$value)
-dat$pred_975 <- apply(yrep,2,quantile,probs=.975)
-dat$pred_025 <- apply(yrep,2,quantile,probs=.025)
-ggplot2::ggplot(dat, aes(time, logN, col=variable)) + geom_point() + facet_wrap(~site,nrow=2) + geom_ribbon(aes(ymin=pred_025, ymax=pred_975), alpha=0.2)
-
+gg_dat <- data.frame(y=c(Y[,1],Y[,2]))
+gg_dat$species <- rep(c(1,2),each=390)
+gg_dat$site <- rep(study$site[study$time !=1],times=2)
+gg_dat$time <- rep(study$time[study$time !=1],times=2)
+gg_dat$ci_025 <- apply(yrep,2,quantile,probs=.025)
+gg_dat$ci_975 <- apply(yrep,2,quantile,probs=.975)
+p16 <- ggplot2::ggplot(gg_dat, aes(time, y, col=species)) + geom_point() + facet_wrap(~site,nrow=2) + geom_errorbar(aes(ymin=ci_025, ymax=ci_975), alpha=0.2)
 
 
