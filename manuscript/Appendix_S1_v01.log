@@ -1,11 +1,11 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.7.26)  13 SEP 2024 07:20
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.10.17)  23 OCT 2024 11:31
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
 **Appendix_S1_v01.tex
 (./Appendix_S1_v01.tex
 LaTeX2e <2024-06-01> patch level 2
-L3 programming layer <2024-05-27>
+L3 programming layer <2024-09-10>
 (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2024/02/08 v1.4n Standard LaTeX document class
 (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/base/size10.clo
@@ -97,7 +97,7 @@ LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 )) (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/generic/iftex/iftex.sty
 Package: iftex 2022/02/03 v1.0f TeX engine tests
 ) (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/unicode-math/unicode-math.sty (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/l3kernel/expl3.sty
-Package: expl3 2024-05-27 L3 programming layer (loader) 
+Package: expl3 2024-09-10 L3 programming layer (loader) 
 (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/l3backend/l3backend-xetex.def
 File: l3backend-xetex.def 2024-05-08 L3 backend support: XeTeX
 \g__graphics_track_int=\count276
@@ -109,9 +109,9 @@ Package: unicode-math 2023/08/13 v0.8r Unicode maths in XeLaTeX and LuaLaTeX
 (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/unicode-math/unicode-math-xetex.sty
 Package: unicode-math-xetex 2023/08/13 v0.8r Unicode maths in XeLaTeX and LuaLaTeX
 (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/l3packages/xparse/xparse.sty
-Package: xparse 2024-05-08 L3 Experimental document command parser
+Package: xparse 2024-08-16 L3 Experimental document command parser
 ) (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/l3packages/l3keys2e/l3keys2e.sty
-Package: l3keys2e 2024-05-08 LaTeX2e option processing using LaTeX3 keys
+Package: l3keys2e 2024-08-16 LaTeX2e option processing using LaTeX3 keys
 ) (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/fontspec/fontspec.sty
 Package: fontspec 2024/05/11 v2.9e Font selection for XeLaTeX and LuaLaTeX
 (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/fontspec/fontspec-xetex.sty
@@ -177,7 +177,7 @@ LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
 (Font)                  OT1/cmtt/m/n --> OT1/lmtt/m/n on input line 38.
 ) (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/xcolor/xcolor.sty
-Package: xcolor 2023/11/15 v3.01 LaTeX color extensions (UK)
+Package: xcolor 2024/09/29 v3.02 LaTeX color extensions (UK)
 (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/graphics-cfg/color.cfg
 File: color.cfg 2016/01/02 v1.6 sample color configuration
 )
@@ -185,20 +185,20 @@ Package xcolor Info: Driver file: xetex.def on input line 274.
 (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/graphics-def/xetex.def
 File: xetex.def 2022/09/22 v5.0n Graphics/color driver for xetex
 ) (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/graphics/mathcolor.ltx)
-Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1350.
-Package xcolor Info: Model `RGB' extended on input line 1366.
-Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1368.
-Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1369.
-Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1370.
-Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1371.
-Package xcolor Info: Model `Gray' substituted by `gray' on input line 1372.
-Package xcolor Info: Model `wave' substituted by `hsb' on input line 1373.
+Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1349.
+Package xcolor Info: Model `RGB' extended on input line 1365.
+Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1367.
+Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1368.
+Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1369.
+Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1370.
+Package xcolor Info: Model `Gray' substituted by `gray' on input line 1371.
+Package xcolor Info: Model `wave' substituted by `hsb' on input line 1372.
 ) (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/graphics/dvipsnam.def
 File: dvipsnam.def 2016/06/17 v3.0m Driver-dependent file (DPC,SPQR)
 ) (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/xcolor/svgnam.def
-File: svgnam.def 2023/11/15 v3.01 Predefined colors according to SVG 1.1 (UK)
+File: svgnam.def 2024/09/29 v3.02 Predefined colors according to SVG 1.1 (UK)
 ) (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/xcolor/x11nam.def
-File: x11nam.def 2023/11/15 v3.01 Predefined colors according to Unix/X11 (UK)
+File: x11nam.def 2024/09/29 v3.02 Predefined colors according to Unix/X11 (UK)
 ) (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/geometry/geometry.sty
 Package: geometry 2020/01/02 v5.9 Page Geometry
 (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/graphics/keyval.sty
@@ -889,7 +889,7 @@ File: Appendix_S1_v01_files/figure-latex/figs9-1.pdf Graphic file (type pdf)
 File: Appendix_S1_v01_files/figure-latex/figs9-2.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/figs9-2.pdf>
 
-Overfull \hbox (2.21883pt too wide) in paragraph at lines 443--443
+Overfull \hbox (2.21883pt too wide) in paragraph at lines 445--445
 [][] [] 
  []
 
@@ -919,7 +919,7 @@ File: Appendix_S1_v01_files/figure-latex/figs12-1.pdf Graphic file (type pdf)
 [13]
 
 LaTeX Font Warning: Font shape `TU/lmtt/bx/it' in size <10> not available
-(Font)              Font shape `TU/lmtt/b/sl' tried instead on input line 633.
+(Font)              Font shape `TU/lmtt/b/sl' tried instead on input line 635.
 
 File: Appendix_S1_v01_files/figure-latex/figs13-1.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/figs13-1.pdf>
@@ -938,7 +938,7 @@ File: Appendix_S1_v01_files/figure-latex/figs15-1.pdf Graphic file (type pdf)
 File: Appendix_S1_v01_files/figure-latex/figs15-2.pdf Graphic file (type pdf)
 <use Appendix_S1_v01_files/figure-latex/figs15-2.pdf>
 
-Overfull \hbox (2.21883pt too wide) in paragraph at lines 711--711
+Overfull \hbox (2.21883pt too wide) in paragraph at lines 713--713
 [][] [] 
  []
 
@@ -991,7 +991,7 @@ File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-30-1.pdf Graphic file (ty
 
 
 [25]
-Underfull \vbox (badness 1596) detected at line 1169
+Underfull \vbox (badness 1596) detected at line 1171
  []
 
 
@@ -1050,7 +1050,7 @@ File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-43-1.pdf Graphic file (ty
 [34]
 
 [35]
-Underfull \vbox (badness 3407) detected at line 1546
+Underfull \vbox (badness 3407) detected at line 1548
  []
 
 
@@ -1141,11 +1141,11 @@ File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-60-1.pdf Graphic file (ty
 [49]
 
 [50]
-Underfull \vbox (badness 10000) detected at line 2109
+Underfull \vbox (badness 10000) detected at line 2111
  []
 
 
-Underfull \vbox (badness 10000) detected at line 2109
+Underfull \vbox (badness 10000) detected at line 2111
  []
 
 
@@ -1177,11 +1177,11 @@ File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-66-2.pdf Graphic file (ty
 
 
 [56]
-Underfull \vbox (badness 10000) detected at line 2395
+Underfull \vbox (badness 10000) detected at line 2397
  []
 
 
-Underfull \vbox (badness 10000) detected at line 2395
+Underfull \vbox (badness 10000) detected at line 2397
  []
 
 
@@ -1217,19 +1217,19 @@ File: Appendix_S1_v01_files/figure-latex/unnamed-chunk-72-2.pdf Graphic file (ty
 [63] (./Appendix_S1_v01.aux)
  ***********
 LaTeX2e <2024-06-01> patch level 2
-L3 programming layer <2024-05-27>
+L3 programming layer <2024-09-10>
  ***********
 
 LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 19544 strings out of 476239
- 390040 string characters out of 5786228
- 1952557 words of memory out of 5000000
- 41771 multiletter control sequences out of 15000+600000
+ 19544 strings out of 476234
+ 390027 string characters out of 5786127
+ 921928 words of memory out of 5000000
+ 41776 multiletter control sequences out of 15000+600000
  564544 words of font info for 92 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 90i,12n,123p,1057b,527s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,11n,123p,1057b,527s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
 Output written on Appendix_S1_v01.pdf (63 pages).

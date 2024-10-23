@@ -1,14 +1,16 @@
 ---
 title: "Detection of eco-evolutionary dynamics in metacommunities using Joint Species
   Distribution Models"
-author: "Jelena H. Pantel, Ruben J. Hermann"
-date: "Ecological Modelling, Faculty of Biology, University of Duisburg-Essen, Universitätsstraße
-  5, 45141 Essen, Germany"
+author:
+  - Jelena H. Pantel^[Laboratoire Chrono-environnement,UMR 6249 CNRS-UFC, 16 Route de Gray, 25030 Besançon cedex, France, jelena.pantel@univ-fcomte.fr]
+  - Ruben J. Hermann^[University of Duisburg-Essen, Universitätsstraße 5, 45141 Essen, Germany, ruben.hermann@uni-due.de]
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   bookdown::pdf_document2:
     toc: no
     fig_caption: yes
     latex_engine: xelatex
+    extra_dependencies: ["float"]
     number_sections: true
   bookdown::html_document2: default
   word_document:
@@ -16,7 +18,7 @@ output:
 header-includes:
 - \usepackage{fancyhdr}
 - \pagestyle{fancy}
-- \fancyhead[L]{Author XXX}
+- \fancyhead[L]{Author Pantel and Hermann}
 - \fancyhead[R]{Detection of ecoevo dynamics}
 - \usepackage{lineno}
 - \linenumbers
@@ -28,7 +30,6 @@ bibliography: refs.bib
 ---
 
 ```{r setup,echo=FALSE,warning=FALSE,message=FALSE}
-library(R.matlab)
 library(Hmsc)
 ```
 
@@ -38,8 +39,7 @@ library(Hmsc)
 Title
 ===============================================================================
 
-Detection of eco-evolutionary dynamics in metacommunities using Joint Species
-  Distribution Models
+Detection of eco-evolutionary dynamics in metacommunities using Joint Species Distribution Models
     
 Abstract
 ===============================================================================
@@ -56,56 +56,15 @@ Methods
 
 ## Simulation model
 
-We simulated growth and competition dynamics for a multi-species assemblage in a patchy landscape, with site variation in one environmental property (Figure \@ref(fig:fig1)).
-
-```{r fig1, echo = FALSE, eval = TRUE, fig.width = 5, fig.height = 5, fig.cap = "Spatial maps showing position of all 50 sites in the simulation, their value for the single environmental variable E, and their value for initial Simpson's diversity at the beginning of the simulation.", warning=FALSE,message=FALSE}
-
-## Figure 1. Plot of location of sites in landscape, associated E values, and associated diversity values
-result <- paste("../data/h_01_d_minus3_res.mat",sep="")
-dat  <- R.matlab::readMat(toString(result))
-
-layout(matrix(c(1,3,2,4),ncol=2), width = c(2,1),height = c(1,1))
-pal <- colorRampPalette(c("white", "blue"))
-plot(dat$xy,col="grey90", fill=TRUE, warnings=F, xlab="X coord",ylab="Y coord")
-options(warn=0)
-points(dat$xy[,1], dat$xy[,2],pch = 21,bg = pal(10)[as.numeric(cut(dat$E,breaks = 10))],col="black")
-
-legend_image <- as.raster(matrix(rev(pal(10)), ncol=1))
-plot(c(0,2),c(0,1),type = 'n', axes = F,xlab = '', ylab = '', main = 'E value')
-text(x=1.5, y = seq(0,1,l=5), labels = seq(0,1,l=5))
-rasterImage(legend_image, 0, 0, 1, 1) ## set new for overplot w/ next plot
-
-pal <- colorRampPalette(c("white", "orange"))
-a  <- vegan::diversity(dat$N[,,1],index="invsimpson")
-a[is.finite(a)==FALSE] <- 0
-plot(dat$xy,col="grey90", fill=TRUE, warnings=F, xlab="X coord",ylab="Y coord")
-options(warn=0)
-points(dat$xy[,1], dat$xy[,2],pch = 21,bg = pal(10)[as.numeric(cut(a,breaks = 10))],col="black")
-
-legend_image <- as.raster(matrix(rev(pal(10)), ncol=1))
-plot(c(0,2),c(0,1),type = 'n', axes = F,xlab = '', ylab = '', main = 'inverse Simpson diversity')
-text(x=1.5, y = seq(0,1,l=6), labels = seq(0,15,l=6))
-rasterImage(legend_image, 0, 0, 1, 1, cex=0.75) ## set new for overplot w/ next plot
-```
+We simulated growth and competition dynamics for a multi-species assemblage in a patchy landscape, with site variation in one environmental property.
 
 ### Environmental variation
-
-
 
 Population growth for species in the metacommunity simulation follows a Leslie-Gower model (a discrete-time version of a Lotka-Volterra model [@Beverton1957] [@Leslie1958]). We consider the impact of trait evolution for growth using a discrete time quantitative genetic model of evolutionary rescue [@Gomulkiewicz1995]. The model for population size is as follows:
 
 $$ N_{i,t+1} =\frac{\hat{W}e^ \frac{-[(\frac{w+(1-h^2)P} {P+w})(E-x_{i,t})]^2}{2(P+w)}N_{i,t}} {1 + \alpha_{ii}N_{i,t} + \sum_{j \neq i}^{S} \alpha_{ij}N_{j,t}} $$
 where $N_i,t$ is the population size of species *i* at time *t*, \( \hat{W} \) is calculated as \( \hat{W}=W_{max}\sqrt(\frac{w}{P+w}) \), \(W_{max}\) is the species' maximum per-capita growth rate, *w* is the width of the Gaussian fitness function (which determines the strength of selection, as increasing values indicate a weaker reduction in fitness with distance from optimum trait value), *P* is the width of the distribution of the phenotype *x*, $h^2$ is the heritability of the trait *x*, *E* is the local environmental optimum trait value, $x_{i,t}$ is the trait value of species *i* at time *t*, $\alpha_{ii}$ is the intraspecific competition coefficient (the per capita impact of species *i* on itself) and $\alpha_{ij}$ is the interspecific competition coefficient. Populations have a critical density $N_c$, below which the population is subject to extinction due to demographic stochasticity at a probability of *p* [@Gomulkiewicz1995].
 
-This model was used in Pantel & Becks [@Pantel2023] to evaluate the consequences of adaptive evolution for coexistence in a three-species system. To expand this model to a metacommunity, we consider the evolution of multiple species (*S* = 15) in a landscape of patches (*k* = 50). The patches have values of an environmental property *E* (drawn from a uniform distribution ranging from 0 to 1) that determines the local optimum phenotype *E* = $x_{opt}$, i.e. where species experience their absolute fitness $W_{max}$, and patches also have spatial locations *X* and *Y* (both drawn from U(0, 1)). The patches thus have a connectivity matrix **D** (here given by their Euclidean distance), as well as a connectivity matrix **C** that is a Gaussian function of **D** and species dispersal rate $d_i$.
-
-To simulate trait evolution together with species growth and competition in the landscape, we used parameter values of \(W_{max}\) = 2, *P* = 1, *w* = 10, $N_c$ = 100, and *p* = 0.001. The simulated metacommunity was initialized in a way that mimics community assembly in small vernal pools that periodically flood (and thus are reset seasonally). In the simulated pool system, local communities are drawn at random from the regional species pool, and thus their initial degree of maladaptation in the pool is random as well. The initial species richness of each site $s_{0k}$ was drawn from a random Poisson distribution, $s_{0k} \sim Pois(0.75)$, the initial population size for all species $N_{0i} \sim Pois(10)$, and the initial degree of maladaptation \(\beta_{i0} \sim Gamma(0.75,1)\). From this \(\beta_{i0}\), the initial distance to the local patch's optimum phenotype was calculated as $d_{i0}=\sqrt{B_{i0}(w+P)}$ and the initial trait value for each species $x_{i0}$ was calculated by subtracting $d_{i0}$ from the local environmental optimum value $E_k$ (Appendix S1, Figure S1.1).
-
-The species interaction matrix was fixed throughout the simulation, with \(\alpha_{ii} = 0.00125\) and \(\alpha_{ij} \sim U(0.0015,1)\). After draws for all random parameter values, the same resulting initial community was used for all simulations, to allow direct comparison across dispersal and heritability values. Simulations were run across a range of dispersal values (identical for all species; *d* = 0, $10^{-9},10^{-8},10^{-7},10^{-6},10^{-5},10^{-4},10^{-3},10^{-2}$, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1) and heritability values (identical for all species: $h^2$ = 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1). The simulations were run in MATLAB (version R2023a) for 1000 time steps and produced records of $N_{ikt}$ and $x_{ikt}$. To test the impacts of strength of selection and environmental variability, we repeated simulations at a single, representative level of heritability and dispersal ($d = 10^{-3}$, $h^2 = 0.1$) in four different scenarios: Scenario 1 (weak selection, fixed environment: $P = 1, w = 10, v[E] = 0$), Scenario 2 (strong selection, fixed environment: $P = 0.1, w = 0.2, v[E] = 0$), Scenario 3 (weak selection, variable environment: $P = 1, w = 10, v[E] = 0.01$), and Scenario 4 (strong selection, variable environment: P = 0.1, w = 0.2, v[E] = 0.01). Environmental variability was implemented by adding random noise to $E_k$ every 10 time steps ($E_{k,t+1} \sim N(E_{k,t},v[E])$).
-
-*Statistical model*
-
-To determine the relative influence of environmental and spatial properties, intra- and interspecific population dynamics, and evolutionary dynamics for community structure, we applied hierarchical modelling of species communities (HMSC, [@Ovaskainen2017HMSC] [@Tikhonov2020]) to model the abundance at each site and year for each species $N_{ikt}$. The abundance values were modeled as $N_{ikt} \sim N(L_{ikt},\sigma_2)$, where the linear predictors **L** are the sum of fixed and random effects **L^F^** + **L^R^** [@Tikhonov2020]. The fixed effects were (1) $E_k$, the value of the site’s environmental parameter (predictor 1), (2) the value of each species' population size the time step before $N_{ik,t-1}$ (predictors 2-16; see [@Sandal2022]), (3) the absolute value of the change in each species' trait value from the previous time step to the next $|\Delta x_{ik,t-1 \to t}|$ (predictors 17-31), (4) and an interaction term for population size by change in trait value $N_{ik,t-1} \times |\Delta x_{ik,t-1 \to t}|$ (predictors 32-46), which led to a total of 46 predictors. The random effects were modeled at the site-level ($\epsilon_{ik} \sim N(0, \Omega^S)$, where $\Omega^S$ is the site species-to-species covariance matrix) and at the time step level ($\epsilon_{it} \sim N(0, \Omega^T)$, where $\Omega^T$ is the temporal species-to-species covariance matrix) using a latent variable approach. In this approach, species-to-species covariance matrices are computed as $\Omega = \lambda \intercal \lambda$, where $\lambda$ are the loadings of each species with latent variables, and latent variables are modeled as $\epsilon_{ik} = \sum_B \eta_{kB} \lambda_{Bi}$ (site) and $\epsilon_{it} = \sum_B \eta_{tB} \lambda_{Bi}$ (time) for *B* latent variables considered [@Ovaskainen2016]. The spatial latent variables represent a spatial model, where species respond to some latent spatial predictor associated with the *xy* coordinates of the sites [@Tikhonov2020]. Analysis and was conducted in R (version 4.2.3) using packages ‘Hmsc’ and 'R.matlab' ([@Bengtsson2022]; [@Tikhonov2022]).
 
 Results
 ===============================================================================
