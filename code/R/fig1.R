@@ -382,4 +382,8 @@ c <- plot_grid(p16,plot_grid(p11,p12,nrow=2),p14,p15,nrow=1,rel_widths=c(3,1,1,1
 ### ### ### ### ### ### ###
 d <- plot_grid(p1,plot_grid(p2,p3,nrow=2),p4,p5,p6,plot_grid(p7,p8,nrow=2),p9,p10,p16,plot_grid(p11,p12,nrow=2),p14,p15,nrow=3,ncol=4,rel_widths=c(3,1,1,1,3,1,1,1,3,1,1,1))
 
+pdf("./output/fig1.pdf",width=8,height=4)
+d
+dev.off()
+
 

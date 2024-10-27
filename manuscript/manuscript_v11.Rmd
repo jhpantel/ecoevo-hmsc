@@ -54,7 +54,13 @@ XXXXX
 Methods
 ================================================================================
 
-## Simulation model
+## Linear statistical models for one- and two-species models of growth, competition, and trait evolution
+
+We evaluated whether linear regression models can appropriately capture the dynamics that drive species abundances in more complex communities. We fit data generated from simulation models with increasing complexity to Bayesian linear regression models. These simulation models were (i) a single-species model of discrete-time logistic population growth, (ii) expanded to include a randomly fluctuating environmental property $E$ that impacts the species' population growth rate, (iii) a two-species model of logistic growth and competition that was then (iv) expanded to consider a randomly fluctuating environmental property, (v) and further expanded to consider evolution in a trait $x$ that is selected by the environmental property, and finally (vi) the model of two-species growth, competition, environmental change, and evolution in a spatially structured (10-patch) habitat.
+
+For linear regression models to fit to the simulated population size data, we began with models using population size and environment as fixed effects ($N_t \sim N_{t+1} + E_t + E_t^2$), and progressed to a mixed model using environment and trait evolution as fixed effects ($N_t \sim E_t + E_t^2 + |\Delta x|$) and time and spatial distance as random effects. For consistency, all linear regression models were implemented using HMSC (Hierarchical Modelling of Species Communities [@Ovaskainen2017HMSC] [@Tikhonov2020]). HMSC uses a latent variable approach as an alternative to directly modelling species interaction coefficients, estimating a reduced number of linear combinations of species abundances that best predict future population size values. For linear models fit to data generated in simulations *iii*, *iv*, *v*, and *vi* above, the time random effect was implemented to capture species interactions (as part of the temporal species association matrix estimated by the model), and the spatial random effect was implemented in model *vi* to capture spatial covariance in abundances as a function of distance between sites. Full methodological details are given in Appendix S1.
+
+## Evolution in metacommunities and HMSC
 
 We simulated growth and competition dynamics for a multi-species assemblage in a patchy landscape, with site variation in one environmental property.
 
@@ -69,7 +75,26 @@ where $N_i,t$ is the population size of species *i* at time *t*, \( \hat{W} \) i
 Results
 ===============================================================================
 
-XXXX
+## Linear statistical models for one- and two-species models of growth, competition, and trait evolution
+
+Linear regression models can estimate the impacts of intra- and interspecific competition, environmental variation, and trait evolution for population size in simple one- and two-species models of population growth. In simple cases (one-species models, linear and quadratic relationships between environment and population size), the regression coefficients successfully reflect the direction and magnitude of the relationships included in the non-linear simulation model (the impact of $N_t$ and $E_t$ for $N_{t+1}$). However, as the processes included in the simulation models become slightly more complex (competition with a second species, spatial structure), regression coefficients were useful for prediction but not for recreating the underlying processes driving changes in population size (Appendix S1; REF?).
+
+To consider species interactions and environmental fluctuations (model *iv*; Figure 1a \@ref(fig:fig1)), we used the latent variable modelling approach implemented in HMSC. The linear model successfully estimated coefficients for fixed environmental effects that captured the impacts of environment for population size in both species (Figure 1b,c) and partitioned the relative importance of the environment and species interactions for species abundances (Figure 1d). The model coefficients could also predict the population size values over time (Figure 1a), though the quality of this prediction varied depending on the level of environmental noise (Appendix S1).
+
+```{r, out.width="90%", include=TRUE, fig.align="center", fig.cap=c("your caption"), echo=FALSE}
+knitr::include_graphics("../output/fig1.pdf")
+```
+
+
+The HMSC model was successfully modelled changes in species abundances when trait evolution was introduced (model *v*; Figure 1e \@ref(fig:fig1)). Fixed effect coefficients for the environmental driver and the total trait change from one time to the next (|\Delta x|) matched well with observed data (Figure 1f,g). The model estimated the relative importance of the environmental driver, trait evolution in both species, and species interactions (Figure 1h), and predicted the observed species abundances well (Figure 1e). Spatial structure was also reproduced in the coefficients of the linear HMSC model by using spatial random effects to capture covariance in species abundances as a function of spatial distance between sites in the 10-patch simulation model (model *vi*; Figure 1i,j,k \@ref(fig:fig1)). The variation partition successfully reflects separation of environmental drivers from trait evolution, species interactions, and spatial random effects (Figure 1l), and we show in Appendix S1 that the relative importance of trait evolution increases when we use a simulation model with less spatial and environmental variation and weak species interactions.
+
+## Evolution in metacommunities and HMSC
+
+We simulated growth and competition dynamics for a multi-species assemblage in a patchy landscape, with site variation in one environmental property.
+
+### Environmental variation
+
+Population growth for spec
 
 Discussion
 ================================================================================
