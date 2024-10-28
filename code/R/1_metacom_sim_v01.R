@@ -18,20 +18,29 @@ check <- function(x){
     x <=d[i]
 }
 
-# This function is the randome sample to chose amone sites where the species can immigrate,
+# This function is the random sample to chose among sites where the species can immigrate,
 # weighted by connectivitx.
 # It takes simply a vector of all patches in, so:
 # x = site/1:50 and i = species number (is part of the loop for dispersal)
 disp_patch <- function(x){
     sample(x=site[-x],size=mig_count[x],replace=T,prob=connec[i,-x,x])
 }
-#Function to update the trait value, where the environmental value is substracted
+#Function to update the trait value, where the environmental value is subtracted
 #by the distance of the trait (which is changed by evo)
 #x = The number of the species
 #xt_up = the updated trait value, which is saved into xt
 up_trait <- function(x){
   xt_up<-E-dt[,x,t]
 }
+
+#Function to update the trait distance value, to the optimal value
+#by the new E value
+#x = The number of the species
+#dt_up = the updated trait distance value, which is saved into dt
+up_dist <- function(x){
+  dt_up <- E-xt[,x,t-1]
+}
+
 ###################################
 ## Step 1. Initialize species    ##
 ###################################
@@ -45,7 +54,9 @@ Wmax = 2    # Maximum population growth rate for all species
 Wt = array(numeric(),c(patch,spec,time))   # Record of fitness vlaues over time, patch x spec x time
 dt = array(numeric(),c(patch,spec,time))   # Record of distance from optimum value over time, patch x spec x time
 xt = array(9999,c(patch,spec,time))     # Record of phenotype value over time, patch x spec x time
+Et = array(numeric(),c(patch,time))   # Record of environmental value over time, patch x spec x time
 
+var = 0.1 #Adding variation to the environmental value for no variation set to 0 (var is the sd of the normal distribution with a mean of 0)
 ## Heritability
 # Scenario 1: No evolution
 #h2 = array(0,c(1,spec))
@@ -87,6 +98,7 @@ for (i in 1:spec) {
 
 ## Environmental properties
 E = array(runif(patch),c(patch,1))    # Each patch has an environmental optimum value E. d, distance between species phenotype and patch optimum, will equal some phenotype value of the species x minus this E quantity. So d = x - E
+Et[,1] = E
 
 ## Initial occupancy
 # Random initial occupancy
@@ -152,12 +164,18 @@ h2 = array(h2_vals[2],c(1,spec)) #which h2_value do you want to use? - just usin
 k = ((w+((1-h2)*P))/(w+P))
 d = array(d_vals[8],c(1,spec))  #which d_value do you want to use? - just using 3 to test
 
+#load("./data/h_01_d_minus3_res.RData")
+
 ###################################################
 ## Step 3. Evolving metacommunity simulations    ##
 ###################################################
 
-for (t in 2:time) {
+for (t in 2:200) {
     t
+    #E fluctuation, here with directional change (with the abs() function)
+    if (t%%10==0) {E = E + abs(rnorm(50,0,var))}
+    Et[,t] = E
+    
     pop = N[,,t] # Write this generation's population size into a temporary record 
     pop[N[,,t-1]==0] = 0 # Carry over all extinct species
 
@@ -176,13 +194,17 @@ for (t in 2:time) {
     last=N[,,t-1]
     
     ## Carry over all populations that are above the critical population density
-    pop[last>=100] = last[last>=100] #this had to be moved up, as R does not like the NAs, when accesing position information
+    pop[last>=100] = last[last>=100] #this had to be moved up, as R does not like the NAs, when accessing position information
     pop[pop>extprob & pop < 100] = last[N[,,t-1]>0 & N[,,t-1]<100 & pop>extprob] # Surviving populations
 
-  
-
-    ## Growth of all remaining populations
-    dt[,,t] = sweep(dt[,,t-1],2,k,"*") # Update distance to optimum phenotype
+    
+## Growth of all remaining populations
+    if (t%%10==0) {
+      dt[,,t] = sapply(1:spec,up_dist) # updating trait distance to the new environmental optimum
+      dt[,,t] = sweep(dt[,,t],2,k,"*")}  # update distance with evolution to the new optimum
+    if (t%%10!=0) {dt[,,t] = sweep(dt[,,t-1],2,k,"*")}  # update distance with evolution to the new optimum
+    
+    # Update distance to optimum phenotype
     # Revise the value for the population that went stochastically extinct this generation
     if (nrow(extinct)>0) {
         for (X in 1:nrow(extinct)) {
@@ -283,10 +305,17 @@ for (t in 2:time) {
 ## update N matrix, end round
 
 #### Step 4. Save results
+#A small extra step, if the simulation ran for only 200 time steps
+dt <- dt[,,1:200]
+N <- N[,,1:200]
+Wt <- Wt[,,1:200]
+xt <- xt[,,1:200]
+Et <- Et[,1:200]
+
 d_lev <- c("d_zero","d_minus9","d_minus8","d_minus7","d_minus6","d_minus5","d_minus4","d_minus3","d_minus2","d_01","d_02","d_03","d_04","d_05","d_06","d_07","d_08","d_09","d_10")
 h_lev <- c("h_0_","h_01_","h_02_","h_03_","h_04_","h_05_","h_06_","h_07_","h_08_","h_09_","h_10_")
 z <- 2
 f <- 8
 print(paste(h2_names[z],d_names[f],sep=""))
 result <- paste(h_lev[z],d_lev[f],sep="")
-save.image(paste("././data/",result,"_res.RData",sep=""))
+save.image(paste("././data/",result,"_res_short_Edirect_sd0.1.RData",sep=""))
