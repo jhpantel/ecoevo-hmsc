@@ -146,7 +146,7 @@ verbose <- 50*thin
 
 m.1 <- Hmsc::sampleMcmc(m,samples=samples,transient=transient,nChains=nChains,nParallel=nChains,verbose=verbose,thin=thin,updater = list(GammaEta = FALSE))
 a <- toc()
-save.image(file=file.path(paste("./data/",h_lev[z],d_lev[f],"_hmsc_v01.RData",sep=""))) # Scenario 1
+save.image(file=file.path(paste("./data/",h_lev[z],d_lev[f],"_hmsc_v01_short.RData",sep=""))) # Scenario 1
 # save.image(file=file.path(paste(h_lev[z],d_lev[f],"_hmsc_v02.RData",sep=""))) # Scenario 2
 # save.image(file=file.path(paste(h_lev[z],d_lev[f],"_hmsc_v03.RData",sep=""))) # Scenario 3
 # save.image(file=file.path(paste(h_lev[z],d_lev[f],"_hmsc_v04.RData",sep=""))) # Scenario 4
