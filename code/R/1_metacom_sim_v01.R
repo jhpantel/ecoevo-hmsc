@@ -38,7 +38,7 @@ up_trait <- function(x){
 #x = The number of the species
 #dt_up = the updated trait distance value, which is saved into dt
 up_dist <- function(x){
-  dt_up <- E-xt[,x,t]
+  dt_up <- E-xt[,x,t-1]
 }
 
 ###################################
