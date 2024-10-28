@@ -18,20 +18,29 @@ check <- function(x){
     x <=d[i]
 }
 
-# This function is the randome sample to chose amone sites where the species can immigrate,
+# This function is the random sample to chose among sites where the species can immigrate,
 # weighted by connectivitx.
 # It takes simply a vector of all patches in, so:
 # x = site/1:50 and i = species number (is part of the loop for dispersal)
 disp_patch <- function(x){
     sample(x=site[-x],size=mig_count[x],replace=T,prob=connec[i,-x,x])
 }
-#Function to update the trait value, where the environmental value is substracted
+#Function to update the trait value, where the environmental value is subtracted
 #by the distance of the trait (which is changed by evo)
 #x = The number of the species
 #xt_up = the updated trait value, which is saved into xt
 up_trait <- function(x){
   xt_up<-E-dt[,x,t]
 }
+
+#Function to update the trait distance value, to the optimal value
+#by the new E value
+#x = The number of the species
+#dt_up = the updated trait distance value, which is saved into dt
+up_dist <- function(x){
+  dt_up <- E-xt[,x,t]
+}
+
 ###################################
 ## Step 1. Initialize species    ##
 ###################################
@@ -185,13 +194,17 @@ for (t in 2:200) {
     last=N[,,t-1]
     
     ## Carry over all populations that are above the critical population density
-    pop[last>=100] = last[last>=100] #this had to be moved up, as R does not like the NAs, when accesing position information
+    pop[last>=100] = last[last>=100] #this had to be moved up, as R does not like the NAs, when accessing position information
     pop[pop>extprob & pop < 100] = last[N[,,t-1]>0 & N[,,t-1]<100 & pop>extprob] # Surviving populations
 
-  
-
-    ## Growth of all remaining populations
-    dt[,,t] = sweep(dt[,,t-1],2,k,"*") # Update distance to optimum phenotype
+    
+## Growth of all remaining populations
+    if (t%%10==0) {
+      dt[,,t] = sapply(1:spec,up_dist) # updating trait distance to the new environmental optimum
+      dt[,,t] = sweep(dt[,,t],2,k,"*")}  # update distance with evolution to the new optimum
+    if (t%%10!=0) {dt[,,t] = sweep(dt[,,t-1],2,k,"*")}  # update distance with evolution to the new optimum
+    
+    # Update distance to optimum phenotype
     # Revise the value for the population that went stochastically extinct this generation
     if (nrow(extinct)>0) {
         for (X in 1:nrow(extinct)) {
