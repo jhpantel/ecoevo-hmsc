@@ -4,6 +4,8 @@
 ## Scenario 1. across d and h2 levels
 ## # P = 1, w = 2, v[E] = 0
   
+library(vegan)
+library(ggplot2)
 set.seed(1)
 
 ###################################
@@ -15,22 +17,30 @@ set.seed(1)
 # x = rlist (list of randomly generated numbers (runif) for each individual in a patch of species i)
 # i = species number (is part of the loop for dispersal)
 check <- function(x){
-    x <=d[i]
+  x <=d[i]
 }
 
-# This function is the randome sample to chose amone sites where the species can immigrate,
+# This function is the random sample to chose among sites where the species can immigrate,
 # weighted by connectivitx.
 # It takes simply a vector of all patches in, so:
 # x = site/1:50 and i = species number (is part of the loop for dispersal)
 disp_patch <- function(x){
-    sample(x=site[-x],size=mig_count[x],replace=T,prob=connec[i,-x,x])
+  sample(x=site[-x],size=mig_count[x],replace=T,prob=connec[i,-x,x])
 }
-#Function to update the trait value, where the environmental value is substracted
+#Function to update the trait value, where the environmental value is subtracted
 #by the distance of the trait (which is changed by evo)
 #x = The number of the species
 #xt_up = the updated trait value, which is saved into xt
 up_trait <- function(x){
   xt_up<-E-dt[,x,t]
+}
+
+#Function to update the trait distance value, to the optimal value
+#by the new E value
+#x = The number of the species
+#dt_up = the updated trait distance value, which is saved into dt
+up_dist <- function(x){
+  dt_up <- E-xt[,x,t-1]
 }
 
 ###################################
@@ -46,7 +56,9 @@ Wmax = 2    # Maximum population growth rate for all species
 Wt = array(numeric(),c(patch,spec,time))   # Record of fitness vlaues over time, patch x spec x time
 dt = array(numeric(),c(patch,spec,time))   # Record of distance from optimum value over time, patch x spec x time
 xt = array(9999,c(patch,spec,time))     # Record of phenotype value over time, patch x spec x time
+Et = array(numeric(),c(patch,time))   # Record of environmental value over time, patch x spec x time
 
+var = 0.1 #Adding variation to the environmental value for no variation set to 0 (var is the sd of the normal distribution with a mean of 0)
 ## Heritability
 # Scenario 1: No evolution
 #h2 = array(0,c(1,spec))
@@ -83,11 +95,12 @@ dkern = array(0.01,c(1,spec))
 connec = array(0,c(spec,patch,patch))  # Species x patch x patch matrix of connectivtiy values
 
 for (i in 1:spec) {
-    connec[i,,] = exp((-1/dkern[i])*distance)
+  connec[i,,] = exp((-1/dkern[i])*distance)
 }
 
 ## Environmental properties
 E = array(runif(patch),c(patch,1))    # Each patch has an environmental optimum value E. d, distance between species phenotype and patch optimum, will equal some phenotype value of the species x minus this E quantity. So d = x - E
+Et[,1] = E
 
 ## Initial occupancy
 # Random initial occupancy
@@ -100,11 +113,11 @@ for (i in 1:patch) {init[[i]] = sample(1:spec,occ[i])}
 N[,,1]=0 
 start = array(numeric())
 for (i in 1:patch){
-    if(length(n[[i]]!=0)){  # If there are species in this location
-        N[i,init[[i]],1] = n[[i]] # Seed initial species occupancy at half the carrying capacity
-        start.1 = matrix(c(rep(i,length(init[[i]])),init[[i]]),c(length(init[[i]]),2)) #this is from line 92 of the matlab script, saving initial species and the patch in which they start
-        start = rbind(start,start.1)
-    }
+  if(length(n[[i]]!=0)){  # If there are species in this location
+    N[i,init[[i]],1] = n[[i]] # Seed initial species occupancy at half the carrying capacity
+    start.1 = matrix(c(rep(i,length(init[[i]])),init[[i]]),c(length(init[[i]]),2)) #this is from line 92 of the matlab script, saving initial species and the patch in which they start
+    start = rbind(start,start.1)
+  }
 }
 start = start[order(start[,2]),]
 a = start[,1]
@@ -167,8 +180,12 @@ for(v.d in 1:length(d_vals)){
     ## Step 3. Evolving metacommunity simulations    ##
     ###################################################
     
-    for (t in 2:time) {
+    for (t in 2:200) {
       t
+      #E fluctuation, here with directional change (with the abs() function)
+      if (t%%10==0) {E = E + abs(rnorm(50,0,var))}
+      Et[,t] = E
+      
       pop = N[,,t] # Write this generation's population size into a temporary record 
       pop[N[,,t-1]==0] = 0 # Carry over all extinct species
       
@@ -191,9 +208,13 @@ for(v.d in 1:length(d_vals)){
       pop[pop>extprob & pop < 100] = last[N[,,t-1]>0 & N[,,t-1]<100 & pop>extprob] # Surviving populations
       
       
-      
       ## Growth of all remaining populations
-      dt[,,t] = sweep(dt[,,t-1],2,k,"*") # Update distance to optimum phenotype
+      if (t%%10==0) {
+        dt[,,t] = sapply(1:spec,up_dist) # updating trait distance to the new environmental optimum
+        dt[,,t] = sweep(dt[,,t],2,k,"*")}  # update distance with evolution to the new optimum
+      if (t%%10!=0) {dt[,,t] = sweep(dt[,,t-1],2,k,"*")}  # update distance with evolution to the new optimum
+      
+      # Update distance to optimum phenotype
       # Revise the value for the population that went stochastically extinct this generation
       if (nrow(extinct)>0) {
         for (X in 1:nrow(extinct)) {
@@ -288,22 +309,131 @@ for(v.d in 1:length(d_vals)){
       }
     }
     #### Step 4. Save results
+    #A small extra step, if the simulation ran for only 200 time steps
+    dt <- dt[,,1:200]
+    N <- N[,,1:200]
+    Wt <- Wt[,,1:200]
+    xt <- xt[,,1:200]
+    Et <- Et[,1:200]
     d_lev <- c("d_zero","d_minus9","d_minus8","d_minus7","d_minus6","d_minus5","d_minus4","d_minus3","d_minus2","d_01","d_02","d_03","d_04","d_05","d_06","d_07","d_08","d_09","d_10")
     h_lev <- c("h_0_","h_01_","h_02_","h_03_","h_04_","h_05_","h_06_","h_07_","h_08_","h_09_","h_10_")
     print(paste(h2_names[v.h2],d_names[v.d],sep=""))
     result <- paste(h_lev[v.h2],d_lev[v.d],sep="")
-    save.image(paste("././data/",result,"_res_v02.RData",sep=""))
+    save.image(paste("/Users/jhpantel/Nextcloud/Pantel/data/",result,"_res_v02.RData",sep=""))
     #### Remove results
     rm(list=setdiff(ls(), c("d_vals","h2_vals","d_names","h2_names","v.d","v.h2")))
   }
 }
 
+###################################
+## Step 5. Evaluate data.        ##
+###################################
+CV <- function(x){
+  a <- mean(x,na.rm=T)	#Get the average of all values
+  b <- (x - a)^2					#Squared deviations from mean
+  c <- sqrt((sum(b,na.rm=T))/(length(x[is.na(x) == F])-1)) #sum squared deviations, divide by sample N-1, take square root
+  d <- c/a  #coefficient of variation
+  return(CV=d)
+}
 
+standard_error <- function(x){
+  st_err <- sd(x) / sqrt(length(x))	
+  
+  return(st_err)
+}
+####### Figure 1. Plot of diversity (y-axis) across dispersal levels (x-axis) for simulations at different levels of heritability (h2). #######
+div_200 <- array(NA,dim=c(19,11,3,3),dimnames=list(c("d_zero","d_minus9","d_minus8","d_minus7","d_minus6","d_minus5","d_minus4","d_minus3","d_minus2","d_01","d_02","d_03","d_04","d_05","d_06","d_07","d_08","d_09","d_10"),c("h_0_","h_01_","h_02_","h_03_","h_04_","h_05_","h_06_","h_07_","h_08_","h_09_","h_10_"),c("alpha","gamma","beta"),c("mean","CV","SDE")))
+d_lev <- c("d_zero","d_minus9","d_minus8","d_minus7","d_minus6","d_minus5","d_minus4","d_minus3","d_minus2","d_01","d_02","d_03","d_04","d_05","d_06","d_07","d_08","d_09","d_10")
+h_lev <- c("h_0_","h_01_","h_02_","h_03_","h_04_","h_05_","h_06_","h_07_","h_08_","h_09_","h_10_")
+## Inverse Simpson's diversity across additional heritability levels
+for(i in 1:length(d_lev)){
+  for(j in 1:length(h_lev)){
+    ## Read in population size values
+    result <- paste("/Users/jhpantel/Nextcloud/Pantel/data/",h_lev[j],d_lev[i],"_res_v02.RData",sep="")
+    tmp.env <- new.env()
+    load(toString(result),envir=tmp.env)
+    r <- get("N",pos=tmp.env) # alpha
+    rm(tmp.env)
+    r <- r[,,200]
+    
+    
+    div_200[i,j,1,1] <- mean(diversity(r[rowSums(r) != 0,],index="invsimpson")) # mean
+    div_200[i,j,1,2] <- CV(diversity(r[rowSums(r) != 0,],index="invsimpson")) # CV
+    div_200[i,j,1,3] <- standard_error(diversity(r[rowSums(r) != 0,],index="invsimpson")) # SE
+    
+    # gamma
+    div_200[i,j,2,1] <- if (is.null(dim(r[rowSums(r) != 0,])[1])) {NA} else if (dim(r[rowSums(r) != 0,])[1] < 2) {NA} else {diversity(colSums(r[rowSums(r) != 0,]),index="invsimpson")}
+    
+    # beta
+    div_200[i,j,3,1] <- if (is.null(dim(r[rowSums(r) != 0,])[1])) {NA} else if (dim(r[rowSums(r) != 0,])[1] < 2) {NA} else {mean(diversity(colSums(r[rowSums(r) != 0,]),index="invsimpson") / diversity(r[rowSums(r) != 0,],index="invsimpson"))}
+    
+    div_200[i,j,3,2] <- if (is.null(dim(r[rowSums(r) != 0,])[1])) {NA} else if (dim(r[rowSums(r) != 0,])[1] < 2) {NA} else {CV(diversity(colSums(r[rowSums(r) != 0,]),index="invsimpson") / diversity(r[rowSums(r) != 0,],index="invsimpson"))}
+    
+    div_200[i,j,3,3] <- if (is.null(dim(r[rowSums(r) != 0,])[1])) {NA} else if (dim(r[rowSums(r) != 0,])[1] < 2) {NA} else {standard_error(diversity(colSums(r[rowSums(r) != 0,]),index="invsimpson") / diversity(r[rowSums(r) != 0,],index="invsimpson"))}
+  }
+}
 
+## Plot results across heritability levels
+## Plot of mean and SE for gamma diversity
+##t1000 only
+par(mfcol=c(3,1),mai = c(0.3, 0.3, 0.1, 0.1))
+# colors
+colfunc <- colorRampPalette(c("black", "green"))
+point_col <- colfunc(11)
+# gamma
+plot(1:length(d_lev),div_200[,1,2,1],type="n",ylim=c(0,15), xaxt="n", yaxt="n",xlab="dispersal (d)",ylab="diversity",main="")
+axis(1, at=1:19, labels=c(0,expression(10^-9),expression(10^-8),expression(10^-7),expression(10^-6),expression(10^-5),expression(10^-4),expression(10^-3),expression(10^-2),0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1), las=1)
+axis(2, at=c(0:15), las=1)
+# h2=0
+points(1:length(d_lev),div_200[,1,2,1],pch=19,col=point_col[1],cex=.7, type="b") # gamma
+#arrows(1:length(d_lev), div_1000[,1,2,1], 1:length(d_lev), div_1000[,1,2,1]+div_1000[,1,2,3], length=0.05, angle=90, code=2, lwd=1, col="black")
+#arrows(1:length(d_lev), div_1000[,1,2,1], 1:length(d_lev), div_1000[,1,2,1]-div_1000[,1,2,3], length=0.05, angle=90, code=2, lwd=1, col="black")
+# loop across h2
+for(i in 2:length(h_lev)){
+  points(1:length(d_lev),div_200[,i,2,1],pch=19,col=point_col[i],cex=.7, type="b") # gamma
+  #arrows(1:length(d_lev),div_1000[,i,2,1],1:length(d_lev),div_1000[,i,2,1]+div_1000[,i,2,3],length=0.05, angle=90, code=2, lwd=1,col="black")
+  #arrows(1:length(d_lev),div_1000[,i,2,1],1:length(d_lev),div_1000[,i,2,1]-div_1000[,i,2,3],length=0.05, angle=90, code=2, lwd=1, col="black")
+}
 
+# alpha
+plot(1:length(d_lev),div_200[,1,2,1],type="n",ylim=c(0,15), xaxt="n", yaxt="n",xlab="dispersal (d)",ylab="diversity",main="")
+axis(1, at=1:19, labels=c(0,expression(10^-9),expression(10^-8),expression(10^-7),expression(10^-6),expression(10^-5),expression(10^-4),expression(10^-3),expression(10^-2),0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1), las=1)
+axis(2, at=c(0:15), las=1)
+# h2=0
+points(1:length(d_lev),div_200[,1,1,1],pch=19,col=point_col[1],cex=.7, type="b") # alpha
+#arrows(1:length(d_lev), div_1000[,1,1,1], 1:length(d_lev), div_1000[,1,1,1]+div_1000[,1,1,3], length=0.05, angle=90, code=2, lwd=1, col="black")
+#arrows(1:length(d_lev), div_1000[,1,1,1], 1:length(d_lev), div_1000[,1,1,1]-div_1000[,1,1,3], length=0.05, angle=90, code=2, lwd=1, col="black")
+# loop across h2
+for(i in 2:length(h_lev)){
+  points(1:length(d_lev),div_200[,i,1,1],pch=19,col=point_col[i],cex=.7, type="b") # alpha
+  #arrows(1:length(d_lev),div_1000[,i,1,1],1:length(d_lev),div_1000[,i,1,1]+div_1000[,i,1,3],length=0.05, angle=90, code=2, lwd=1,col="black")
+  #arrows(1:length(d_lev),div_1000[,i,1,1],1:length(d_lev),div_1000[,i,1,1]-div_1000[,i,1,3],length=0.05, angle=90, code=2, lwd=1, col="black")
+}
 
-## use randsample to randomly sample among the available sites (the other 49) with weights according to connectivity
-## subtract those individuals from source population, subject to extinction mortality probability, add remaining to new site
-## Will have to figure out how to update dt and Wt at the new site (given the species has adapted to the old site in some way)
-## update N matrix, end round
+# beta
+plot(1:length(d_lev),div_200[,1,2,1],type="n",ylim=c(0,15), xaxt="n", yaxt="n",xlab="dispersal (d)",ylab="diversity",main="")
+axis(1, at=1:19, labels=c(0,expression(10^-9),expression(10^-8),expression(10^-7),expression(10^-6),expression(10^-5),expression(10^-4),expression(10^-3),expression(10^-2),0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1), las=1)
+axis(2, at=c(0:15), las=1)
+# h2=0
+points(1:length(d_lev),div_200[,1,3,1],pch=19,col=point_col[1],cex=.7,type="b")
+#arrows(1:length(d_lev), div_1000[,1,3,1], 1:length(d_lev), div_1000[,1,3,1]+div_1000[,1,3,3], length=0.05, angle=90, code=2, lwd=1, col="black")
+#arrows(1:length(d_lev), div_1000[,1,3,1], 1:length(d_lev), div_1000[,1,3,1]-div_1000[,1,3,3], length=0.05, angle=90, code=2, lwd=1, col="black")
+# loop across h2
+for(i in 2:length(h_lev)){
+  points(1:length(d_lev),div_200[,i,3,1],pch=19,col=point_col[i],cex=.7,type="b")
+  #arrows(1:length(d_lev),div_1000[,i,3,1],1:length(d_lev),div_1000[,i,3,1]+div_1000[,i,3,3],length=0.05, angle=90, code=2, lwd=1,col="black")
+  #arrows(1:length(d_lev),div_1000[,i,3,1],1:length(d_lev),div_1000[,i,3,1]-div_1000[,i,3,3],length=0.05, angle=90, code=2, lwd=1, col="black")
+}
 
+####### Figure 2. (p) Inverse Simpson's diversity ($^2D$) at the local (average $\\alpha$ value across all 50 sites, with error bars at ± 1 standard error) and regional ($\\gamma$) level, and turnover between sites (average $\\beta$ value across all 50 sites, with error bars at ± 1 SE) for $h^2$=0 (solid lines) and $h^2$=0.1 (dashed lines). The increased $\\gamma$ and average $\\beta$ diversity values for $h^2$=0.1 indicate that local adaptation rescues numerous species that would otherwise become extinct. #######
+
+# Reshape for ggplot
+mean.div_200 <- div_200[,1:2,,1]
+mean_div.gg <- reshape2::melt(mean.div_200)
+se.div_200 <- div_200[,1:2,,3]
+se.div_200 <- reshape2::melt(se.div_200)
+mean_div.gg$se <- se.div_200$value
+colnames(mean_div.gg)[1:4] <- c("d_lev","h_lev","level","mean")
+mean_div.gg$level <- as.factor(mean_div.gg$level)
+
+p <- ggplot2::ggplot(mean_div.gg,ggplot2::aes(x=d_lev,y=mean,col=level,linetype=h_lev)) + ggplot2::geom_point(aes(fill=level),size=2,shape=21,col="black") + ggplot2::geom_line(aes(group=interaction(level,h_lev)),size=0.25,col="black") + ggplot2::geom_errorbar(ggplot2::aes(ymin=mean-se, ymax=mean+se), width=0.2, size=0.25, col="black", linetype=1) + ggplot2::coord_cartesian(ylim=c(0,15)) + ggplot2::theme_classic() + ggplot2::ylab("diversity") + ggplot2::xlab("dispersal") + scale_x_discrete(labels=c(0,expression(10^-9),expression(10^-8),expression(10^-7),expression(10^-6),expression(10^-5),expression(10^-4),expression(10^-3),expression(10^-2),0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)) + scale_fill_manual(values=c("black","white", "darkgrey"))
