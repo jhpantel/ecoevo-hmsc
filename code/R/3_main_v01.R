@@ -114,7 +114,7 @@ env_names = NULL
 for (i in 1:dim(E)[2]){
   env_names[i] = paste("env",i,"",sep="")
 }
-env_hold <- array(NA,dim=c(dim(Y)[1],1),dimnames = list(NULL,env_names))
+env_hold <- array(NA,dim=c(dim(Y)[1],dim(E)[2]),dimnames = list(NULL,env_names))
 count <- seq(1,(patch*cut-patch),by=patch)
 for(i in 1:(cut-1)){ # for each environmental variable
   env_hold[(count[i]:(count[i]+(patch-1))),] <- Et[,i+1]
