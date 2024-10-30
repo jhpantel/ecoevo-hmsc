@@ -110,12 +110,16 @@ rL.time <- Hmsc::HmscRandomLevel(units = unique(Random$year))
 rL.time = Hmsc::setPriors(rL.time,nfMin=1,nfMax=5)
 
 ## Fixed effects: environment
-env_hold <- array(NA,dim=c(dim(Y)[1],dim(E)[2]))
-for(i in 1:dim(E)[2]){ # for each environmental variable
-  env_hold[,i] <- rep(E[,i],(cut-1))
-  colnames(env_hold)[i] <- paste("env",i,sep="")
+env_names = NULL
+for (i in 1:dim(E)[2]){
+  env_names[i] = paste("env",i,"",sep="")
 }
-
+env_hold <- array(NA,dim=c(dim(Y)[1],1),dimnames = list(NULL,env_names))
+count <- seq(1,(patch*cut-patch),by=patch)
+for(i in 1:(cut-1)){ # for each environmental variable
+  env_hold[(count[i]:(count[i]+(patch-1))),] <- Et[,i+1]
+  
+}
 ## Interaction effects: site abundance the year before X change in species trait value
 X_delta_x <- X * delta_x_time
 colnames(X_delta_x) <- paste("x",colnames(X_delta_x),sep="")
