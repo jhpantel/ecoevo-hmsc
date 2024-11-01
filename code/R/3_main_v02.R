@@ -36,7 +36,7 @@ h_lev <- c("h_0_","h_01_","h_02_","h_03_","h_04_","h_05_","h_06_","h_07_","h_08_
 
 # HMSC for single results condition
 z <- 2
-f <- 4
+f <- 8
 
 print(paste(h_lev[z],d_lev[f],sep=""))
 result <- paste(h_lev[z],d_lev[f],sep="")

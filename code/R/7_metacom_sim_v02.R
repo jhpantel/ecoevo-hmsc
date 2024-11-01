@@ -195,9 +195,9 @@ for(v.d in 1:length(d_vals)){
       pop[N[,,t-1]>0 & N[,,t-1] < 100]  = runif(length(pop[N[,,t-1]>0 & N[,,t-1] < 100]))
       extinct<-which(pop>0&pop<extprob,arr.ind=T) # Record position of species that went stochastically extinct
       if (nrow(extinct)>0) {
-        for (z in 1:nrow(extinct)){   #For each species that is stochastically extinct
-          xt[extinct[z,1],extinct[z,2],t] =0
-          dt[extinct[z,1],extinct[z,2],t] =0
+        for (zb in 1:nrow(extinct)){   #For each species that is stochastically extinct
+          xt[extinct[zb,1],extinct[zb,2],t] =0
+          dt[extinct[zb,1],extinct[zb,2],t] =0
         }
       }
       pop[pop>0&pop<extprob]=0  # Stochastically extinct populations set to zero for this generation    
