@@ -292,10 +292,10 @@ for (t in 2:time) {
     ## Check to see if population trait information remains for extinct populations
     A = which(pop==0 & N[,,t-1]>0,arr.ind=T)
     if(nrow(A)>0){
-        for (z in 1:nrow(A)) { # For each species / site that went extinct for other reasons
-            xt[A[z,1],A[z,2],t] = NA
-            dt[A[z,1],A[z,2],t] = NA
-            Wt[A[z,1],A[z,2],t] = NA
+        for (za in 1:nrow(A)) { # For each species / site that went extinct for other reasons
+            xt[A[za,1],A[za,2],t] = NA
+            dt[A[za,1],A[za,2],t] = NA
+            Wt[A[za,1],A[za,2],t] = NA
         }
     }
     if (t >= cut) {break}
