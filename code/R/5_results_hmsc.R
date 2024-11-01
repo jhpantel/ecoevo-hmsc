@@ -10,7 +10,7 @@ library(gridExtra)
 library(Hmsc)
 
 #### Step 0 Load the data --------------
-load("./data/h_01_d_minus3_hmsc_v01.RData")
+load("./data/h_01_d_minus3_hmsc_v01_short_E_var0.1.RData")
 
 #### Step 1. Evaluate posteriors --------------
 m.post = Hmsc::convertToCodaObject(m.1)
