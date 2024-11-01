@@ -47,6 +47,7 @@ up_dist <- function(x){
 patch = 50   # Number of patches in the landscape
 spec = 15    # Number of species in the community
 time = 1000  # Number of time steps to run the simulation
+cut = 1000   # Number when to stop the simulation early
 N = array(numeric(),c(patch,spec,time))   # Record of abundances of all species over time patch x spec x time
 P = array(1,c(1,spec))    # Phenotypic variances for all species
 w = array(2,c(1,spec))   # Width of fitness curve
@@ -170,10 +171,10 @@ d = array(d_vals[8],c(1,spec))  #which d_value do you want to use? - just using 
 ## Step 3. Evolving metacommunity simulations    ##
 ###################################################
 
-for (t in 2:200) {
+for (t in 2:time) {
     t
     #E fluctuation, here with directional change (with the abs() function)
-    if (t%%10==0) {E = E + abs(rnorm(50,0,var))}
+    if (t%%10==0) {E = E + rnorm(patch,0,var)}
     Et[,t] = E
     
     pop = N[,,t] # Write this generation's population size into a temporary record 
@@ -297,6 +298,7 @@ for (t in 2:200) {
             Wt[A[z,1],A[z,2],t] = NA
         }
     }
+    if (t >= cut) {break}
 }
 
 ## use randsample to randomly sample among the available sites (the other 49) with weights according to connectivity
@@ -306,11 +308,11 @@ for (t in 2:200) {
 
 #### Step 4. Save results
 #A small extra step, if the simulation ran for only 200 time steps
-dt <- dt[,,1:200]
-N <- N[,,1:200]
-Wt <- Wt[,,1:200]
-xt <- xt[,,1:200]
-Et <- Et[,1:200]
+dt <- dt[,,1:cut]
+N <- N[,,1:cut]
+Wt <- Wt[,,1:cut]
+xt <- xt[,,1:cut]
+Et <- Et[,1:cut]
 
 d_lev <- c("d_zero","d_minus9","d_minus8","d_minus7","d_minus6","d_minus5","d_minus4","d_minus3","d_minus2","d_01","d_02","d_03","d_04","d_05","d_06","d_07","d_08","d_09","d_10")
 h_lev <- c("h_0_","h_01_","h_02_","h_03_","h_04_","h_05_","h_06_","h_07_","h_08_","h_09_","h_10_")
@@ -318,4 +320,4 @@ z <- 2
 f <- 8
 print(paste(h2_names[z],d_names[f],sep=""))
 result <- paste(h_lev[z],d_lev[f],sep="")
-save.image(paste("././data/",result,"_res_short_Edirect_sd0.1.RData",sep=""))
+save.image(paste("././data/",result,"_res_short_E_var0.1.RData",sep=""))

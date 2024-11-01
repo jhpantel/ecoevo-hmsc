@@ -11,7 +11,7 @@ library(patchwork)
 
 ##
 ####  Step 1. Read in the data and get it into shape --------------
-load("././data/h_01_d_minus3_res_short_Edirect_sd0.1.RData") # Scenario 1
+load("././data/h_01_d_minus3_res_short_E_var0.1.RData") # Scenario 1
 ##
 ################### Extinction checks from JP ###################
 # Address extinct species
@@ -194,7 +194,7 @@ mtext("Species richness in each patch over time", side = 3, line = 0, outer = TR
 par(mfrow=(c(10,5)))
 par(mar=c(1,1,1,1))
 for(j in 1:nrow(Et)){
-  plot(Et[j,],ylim=c(0,max(Et,na.rm=T)),axes=FALSE,type="n",ylab=NA,xlab=NA,xaxs="i",yaxs="i")
+  plot(Et[j,],ylim=c(min(Et),max(Et)),axes=FALSE,type="n",ylab=NA,xlab=NA,xaxs="i",yaxs="i")
   if (j %in% c(1,6,11,16,21,26,31,36,41,46))
     axis(2,col="grey40",col.axis="grey20",labels=T)
   if (j %in% c(46,47,48,49,50))
@@ -205,10 +205,12 @@ for(j in 1:nrow(Et)){
 mtext("Environmental value in each patch over time", side = 3, line = 0, outer = TRUE)
 
 ## Plot of alpha diversity for given patch over time
+alpha_div[sapply(alpha_div, is.infinite)] <- NA
+
 par(mfrow=(c(10,5)))
 par(mar=c(1,1,1,1))
 for(j in 1:nrow(alpha_div)){
-  plot(alpha_div[j,1,],ylim=c(0,2),axes=FALSE,type="n",ylab=NA,xlab=NA,xaxs="i",yaxs="i")
+  plot(alpha_div[j,1,],ylim=c(0,max(alpha_div,na.rm=T)),axes=FALSE,type="n",ylab=NA,xlab=NA,xaxs="i",yaxs="i")
   if (j %in% c(1,6,11,16,21,26,31,36,41,46))
     axis(2,col="grey40",col.axis="grey20",labels=T)
   if (j %in% c(46,47,48,49,50))

@@ -53,10 +53,17 @@ d <- b[c] # generation of last occurrence for species that go extinct
 
 # Arrange all data for HMSC
 ## site-by-species abundance data as a time series
-Y <- array(NA,dim=c(50000,15),dimnames=list(NULL,c("y1","y2","y3","y4","y5","y6","y7","y8","y9","y10","y11","y12","y13","y14","y15")))
-count <- seq(1,50000,by=50)
-for(i in 1:1000){
-  Y[(count[i]:(count[i]+49)),] <- N[,,i]
+spec_name = NULL
+trait_name = NULL
+for (i in 1:spec){
+  spec_name[i] = paste("y",i,"",sep="")
+  trait_name[i] = paste("x",i,"",sep="")
+}
+
+Y <- array(NA,dim=c((patch*cut),spec),dimnames=list(NULL,spec_name))
+count <- seq(1,(patch*cut),by=patch)
+for(i in 1:cut){
+  Y[(count[i]:(count[i]+(patch-1))),] <- N[,,i]
 }
 
 ## site-by-species trait data as a time series
@@ -66,25 +73,25 @@ trait_init[trait_init == 9999] <- NaN
 trait_x[,,1] <- trait_init
 ## site-by-species CHANGE in trait value as a time series
 ## absolute value of change in trait value
-delta_x <- array(NA,c(50,15,999),dimnames=list(NULL,c("x1","x2","x3","x4","x5","x6","x7","x8","x9","x10","x11","x12","x13","x14","x15"),NULL))
-for(i in 2:time){
+delta_x <- array(NA,c(patch,spec,(cut-1)),dimnames=list(NULL,trait_name,NULL))
+for(i in 2:cut){
   delta_x[,,i-1] <- abs(trait_x[,,i] - trait_x[,,i-1])
 }
-delta_x_time <- array(NA,dim=c(49950,15),dimnames=list(NULL,c("x1","x2","x3","x4","x5","x6","x7","x8","x9","x10","x11","x12","x13","x14","x15")))
-count <- seq(1,49950,by=50)
-for(i in 1:999){
-  delta_x_time[(count[i]:(count[i]+49)),] <- delta_x[,,i]
+delta_x_time <- array(NA,dim=c((patch*cut-patch),spec),dimnames=list(NULL,trait_name))
+count <- seq(1,(patch*cut-patch),by=patch)
+for(i in 1:(cut-1)){
+  delta_x_time[(count[i]:(count[i]+(patch-1))),] <- delta_x[,,i]
 }
 delta_x_time[is.finite(delta_x_time) == FALSE] <- 0
 
 ## Random effects of site and year
-Random <- array(NA,dim=c(50000,2),dimnames=list(NULL,c("site","year")))
-Random[,1] <- rep(1:50,1000)
-Random[,2] <- rep(1:1000,each=50)
+Random <- array(NA,dim=c((patch*cut),2),dimnames=list(NULL,c("site","year")))
+Random[,1] <- rep(1:patch,cut)
+Random[,2] <- rep(1:cut,each=patch)
 Random <- as.data.frame(Random)
 
 ## Fixed effects: environment, site abundance the year before, species trait value the year before
-X <- Y[Random$year != 1000,]  # Use abundance in years 1-999 as fixed effects - the abundance the year before each response variable (which will be for Years 2-1000).
+X <- Y[Random$year != cut,]  # Use abundance in years 1-999 as fixed effects - the abundance the year before each response variable (which will be for Years 2-1000).
 Y <- Y[Random$year != 1,]  # Trim Y to only include years 2-1000
 
 ## Scaling will be done in the HMSC command, the argument YScale=TRUE
@@ -103,12 +110,16 @@ rL.time <- Hmsc::HmscRandomLevel(units = unique(Random$year))
 rL.time = Hmsc::setPriors(rL.time,nfMin=1,nfMax=5)
 
 ## Fixed effects: environment
-env_hold <- array(NA,dim=c(dim(Y)[1],dim(E)[2]))
-for(i in 1:dim(E)[2]){ # for each environmental variable
-  env_hold[,i] <- rep(E[,i],999)
-  colnames(env_hold)[i] <- paste("env",i,sep="")
+env_names = NULL
+for (i in 1:dim(E)[2]){
+  env_names[i] = paste("env",i,"",sep="")
 }
-
+env_hold <- array(NA,dim=c(dim(Y)[1],dim(E)[2]),dimnames = list(NULL,env_names))
+count <- seq(1,(patch*cut-patch),by=patch)
+for(i in 1:(cut-1)){ # for each environmental variable
+  env_hold[(count[i]:(count[i]+(patch-1))),] <- Et[,i+1]
+  
+}
 ## Interaction effects: site abundance the year before X change in species trait value
 X_delta_x <- X * delta_x_time
 colnames(X_delta_x) <- paste("x",colnames(X_delta_x),sep="")
@@ -132,9 +143,10 @@ if (length(c) > 0) { # if there are any extinct species
 }
 
 #### Step 4. Run HMSC analyses --------------
-#XFormula = ~y1+y2+y3+y4+y5+y6+y7+y8+y9+y10+y11+y12+y13+y14+y15+env1+x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11+x12+x13+x14+x15+xy1+xy2+xy3+xy4+xy5+xy6+xy7+xy8+xy9+xy10+xy11+xy12+xy13+xy14+xy14
+#XFormula = ~env1+x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11+x12+x13+x14+x15
 sp <- s[-e]
-XFormula = ~env1+x1+x3+x4+x6+x7+x8+x9+x10+x12+x13+x14+x15
+sp
+XFormula = ~env1+x1+x2+x3+x6+x7+x8+x9+x10+x12+x13+x14+x15
 m <- Hmsc::Hmsc(Y=Y,XData=X,XFormula = XFormula,studyDesign=Random,ranLevels=list("site"=rL.spatial,"year"=rL.time),distr="normal",XScale=TRUE,YScale=TRUE)
 tic()
 
