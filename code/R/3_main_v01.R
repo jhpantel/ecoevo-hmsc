@@ -40,7 +40,7 @@ f <- 8
 
 print(paste(h_lev[z],d_lev[f],sep=""))
 result <- paste(h_lev[z],d_lev[f],sep="")
-load(paste("././data/",result,"_res.RData",sep="")) # Scenario 1
+load(paste("././data/",result,"_res_short_E_var0.1.RData",sep="")) # Scenario 1
 # res  <- R.matlab::readMat(paste(result,"_res_v02.mat",sep="")) # Scenario 2
 # res  <- R.matlab::readMat(paste(result,"_res_v03.mat",sep="")) # Scenario 3
 # res  <- R.matlab::readMat(paste(result,"_res_v04.mat",sep="")) # Scenario 4
@@ -146,7 +146,7 @@ if (length(c) > 0) { # if there are any extinct species
 #XFormula = ~env1+x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11+x12+x13+x14+x15
 sp <- s[-e]
 sp
-XFormula = ~env1+x1+x2+x3+x6+x7+x8+x9+x10+x12+x13+x14+x15
+XFormula = ~env1+x1+x3+x4+x6+x7+x8+x9+x10+x12+x13+x14+x15
 m <- Hmsc::Hmsc(Y=Y,XData=X,XFormula = XFormula,studyDesign=Random,ranLevels=list("site"=rL.spatial,"year"=rL.time),distr="normal",XScale=TRUE,YScale=TRUE)
 tic()
 
@@ -158,7 +158,7 @@ verbose <- 50*thin
 
 m.1 <- Hmsc::sampleMcmc(m,samples=samples,transient=transient,nChains=nChains,nParallel=nChains,verbose=verbose,thin=thin,updater = list(GammaEta = FALSE))
 a <- toc()
-save.image(file=file.path(paste("./data/",h_lev[z],d_lev[f],"_hmsc_v01_short.RData",sep=""))) # Scenario 1
+save.image(file=file.path(paste("./data/",h_lev[z],d_lev[f],"_hmsc_v01_short_E_var0.1.RData",sep=""))) # Scenario 1
 # save.image(file=file.path(paste(h_lev[z],d_lev[f],"_hmsc_v02.RData",sep=""))) # Scenario 2
 # save.image(file=file.path(paste(h_lev[z],d_lev[f],"_hmsc_v03.RData",sep=""))) # Scenario 3
 # save.image(file=file.path(paste(h_lev[z],d_lev[f],"_hmsc_v04.RData",sep=""))) # Scenario 4

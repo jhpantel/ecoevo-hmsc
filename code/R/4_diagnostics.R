@@ -13,7 +13,7 @@ library(bayesplot)
 
 #### Checking the MCMC chains --------------
 #### Step 0 Load the data --------------
-load("./data/h_01_d_minus3_hmsc_v01.RData")
+load("./data/h_01_d_minus3_hmsc_v01_short_E_var0.1.RData")
 
 #### Step 1 Create the necessary data.frame --------------
 
@@ -28,9 +28,9 @@ npred <- ncol(m.1$XData)+1
 sp<-colnames(m.1$Y)
 sp_n<-as.numeric(sub("y","",colnames(m.1$Y)))
 VP <- computeVariancePartitioning(m.1, group = c(1,2,rep(3,s)), groupnames = c("Intercept","Env","deltaX"))
-pdf("./output/vp2.pdf",width=8,height=4)
+#pdf("./output/vp2.pdf",width=8,height=4)
 plotVariancePartitioning(m.1, VP = VP, args.legend=list(cex=0.75,bg="transparent"))
-dev.off()
+#dev.off()
 
 #### Step 2 Creatin simpple histograms --------------
 #Creating a histogram of the effective sample size (ess) of all Beta parameters
