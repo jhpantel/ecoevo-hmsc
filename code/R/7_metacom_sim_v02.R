@@ -49,6 +49,7 @@ up_dist <- function(x){
 patch = 50   # Number of patches in the landscape
 spec = 15    # Number of species in the community
 time = 1000  # Number of time steps to run the simulation
+cut = 200   # Number when to stop the simulation early
 N = array(numeric(),c(patch,spec,time))   # Record of abundances of all species over time patch x spec x time
 P = array(1,c(1,spec))    # Phenotypic variances for all species
 w = array(2,c(1,spec))   # Width of fitness curve
@@ -58,7 +59,7 @@ dt = array(numeric(),c(patch,spec,time))   # Record of distance from optimum val
 xt = array(9999,c(patch,spec,time))     # Record of phenotype value over time, patch x spec x time
 Et = array(numeric(),c(patch,time))   # Record of environmental value over time, patch x spec x time
 
-var = 0.1 #Adding variation to the environmental value for no variation set to 0 (var is the sd of the normal distribution with a mean of 0)
+var = 0 #Adding variation to the environmental value for no variation set to 0 (var is the sd of the normal distribution with a mean of 0)
 ## Heritability
 # Scenario 1: No evolution
 #h2 = array(0,c(1,spec))
@@ -180,7 +181,7 @@ for(v.d in 1:length(d_vals)){
     ## Step 3. Evolving metacommunity simulations    ##
     ###################################################
     
-    for (t in 2:200) {
+    for (t in 2:time) {
       t
       #E fluctuation, here with directional change (with the abs() function)
       if (t%%10==0) {E = E + abs(rnorm(50,0,var))}
@@ -301,20 +302,21 @@ for(v.d in 1:length(d_vals)){
       ## Check to see if population trait information remains for extinct populations
       A = which(pop==0 & N[,,t-1]>0,arr.ind=T)
       if(nrow(A)>0){
-        for (z in 1:nrow(A)) { # For each species / site that went extinct for other reasons
-          xt[A[z,1],A[z,2],t] = NA
-          dt[A[z,1],A[z,2],t] = NA
-          Wt[A[z,1],A[z,2],t] = NA
+        for (za in 1:nrow(A)) { # For each species / site that went extinct for other reasons
+          xt[A[za,1],A[za,2],t] = NA
+          dt[A[za,1],A[za,2],t] = NA
+          Wt[A[za,1],A[za,2],t] = NA
         }
       }
+      if (t >= cut) {break}
     }
     #### Step 4. Save results
     #A small extra step, if the simulation ran for only 200 time steps
-    dt <- dt[,,1:200]
-    N <- N[,,1:200]
-    Wt <- Wt[,,1:200]
-    xt <- xt[,,1:200]
-    Et <- Et[,1:200]
+    dt <- dt[,,1:cut]
+    N <- N[,,1:cut]
+    Wt <- Wt[,,1:cut]
+    xt <- xt[,,1:cut]
+    Et <- Et[,1:cut]
     d_lev <- c("d_zero","d_minus9","d_minus8","d_minus7","d_minus6","d_minus5","d_minus4","d_minus3","d_minus2","d_01","d_02","d_03","d_04","d_05","d_06","d_07","d_08","d_09","d_10")
     h_lev <- c("h_0_","h_01_","h_02_","h_03_","h_04_","h_05_","h_06_","h_07_","h_08_","h_09_","h_10_")
     print(paste(h2_names[v.h2],d_names[v.d],sep=""))
