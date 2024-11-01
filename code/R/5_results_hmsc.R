@@ -1,6 +1,6 @@
 # Title. results.R
 # Author. J.H. Pantel
-# Date 28-08-2023
+# Date 01-11-2024
 # Description. This script contains analyses for the HMSC_ecoevo project and associated manuscript Hermann & Pantel 202x.
 
 #### Libraries ---------------------------------------------------------------
@@ -14,7 +14,7 @@ load("./data/h_01_d_minus3_hmsc_v01.RData")
 
 #### Step 1. Evaluate posteriors --------------
 m.post = Hmsc::convertToCodaObject(m.1)
-m.df <- as.data.frame(rbind(m.post$Beta[[1]],m.post$Beta[[2]]))
+m.df <- do.call(rbind, m.post$Beta)
 
 #### Create Variance Paritioning plot
 s <- ncol(m.1$Y)
@@ -50,14 +50,14 @@ colnames(B.int)[1] <- "Int1"
 bayesplot::mcmc_areas(B.int,rhat=xc) + legend_none() +  theme(text = element_text(size = 20))
 
 # N ~ Environment ##########
-B.E <- m.df[,2]
+B.E <- m.df[,seq(2,length(colnames(m.df)),npred)]
 # All values, colored by overlap of HPDI with 0
 xc<-NULL
 for(i in 1:ncol(B.E)) xc[i]<-as.numeric(sum(colnames(B.E)[i]==not0))+1
 theme_set(theme_grey())
 #Renaming it to E and the according species number
 for(i in 1:(s-1)){
-  B.E <- cbind(B.E,m.df[,2+(i*npred)])
+  #B.E <- cbind(B.E,m.df[,2+(i*npred)])
   colnames(B.E)[i+1] <- paste0("E", (i+1), sep = "")
 }
 colnames(B.E)[1] <- "E1"
