@@ -688,6 +688,22 @@ verbose <- 500*thin
 m.2.sample <- sampleMcmc(m.2.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
 m2.post.hmsc <- convertToCodaObject(m.2.sample)
 ```
+```{r}
+m2.post.hmsc <- convertToCodaObject(m.2.sample)
+summary(m2.post.hmsc$Beta)
+bayesplot::mcmc_trace(m2.post.hmsc$Beta)
+bayesplot::mcmc_areas(m2.post.hmsc$Beta,area_method = c("equal height"))
+```
+
+
+
+```{r}
+Gradient <- constructGradient(m.2.sample,focalVariable="dx1",non.focalVariables=list(E=list(2),Esq=list(2)),ngrid=59)
+# Esq is manually constructed as gradient-produced E^2
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.2.sample,XData=Gradient$XDataNew,expected=TRUE)
+plotGradient(m.2.sample,Gradient,pred=predY,showData=T,measure="Y",main="",xlab="dx1_t",ylab="predicted N_t+1")
+```
 
 ```{r warning=FALSE}
 VP2 <- computeVariancePartitioning(m.2.sample,group=c(1,1,1,2),groupnames=c("Env","x1"))
