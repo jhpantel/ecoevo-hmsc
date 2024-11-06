@@ -1202,7 +1202,12 @@ verbose <- 500*thin
 m.11.sample <- sampleMcmc(m.11.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
 m11.post.hmsc <- convertToCodaObject(m.11.sample)
 ```
-
+```{r}
+m11.post.hmsc <- convertToCodaObject(m.11.sample)
+summary(m11.post.hmsc$Beta)
+bayesplot::mcmc_trace(m11.post.hmsc$Beta)
+bayesplot::mcmc_areas(m11.post.hmsc$Beta,area_method = c("equal height"))
+```
 ```{r warning=FALSE}
 VP11 <- computeVariancePartitioning(m.11.sample,group=c(1,1,1,2),groupnames=c("Env","x1"))
 plotVariancePartitioning(m.11.sample,VP11,cols=c("white","skyblue","darkgrey"),args.legend=list(cex=0.75,bg="transparent"))
@@ -1260,6 +1265,32 @@ ggplot(combined, aes(x = m, y = parameter, color = model)) +
   geom_point(aes(color=model),position = pos)+
   coord_flip()+
   geom_vline(xintercept=0,linetype="dashed")
+```
+
+We can see that the variation in Y is a combination of the relative importance of density-dependence and of trait evolution. We can see that relative importance changes across $h^2$ levels. What drives changes in this relative importance?
+
+```{r}
+d_dat <- gdat[gdat$time != 1,c(1,2,3,5)]
+d_dat <- as.data.frame(d_dat)
+d_dat$dxt <- NA
+d_dat$ddt <- NA
+d_dat$dN <- NA
+d_dat$dd <- NA
+for(i in 1:11){
+  sub <- gdat[gdat$h2==levels(gdat$h2)[i],]
+  d_dat$dxt[d_dat$h2==levels(d_dat$h2)[i]] <- abs(sub$x1[2:60]-sub$x1[1:59]) # absolute value of change in trait value
+  d_dat$ddt[d_dat$h2==levels(d_dat$h2)[i]] <- alpha[1,1]*sub$N1[2:60] - alpha[1,1]*sub$N1[1:59]
+  d_dat$dN[d_dat$h2==levels(d_dat$h2)[i]] <- sub$N1[2:60] - sub$N1[1:59]
+  d_dat$dd[d_dat$h2==levels(d_dat$h2)[i]] <- alpha[1,1]*d_dat$N1[d_dat$h2==levels(d_dat$h2)[i]]
+}
+```
+```{r}
+### Plot of time xx ###
+d_dat <- d_dat[d_dat$h2 != 0,]
+d_dat$ln_N <- log(d_dat$N1)
+ggplot2::ggplot(d_dat, aes(dxt, dN, col=h2)) + geom_line() + geom_point()
+ggplot2::ggplot(d_dat, aes(ddt, dN, col=h2)) + geom_line() + geom_point()
+### ###
 ```
 
 

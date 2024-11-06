@@ -102,7 +102,7 @@ p4 <- bayesplot::mcmc_areas(m.beta) + scale_x_continuous(limits=c(-20,30)) +
 ### variance partitioning ###
 par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0.5,0.5))
 VP <- computeVariancePartitioning(m.1.sample, group = c(1, 1, 1), groupnames = "Env")
-plotVariancePartitioning(m.1.sample, VP, args.legend = list(cex = 0.6, bg = "transparent"),cex.axis=0.6,main="")
+plotVariancePartitioning(m.1.sample, VP, args.legend = list(cex = 0.6, bg = "transparent"),cex.axis=0.6,main="",cols=c("white","orange"))
 p5 <- recordPlot()
 ### ### ### ### ### ### ###
 ### all plots together ###

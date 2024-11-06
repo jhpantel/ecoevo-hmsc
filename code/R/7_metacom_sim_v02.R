@@ -439,3 +439,14 @@ colnames(mean_div.gg)[1:4] <- c("d_lev","h_lev","level","mean")
 mean_div.gg$level <- as.factor(mean_div.gg$level)
 
 p <- ggplot2::ggplot(mean_div.gg,ggplot2::aes(x=d_lev,y=mean,col=level,linetype=h_lev)) + ggplot2::geom_point(aes(fill=level),size=2,shape=21,col="black") + ggplot2::geom_line(aes(group=interaction(level,h_lev)),size=0.25,col="black") + ggplot2::geom_errorbar(ggplot2::aes(ymin=mean-se, ymax=mean+se), width=0.2, size=0.25, col="black", linetype=1) + ggplot2::coord_cartesian(ylim=c(0,15)) + ggplot2::theme_classic() + ggplot2::ylab("diversity") + ggplot2::xlab("dispersal") + scale_x_discrete(labels=c(0,expression(10^-9),expression(10^-8),expression(10^-7),expression(10^-6),expression(10^-5),expression(10^-4),expression(10^-3),expression(10^-2),0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)) + scale_fill_manual(values=c("black","white", "darkgrey"))
+
+
+load("~/Nextcloud/Pantel/data/h_01_d_zero_hmsc_v02.RData")
+#### Step 1. Evaluate posteriors --------------
+m.post = Hmsc::convertToCodaObject(m.1)
+m.df <- do.call(rbind, m.post$Beta)
+#### Create Variance Paritioning plot
+s <- ncol(m.1$Y)
+VP <- computeVariancePartitioning(m.1, group = c(1,1,rep(2,s)), groupnames = c("Env","deltaX"))
+#pdf("./output/vp2.pdf",width=8,height=4)
+plotVariancePartitioning(m.1, VP = VP, args.legend=list(cex=0.75,bg="transparent"),cols=c("white","skyblue","darkgrey","orange","pink"))
