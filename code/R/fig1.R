@@ -1,6 +1,6 @@
 ## Code for Figure 1
 ## J.H. Pantel
-## 13-10-2024
+## 08-11-2024
 
 ## libraries
 library(ecoevor)
@@ -11,6 +11,8 @@ library(bayesplot)
 library(reshape2)
 library(cowplot)
 library(MASS)
+## functions
+source("./code/R/plot_grad_ylim.R")
 
 ## set random seed
 set.seed(8)
@@ -29,9 +31,9 @@ E.0 <- 0.8
 x <- c(0.6,0.8)
 # Simulation of model for t time steps
 t <- 40
-N <- array(NA,dim=c(t,length(r)))
+N <- array(NA,dim=c(t,length(N0)))
 N <- as.data.frame(N)
-colnames(N) <- paste0("N",1:length(r))
+colnames(N) <- paste0("N",1:length(N0))
 N[1,] <- N0
 E <- rep(NA, t)
 E[1] <- E.0
@@ -89,25 +91,19 @@ p1 <- ppc_intervals(y,yrep,x=rep(dat$time[1:(t-1)],times=2),prob = 0.95) +
 Gradient <- constructGradient(m.1.sample,focalVariable="E",non.focalVariables=list(Esq=list(2)),ngrid=39)
 Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
 predY <- predict(m.1.sample,XData=Gradient$XDataNew,expected=TRUE)
-plotGradient(m.1.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="E_t",ylab="predicted N1_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,bty='n')
+plot_grad_ylim(m.1.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="E_t",ylab="predicted N1_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,bty='n',auto=0,l1=0,h1=5)
 p2 <- recordPlot()
-plotGradient(m.1.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,bty='n')
+plot_grad_ylim(m.1.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,bty='n',auto=0,l1=0,h1=5)
 p3 <- recordPlot()
-### Beta posterior plot ###
-m.post = Hmsc::convertToCodaObject(m.1.sample)
-m.beta <- as.data.frame(rbind(m.post$Beta[[1]],m.post$Beta[[2]]))
-colnames(m.beta) <- c("Int1","E1","Esq1","Int2","E2","Esq2")
-p4 <- bayesplot::mcmc_areas(m.beta) + scale_x_continuous(limits=c(-20,30)) +
-  theme(axis.text=element_text(size=8))
 ### variance partitioning ###
 par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0.5,0.5))
 VP <- computeVariancePartitioning(m.1.sample, group = c(1, 1, 1), groupnames = "Env")
 plotVariancePartitioning(m.1.sample, VP, args.legend = list(cex = 0.6, bg = "transparent"),cex.axis=0.6,main="",cols=c("white","orange"))
-p5 <- recordPlot()
+p4 <- recordPlot()
 ### ### ### ### ### ### ###
 ### all plots together ###
 ### ### ### ### ### ### ###
-a <- plot_grid(p1,plot_grid(p2,p3,nrow=2),p4,p5,nrow=1,rel_widths=c(2,1,1,1))
+a <- plot_grid(p1,plot_grid(p2,p3,nrow=2),p4,nrow=1,rel_widths=c(2,1,1))
 
 # 2. Sim: Two species, logistic growth + competition, environmental covariate, evolution ---------
 ### Sim2. Two species, Leslie-Gower competition, environmental covariate, evolution
@@ -128,19 +124,19 @@ k <- (w + (1 - h2) * P)/(P + w)
 # Simulation of model for t time steps
 # Simulation of model for t time steps
 t <- 40
-N <- array(NA,dim=c(t,length(r)))
+N <- array(NA,dim=c(t,length(N0)))
 N <- as.data.frame(N)
-colnames(N) <- paste0("N",1:length(r))
+colnames(N) <- paste0("N",1:length(N0))
 N[1,] <- N0
 E <- rep(NA, t)
 E[1] <- E.0
-x <- array(NA,dim=c(t,length(r)))
+x <- array(NA,dim=c(t,length(N0)))
 x <- as.data.frame(x)
-colnames(x) <- paste0("x",1:length(r))
+colnames(x) <- paste0("x",1:length(N0))
 x[1,] <- x.0
-r <- array(NA,dim=c(t,length(r)))
+r <- array(NA,dim=c(t,length(N0)))
 r <- as.data.frame(r)
-colnames(r) <- paste0("r",1:length(r))
+colnames(r) <- paste0("r",1:length(N0))
 What <- Wmax*sqrt(w/(P+w))
 r[1,] <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E[1]-x[1,]))^2)/(2*(P+w)))
 for (i in 2:t) {
@@ -199,52 +195,63 @@ yrep <- as.matrix(data.frame(hold2))
 par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
 color_scheme_set("brightblue")
 #ppc_dens_overlay(y, yrep[1:50, ])
-p6 <- ppc_intervals(y,yrep,x=rep(dat$time[1:(t-1)],times=2),prob = 0.95) +
+p5 <- ppc_intervals(y,yrep,x=rep(dat$time[1:(t-1)],times=2),prob = 0.95) +
   labs(x = "time",y = "ln(N)",) +
   theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
   theme(legend.position = "none")
 ### Gradient plot ###
+Gradient <- constructGradient(m.2.sample,focalVariable="dx1",non.focalVariables=list(E=list(2),Esq=list(2),dx2=list(2)),,ngrid=39)
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.2.sample,XData=Gradient$XDataNew,expected=TRUE)
+plot_grad_ylim(m.2.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx_t",ylab="predicted N1_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,mar=c(1,1,0,0),bty='n',auto=0,l1=0,h1=5)
+p6 <- recordPlot()
 Gradient <- constructGradient(m.2.sample,focalVariable="E",non.focalVariables=list(Esq=list(2)),ngrid=39)
 Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
 predY <- predict(m.2.sample,XData=Gradient$XDataNew,expected=TRUE)
-plotGradient(m.2.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="E_t",ylab="predicted N1_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,mar=c(1,1,0,0),bty='n')
+plot_grad_ylim(m.2.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,mar=c(1,1,0,0),bty='n',auto=0,l1=0,h1=5)
 p7 <- recordPlot()
-plotGradient(m.2.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,mar=c(1,1,0,0),bty='n')
-p8 <- recordPlot()
-### Beta posterior plot ###
-m.post = Hmsc::convertToCodaObject(m.2.sample)
-m.beta <- as.data.frame(rbind(m.post$Beta[[1]],m.post$Beta[[2]]))
-colnames(m.beta) <- c("Int1","E1","Esq1","dx1_1","dx1_2","Int2","E2","Esq2","dx2_1","dx2_2")
-p9 <- bayesplot::mcmc_areas(m.beta) + scale_x_continuous(limits=c(-20,30)) + theme(axis.text=element_text(size=8))
 ### variance partitioning ###
 par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0.5,0.5))
 VP <- computeVariancePartitioning(m.2.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
 plotVariancePartitioning(m.2.sample,VP,cols=c("white","skyblue","darkgrey","orange"),args.legend=list(cex=0.6,bg="transparent"),cex.axis=0.6,main="")
-p10 <- recordPlot()
+p8 <- recordPlot()
 ### ### ### ### ### ### ###
 ### all plots together ###
 ### ### ### ### ### ### ###
-b <- plot_grid(p6,plot_grid(p7,p8,nrow=2),p9,p10,nrow=1,rel_widths=c(2,1,1,1))
+b <- plot_grid(p5,plot_grid(p6,p7,nrow=2),p8,nrow=1,rel_widths=c(2,1,1))
 
 # 3. Sim: Two species, logistic growth + competition, environmental covariate in spatially structured environment ---------
 ### Sim3. Two species, Leslie-Gower competition, environmental covariate, evolution, multiple sites
-set.seed(42)
+set.seed(12345)
 # Initial conditions
 # Simulation of model for t time steps, i sites
+N0 <- c(10,10)
+E.0 <- 0.8
+x.0 <- c(0.1,0.8)
+alpha.11 <- 0.01
+alpha.22 <- 0.01
+alpha.12 <- 0.005
+alpha.21 <- 0.01
+alpha <- matrix(c(alpha.11,alpha.21,alpha.12,alpha.22),nrow=2,byrow=FALSE) # careful to make sure you have correct interaction matrix
+P <- 1
+w <- 2
+Wmax <- 2
+h2 <- 1
+k <- (w + (1 - h2) * P)/(P + w)
 j <- 10
 # random site locations
 xycoords = matrix(runif(2*j), ncol = 2)
 rownames(xycoords) <- 1:j
 t <- 40
-N <- array(NA,dim=c(j*t,length(r)))
+N <- array(NA,dim=c(j*t,length(N0)))
 N <- as.data.frame(N)
-colnames(N) <- paste0("N",1:length(r))
-x <- array(NA,dim=c(j*t,length(r)))
+colnames(N) <- paste0("N",1:length(N0))
+x <- array(NA,dim=c(j*t,length(N0)))
 x <- as.data.frame(x)
-colnames(x) <- paste0("x",1:length(r))
-r <- array(NA,dim=c(j*t,length(r)))
+colnames(x) <- paste0("x",1:length(N0))
+r <- array(NA,dim=c(j*t,length(N0)))
 r <- as.data.frame(r)
-colnames(r) <- paste0("r",1:length(r))
+colnames(r) <- paste0("r",1:length(N0))
 N[1:j,] <- rep(N0,each=j)
 E <- rep(NA, t)
 E[1] <- E.0
@@ -275,7 +282,7 @@ for (i in 2:t) {
 }
 # site-level random effect
 sigma <- 0
-sigma.spatial <- 4
+sigma.spatial <- 10
 alpha.spatial <- 0.5
 Sigma = sigma.spatial^2*exp(-as.matrix(dist(xycoords))/alpha.spatial)
 # draw from covariance matrix
@@ -331,24 +338,22 @@ verbose <- 500*thin
 m.3.sample <- sampleMcmc(m.3.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
 ### Gradient plot ###
 par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
-Gradient <- constructGradient(m.3.sample,focalVariable="dx2",non.focalVariables=list(E=list(2),Esq=list(2),dx1=list(2)),ngrid=39)
+### Gradient plot ###
+Gradient <- constructGradient(m.3.sample,focalVariable="dx1",non.focalVariables=list(E=list(2),Esq=list(2),dx2=list(2)),ngrid=390)
 Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
-predY <- predict(m.3.sample,XData=Gradient$XDataNew,expected=TRUE)
-plotGradient(m.3.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="E_t",ylab="predicted N1_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,mar=c(0,0,0,0),bty='n',xaxs = "r", yaxs = "r", tcl=-0.4)
-p11 <- recordPlot()
-plotGradient(m.3.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,mar=c(0,0,0,0),bty='n',xaxs = "r", yaxs = "r", tcl=-0.4)
-p12 <- recordPlot()
-### Beta posterior plot ###
-m3.post.hmsc <- convertToCodaObject(m.3.sample)
-m.beta <- as.data.frame(rbind(m3.post.hmsc$Beta[[1]],m3.post.hmsc$Beta[[2]]))
-colnames(m.beta) <- c("Int1","E1","Esq1","dx1_1","dx1_2","Int2","E2","Esq2","dx2_1","dx2_2")
-p13 <- bayesplot::mcmc_trace(m3.post.hmsc$Beta)
-p14 <- bayesplot::mcmc_areas(m.beta) + scale_x_continuous(limits=c(-20,30)) + theme(axis.text=element_text(size=8))
+predY <- predict(m.3.sample,XData=Gradient$XDataNew,expected=TRUE,ranLevels=Gradient$rLNew)
+plot_grad_ylim(m.3.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx_t",ylab="predicted N1_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,mar=c(1,1,0,0),bty='n',auto=0,l1=0,h1=5)
+p9 <- recordPlot()
+Gradient <- constructGradient(m.3.sample,focalVariable="E",non.focalVariables=list(Esq=list(2)),ngrid=390)
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.3.sample,XData=Gradient$XDataNew,expected=TRUE,,ranLevels=Gradient$rLNew)
+plot_grad_ylim(m.3.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,mar=c(1,1,0,0),bty='n',auto=0,l1=0,h1=5)
+p10 <- recordPlot()
+### variance partitioning ###
 par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0.5,0.5))
 VP <- computeVariancePartitioning(m.3.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
 plotVariancePartitioning(m.3.sample,VP,cols=c("white","skyblue","darkgrey","orange","pink"),args.legend=list(cex=0.6,bg="transparent"),main="",cex.axis=0.6)
-p15 <- recordPlot()
-
+p11 <- recordPlot()
 # prepare for plot
 pred3 <- predict(m.3.sample)
 hold1 <- list()
@@ -367,23 +372,21 @@ gg_dat$site <- rep(study$site[study$time !=1],times=2)
 gg_dat$time <- rep(study$time[study$time !=1],times=2)
 gg_dat$ci_025 <- apply(yrep,2,quantile,probs=.025)
 gg_dat$ci_975 <- apply(yrep,2,quantile,probs=.975)
-p16 <- ggplot2::ggplot(gg_dat, aes(time, y, col=species)) + geom_point(size = 0.5) + facet_wrap(~site,nrow=2) + geom_errorbar(aes(ymin=ci_025, ymax=ci_975), alpha=0.5) +
+p12 <- ggplot2::ggplot(gg_dat, aes(time, y, col=species)) + geom_point(size = 0.5) + facet_wrap(~site,nrow=2) + geom_errorbar(aes(ymin=ci_025, ymax=ci_975), alpha=0.5) +
   theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
   theme(legend.position = "none",strip.text = element_text(size=6))
 
 ### ### ### ### ### ### ###
 ### all plots together ###
 ### ### ### ### ### ### ###
-c <- plot_grid(p16,plot_grid(p11,p12,nrow=2),p14,p15,nrow=1,rel_widths=c(3,1,1,1),rel_heights=c(2,1,1,1))
+c <- plot_grid(p12,plot_grid(p9,p10,nrow=2),p11,nrow=1,rel_widths=c(3,1,1,1),rel_heights=c(2,1,1,1))
 
 
 ### ### ### ### ### ### ###
 ### all plots together ###
 ### ### ### ### ### ### ###
-d <- plot_grid(p1,plot_grid(p2,p3,nrow=2),p4,p5,p6,plot_grid(p7,p8,nrow=2),p9,p10,p16,plot_grid(p11,p12,nrow=2),p14,p15,nrow=3,ncol=4,rel_widths=c(3,1,1,1,3,1,1,1,3,1,1,1))
+d <- plot_grid(p1,plot_grid(p2,p3,nrow=2),p4,p5,plot_grid(p6,p7,nrow=2),p8,p12,plot_grid(p9,p10,nrow=2),p11,nrow=3,ncol=3,rel_widths=c(3,1,1,3,1,1,3,1,1))
 
-pdf("./output/fig1.pdf",width=8,height=4)
+pdf("./output/fig1.pdf",paper="a4r")
 d
 dev.off()
-
-
