@@ -171,7 +171,7 @@ rm(list=setdiff(ls(), c("d_vals","h2_vals","d_names","h2_names","v.d","v.h2")))
 
 ## Vary h2 and d values across simulation runs
 for(v.d in 1:length(d_vals)){
-  for(v.h2 in 2:3){
+  for(v.h2 in 2){
     load("./data/init_v02.RData")
     d = array(d_vals[v.d],c(1,spec))
     h2 = array(h2_vals[v.h2],c(1,spec))
