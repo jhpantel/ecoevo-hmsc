@@ -7,6 +7,7 @@ library(ggplot2)
 library(ggalluvial)
 library(Hmsc)
 library(vegan)
+library(cowplot)
 
 ## Figure 4a. Alpha diversity across d and h2 levels
 ## functions
@@ -30,7 +31,7 @@ h_lev <- c("h_0_","h_01_","h_02_","h_03_","h_04_","h_05_","h_06_","h_07_","h_08_
 for(i in 1:length(d_lev)){
   for(j in 1:length(h_lev)){
     ## Read in population size values
-    result <- paste("/Users/jhpantel/Nextcloud/Pantel/data/",h_lev[j],d_lev[i],"_res_v02.RData",sep="")
+    result <- paste("./data/mc_v02/",h_lev[j],d_lev[i],"_res_v02.RData",sep="")
     tmp.env <- new.env()
     load(toString(result),envir=tmp.env)
     r <- get("N",pos=tmp.env) # alpha
@@ -143,6 +144,41 @@ p3 <- ggplot(sub3,aes(y = Percentage, x = d, fill = as.character(level))) +
   theme(panel.grid.major = element_blank(), 
         axis.text.y = element_blank(), 
         axis.ticks.y = element_blank(),legend.position=c(0.8,0.5),legend.text = element_text(size=7),legend.title = element_blank())
+
+## Figure 4a. Conceptual MC figure
+load(paste("./data/mc_v02/",h_lev[2],d_lev[8],"_res_v02.RData",sep=""))
+mc <- data.frame(x=rep(NA,50*3),y=rep(NA,50*3),t=rep(c(0,100,200),each=50),gam=rep(NA,50*3),xt=rep(NA,50*3))
+# t0
+mc[1:50,c(1,2)] <- xy
+a  <- diversity(N[,,1],index="invsimpson")
+a[is.finite(a)==FALSE] <- 0
+mc[1:50,4] <- a # alpha diversity
+b <- rowSums(xt[,,1]*N[,,1],na.rm=TRUE) / rowSums(N[,,1])
+b[is.finite(b)==FALSE] <- 0
+mc[1:50,5] <- b # community weighted mean trait value
+# t100
+mc[51:100,c(1,2)] <- xy
+a  <- diversity(N[,,100],index="invsimpson")
+a[is.finite(a)==FALSE] <- 0
+mc[51:100,4] <- a # alpha diversity
+b <- rowSums(xt[,,100]*N[,,100],na.rm=TRUE) / rowSums(N[,,100])
+b[is.finite(b)==FALSE] <- 0
+mc[51:100,5] <- b # community weighted mean trait value
+# t200
+mc[101:150,c(1,2)] <- xy
+a  <- diversity(N[,,200],index="invsimpson")
+a[is.finite(a)==FALSE] <- 0
+mc[101:150,4] <- a # alpha diversity
+b <- rowSums(xt[,,200]*N[,,200],na.rm=TRUE) / rowSums(N[,,200])
+b[is.finite(b)==FALSE] <- 0
+mc[101:150,5] <- b # community weighted mean trait value
+
+sub1 <- mc[mc$t==0,]
+a1 <- ggplot(sub1,aes(x,y)) + geom_point(aes(color=xt)) + scale_color_gradient(low = "white", high = "skyblue") + theme(legend.position = "none")
+sub2 <- mc[mc$t==100,]
+a2 <- ggplot(sub2,aes(x,y)) + geom_point(aes(color=xt)) + scale_color_gradient(low = "white", high = "skyblue") + theme(legend.position = "none")
+sub3 <- mc[mc$t==200,]
+a3 <- ggplot(sub3,aes(x,y)) + geom_point(aes(color=xt)) + scale_color_gradient(low = "white", high = "skyblue") + theme(legend.position = "none")
 
 d <- plot_grid(p0,plot_grid(p1,p2,p3,nrow=3),ncol=2,rel_widths=c(2,1.5))
 
