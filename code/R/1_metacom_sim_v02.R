@@ -159,9 +159,9 @@ alpha[lower.tri(alpha,diag=F)]=0 + (.0015-0)*runif(length(alpha[lower.tri(alpha,
 
 ## Set up dispersal and heritability to vary across a loop
 d_vals = c(0, 10^-9, 10^-8, 10^-7, 10^-6, 10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
-h2_vals = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
+h2_vals = c(0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
 d_names = c("0", "minus9", "minus8", "minus7", "minus6", "minus5", "minus4", "minus3", "minus2", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10")
-h2_names = c("0", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10")
+h2_names = c("0", "005", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10")
 
 ## Save initial community conditions
 save.image("./data/init_v02.RData")
@@ -171,7 +171,7 @@ rm(list=setdiff(ls(), c("d_vals","h2_vals","d_names","h2_names","v.d","v.h2")))
 
 ## Vary h2 and d values across simulation runs
 for(v.d in 1:length(d_vals)){
-  for(v.h2 in 1:length(h2_vals)){
+  for(v.h2 in 2:3){
     load("./data/init_v02.RData")
     d = array(d_vals[v.d],c(1,spec))
     h2 = array(h2_vals[v.h2],c(1,spec))
@@ -318,7 +318,7 @@ for(v.d in 1:length(d_vals)){
     xt <- xt[,,1:cut]
     Et <- Et[,1:cut]
     d_lev <- c("d_zero","d_minus9","d_minus8","d_minus7","d_minus6","d_minus5","d_minus4","d_minus3","d_minus2","d_01","d_02","d_03","d_04","d_05","d_06","d_07","d_08","d_09","d_10")
-    h_lev <- c("h_0_","h_01_","h_02_","h_03_","h_04_","h_05_","h_06_","h_07_","h_08_","h_09_","h_10_")
+    h_lev <- c("h_0_","h_005_","h_01_","h_02_","h_03_","h_04_","h_05_","h_06_","h_07_","h_08_","h_09_","h_10_")
     print(paste(h2_names[v.h2],d_names[v.d],sep=""))
     result <- paste(h_lev[v.h2],d_lev[v.d],sep="")
     save.image(paste("./data/mc_v02/",result,"_res_v02.RData",sep=""))
