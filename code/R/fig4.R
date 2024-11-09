@@ -174,11 +174,11 @@ b[is.finite(b)==FALSE] <- 0
 mc[101:150,5] <- b # community weighted mean trait value
 
 sub1 <- mc[mc$t==0,]
-a1 <- ggplot(sub1,aes(x,y)) + geom_point(aes(color=xt)) + scale_color_gradient(low = "white", high = "skyblue") + theme(legend.position = "none")
+a1 <- ggplot(sub1,aes(x,y)) + geom_point(aes(color=xt,size=gam)) + scale_color_gradient(low = "white", high = "skyblue") + theme(legend.position = "none")
 sub2 <- mc[mc$t==100,]
-a2 <- ggplot(sub2,aes(x,y)) + geom_point(aes(color=xt)) + scale_color_gradient(low = "white", high = "skyblue") + theme(legend.position = "none")
+a2 <- ggplot(sub2,aes(x,y)) + geom_point(aes(color=xt,size=gam)) + scale_color_gradient(low = "white", high = "skyblue") + theme(legend.position = "none")
 sub3 <- mc[mc$t==200,]
-a3 <- ggplot(sub3,aes(x,y)) + geom_point(aes(color=xt)) + scale_color_gradient(low = "white", high = "skyblue") + theme(legend.position = "none")
+a3 <- ggplot(sub3,aes(x,y)) + geom_point(aes(color=xt,size=gam)) + scale_color_gradient(low = "white", high = "skyblue") + theme(legend.position = "none")
 
 d <- plot_grid(p0,plot_grid(p1,p2,p3,nrow=3),ncol=2,rel_widths=c(2,1.5))
 
