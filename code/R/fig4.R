@@ -145,15 +145,9 @@ p3 <- ggplot(sub3,aes(y = Percentage, x = d, fill = as.character(level))) +
         axis.text.y = element_blank(), 
         axis.ticks.y = element_blank(),legend.position=c(0.8,0.5),legend.text = element_text(size=7),legend.title = element_blank())
 
-d <- plot_grid(p0,plot_grid(p1,p2,p3,nrow=3),ncol=2,rel_widths=c(2,1.5))
-
-pdf("./output/fig4.pdf",paper="a4r")
-d
-dev.off()
-
 #### Figure 4a. Conceptual MC figure ####
 load(paste("./data/mc_v02/",h_lev[2],d_lev[8],"_res_v02.RData",sep=""))
-mc <- data.frame(x=rep(NA,50*3),y=rep(NA,50*3),t=rep(c(0,100,200),each=50),gam=rep(NA,50*3),xt=rep(NA,50*3))
+mc <- data.frame(x=rep(NA,50*3),y=rep(NA,50*3),t=rep(c(0,10,200),each=50),div_a=rep(NA,50*3),xt=rep(NA,50*3))
 # t0
 mc[1:50,c(1,2)] <- xy
 a  <- diversity(N[,,1],index="invsimpson")
@@ -162,12 +156,12 @@ mc[1:50,4] <- a # alpha diversity
 b <- rowSums(xt[,,1]*N[,,1],na.rm=TRUE) / rowSums(N[,,1])
 b[is.finite(b)==FALSE] <- 0
 mc[1:50,5] <- b # community weighted mean trait value
-# t100
+# t10
 mc[51:100,c(1,2)] <- xy
-a  <- diversity(N[,,100],index="invsimpson")
+a  <- diversity(N[,,10],index="invsimpson")
 a[is.finite(a)==FALSE] <- 0
 mc[51:100,4] <- a # alpha diversity
-b <- rowSums(xt[,,100]*N[,,100],na.rm=TRUE) / rowSums(N[,,100])
+b <- rowSums(xt[,,10]*N[,,10],na.rm=TRUE) / rowSums(N[,,10])
 b[is.finite(b)==FALSE] <- 0
 mc[51:100,5] <- b # community weighted mean trait value
 # t200
@@ -179,9 +173,10 @@ b <- rowSums(xt[,,200]*N[,,200],na.rm=TRUE) / rowSums(N[,,200])
 b[is.finite(b)==FALSE] <- 0
 mc[101:150,5] <- b # community weighted mean trait value
 
-sub1 <- mc[mc$t==0,]
-a1 <- ggplot(sub1,aes(x,y)) + geom_point(aes(color=xt,size=gam)) + scale_color_gradient(low = "white", high = "skyblue") + theme(legend.position = "none")
-sub2 <- mc[mc$t==100,]
-a2 <- ggplot(sub2,aes(x,y)) + geom_point(aes(color=xt,size=gam)) + scale_color_gradient(low = "white", high = "skyblue") + theme(legend.position = "none")
-sub3 <- mc[mc$t==200,]
-a3 <- ggplot(sub3,aes(x,y)) + geom_point(aes(color=xt,size=gam)) + scale_color_gradient(low = "white", high = "skyblue") + theme(legend.position = "none")
+c0 <- ggplot(mc,aes(x,y)) + geom_point(aes(color=xt,size=div_a)) + facet_wrap(~t) + scale_color_gradient(low = "lightgrey", high = "forestgreen") + theme(axis.text.x=element_blank(),axis.text.y=element_blank())
+
+d <- plot_grid(plot_grid(c0,p0,ncol=1,rel_heights = c(1,1)),plot_grid(p1,p2,p3,nrow=3),ncol=2,rel_widths=c(2,1.2))
+
+pdf("./output/fig4.pdf",paper="a4r")
+d
+dev.off()
