@@ -9,7 +9,7 @@ library(Hmsc)
 library(vegan)
 library(cowplot)
 
-## Figure 4a. Alpha diversity across d and h2 levels
+#### Figure 4a. Alpha diversity across d and h2 levels ####
 ## functions
 CV <- function(x){
   a <- mean(x,na.rm=T)	#Get the average of all values
@@ -71,9 +71,9 @@ for(i in 1:length(h2_vals)){
 sub <- mean_div.gg[mean_div.gg$level=="gamma",]
 sub2 <- sub[(sub$h2==0 | sub$h2==0.1 | sub$h2==0.3 | sub$h2==0.9),]
   
-p0 <- ggplot(sub2,aes(x=d_lev,y=mean)) + geom_point(aes(colour=h2)) + scale_colour_gradient(low="lightgrey",high="forestgreen")+ geom_line(aes(group=interaction(level,h_lev)),size=0.25,col="black",linewidth=0.1) + coord_cartesian(ylim=c(0,15)) + theme_classic() + ylab(expression(gamma*" diversity")) + xlab("dispersal") + scale_x_discrete(labels=c(0,expression(10^-9),expression(10^-8),expression(10^-7),expression(10^-6),expression(10^-5),expression(10^-4),expression(10^-3),expression(10^-2),0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1))
+p0 <- ggplot(sub2,aes(x=d_lev,y=mean)) + geom_point(aes(colour=h2)) + scale_colour_gradient(low="lightgrey",high="forestgreen")+ geom_line(aes(group=interaction(level,h_lev)),col="black",linewidth=0.1) + coord_cartesian(ylim=c(0,15)) + theme_classic() + ylab(expression(gamma*" diversity")) + xlab("dispersal") + scale_x_discrete(labels=c(0,expression(10^-9),expression(10^-8),expression(10^-7),expression(10^-6),expression(10^-5),expression(10^-4),expression(10^-3),expression(10^-2),0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1))
 
-## Figure 4b. Stacked bar chart of mean VarPart results across d and h2 levels tested
+#### Figure 4b. Stacked bar chart of mean VarPart results across d and h2 levels tested ####
 ## Enter VarPart data
 data_bar <- data.frame(d=rep(NA,9),h2=rep(NA,9),Percentage=NA,level=rep(c("Env","deltaX","R(site)","R(time)"),times=9),col_col=rep(c("white","skyblue","darkgrey","orange"),times=9))
 
@@ -145,7 +145,13 @@ p3 <- ggplot(sub3,aes(y = Percentage, x = d, fill = as.character(level))) +
         axis.text.y = element_blank(), 
         axis.ticks.y = element_blank(),legend.position=c(0.8,0.5),legend.text = element_text(size=7),legend.title = element_blank())
 
-## Figure 4a. Conceptual MC figure
+d <- plot_grid(p0,plot_grid(p1,p2,p3,nrow=3),ncol=2,rel_widths=c(2,1.5))
+
+pdf("./output/fig4.pdf",paper="a4r")
+d
+dev.off()
+
+#### Figure 4a. Conceptual MC figure ####
 load(paste("./data/mc_v02/",h_lev[2],d_lev[8],"_res_v02.RData",sep=""))
 mc <- data.frame(x=rep(NA,50*3),y=rep(NA,50*3),t=rep(c(0,100,200),each=50),gam=rep(NA,50*3),xt=rep(NA,50*3))
 # t0
@@ -179,9 +185,3 @@ sub2 <- mc[mc$t==100,]
 a2 <- ggplot(sub2,aes(x,y)) + geom_point(aes(color=xt,size=gam)) + scale_color_gradient(low = "white", high = "skyblue") + theme(legend.position = "none")
 sub3 <- mc[mc$t==200,]
 a3 <- ggplot(sub3,aes(x,y)) + geom_point(aes(color=xt,size=gam)) + scale_color_gradient(low = "white", high = "skyblue") + theme(legend.position = "none")
-
-d <- plot_grid(p0,plot_grid(p1,p2,p3,nrow=3),ncol=2,rel_widths=c(2,1.5))
-
-pdf("./output/fig4.pdf",paper="a4r")
-d
-dev.off()
