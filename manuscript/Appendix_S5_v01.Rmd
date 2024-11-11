@@ -1,0 +1,61 @@
+---
+  title: "Appendix S5. The interpretation of the estimated trait change beta"
+author:
+  - Jelena H. Pantel^[Laboratoire Chrono-environnement,UMR 6249 CNRS-UFC, 16 Route de Gray, 25030 Besançon cedex, France, jelena.pantel@univ-fcomte.fr]
+- Ruben J. Hermann^[University of Duisburg-Essen, Universitätsstraße 5, 45141 Essen, Germany, ruben.hermann@uni-due.de]
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::pdf_document2:
+  toc: no
+fig_caption: yes
+latex_engine: xelatex
+extra_dependencies: ["float"]
+bookdown::html_document2: default
+word_document:
+  reference_docx: docx_template.docx
+header-includes:
+  - \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead[L]{Author Pantel and Hermann}
+- \fancyhead[R]{Detection of ecoevo dynamics}
+- \usepackage{lineno}
+- \linenumbers
+link-citations: yes
+linkcolor: blue
+csl: the-american-naturalist.csl
+bibliography: refs.bib
+---
+  
+  ```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+```{r setup,echo=FALSE,message=FALSE}
+library(ecoevor)
+library(ggplot2)
+library(reshape2)
+library(Hmsc)
+library(bayesplot)
+```
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+# Wrap long lines
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE,out.width="50%")
+```
+
+# Empirical data
+
+To correctly interpret correlation of trait change with population density of the species (as seen in Fig. X) we first need to check the raw data.
+
+```{r, out.width="90%", include=TRUE, fig.align="center", fig.cap=c("Figure S05 1"), echo=FALSE}
+knitr::include_graphics("../output/fig_S05_1.pdf")
+```
+
+From the empirical data we can detect that species Rn is drastically increasing in frond size over the course of the experiment, with a peak in trait change during week 5 and 7. Simultaneously it is only slowly increasing in population density, with slightly lower density during week 5. This leads to the highest value in $\Delta \hat{x}$ during a lower value in the population density of species Rn. Similarly species Wc had great trait changes, during time points when species Lm and Sp showed an increase in population density. HMSC draws a linear correlation between both and in (\@ref(fig:fig2)) it can be seen how HMSC infers these correlations (the logarithmic scale of $\Delta \hat{x}$ was used for clearance).
+
+```{r, out.width="90%", include=TRUE, fig.align="center", fig.cap=c("Figure S05 2"), echo=FALSE}
+knitr::include_graphics("../output/fig_S05_2.pdf")
+```
+
+What should be noted is that, species Rn was the only to increase in frond size over this experiment, which is likely the result of its decreased in population size. At the same time species Wc decreased in frond size, thus occupying less space on the water surface thus freeing space for the other species to occupy. Though this interpretation needs to be taken with caution as more information is missing for a more careful interpretation.
