@@ -11,6 +11,7 @@ library(bayesplot)
 library(reshape2)
 library(cowplot)
 library(MASS)
+library(gridGraphics)
 ## functions
 source("./code/R/plot_grad_ylim.R")
 
@@ -98,7 +99,7 @@ p3 <- recordPlot()
 ### variance partitioning ###
 par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0.5,0.5))
 VP <- computeVariancePartitioning(m.1.sample, group = c(1, 1, 1), groupnames = "Env")
-plotVariancePartitioning(m.1.sample, VP, args.legend = list(cex = 0.6, bg = "transparent"),cex.axis=0.6,main="",cols=c("white","orange"))
+plotVariancePartitioning(m.1.sample, VP, args.legend = list(cex = 0.4, bg = "transparent",x=2),cex.axis=0.6,main="",cols=c("white","orange"))
 p4 <- recordPlot()
 ### ### ### ### ### ### ###
 ### all plots together ###
@@ -213,7 +214,7 @@ p7 <- recordPlot()
 ### variance partitioning ###
 par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0.5,0.5))
 VP <- computeVariancePartitioning(m.2.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
-plotVariancePartitioning(m.2.sample,VP,cols=c("white","skyblue","darkgrey","orange"),args.legend=list(cex=0.6,bg="transparent"),cex.axis=0.6,main="")
+plotVariancePartitioning(m.2.sample,VP,cols=c("white","skyblue","darkgrey","orange"),args.legend=list(cex=0.4,bg="transparent",x=2),cex.axis=0.6,main="")
 p8 <- recordPlot()
 ### ### ### ### ### ### ###
 ### all plots together ###
@@ -352,7 +353,7 @@ p10 <- recordPlot()
 ### variance partitioning ###
 par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0.5,0.5))
 VP <- computeVariancePartitioning(m.3.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
-plotVariancePartitioning(m.3.sample,VP,cols=c("white","skyblue","darkgrey","orange","pink"),args.legend=list(cex=0.6,bg="transparent"),main="",cex.axis=0.6)
+plotVariancePartitioning(m.3.sample,VP,cols=c("white","skyblue","darkgrey","orange","pink"),args.legend=list(cex=0.4,bg="transparent",x=2),main="",cex.axis=0.6)
 p11 <- recordPlot()
 # prepare for plot
 pred3 <- predict(m.3.sample)
@@ -385,8 +386,18 @@ c <- plot_grid(p12,plot_grid(p9,p10,nrow=2),p11,nrow=1,rel_widths=c(3,1,1,1),rel
 ### ### ### ### ### ### ###
 ### all plots together ###
 ### ### ### ### ### ### ###
-d <- plot_grid(p1,plot_grid(p2,p3,nrow=2),p4,p5,plot_grid(p6,p7,nrow=2),p8,p12,plot_grid(p9,p10,nrow=2),p11,nrow=3,ncol=3,rel_widths=c(3,1,1,3,1,1,3,1,1))
+p2.g <- ggdraw(p2)
+p3.g <- ggdraw(p3)
+p4.g <- ggdraw(p4)
+p6.g <- ggdraw(p6)
+p7.g <- ggdraw(p7)
+p8.g <- ggdraw(p8)
+p9.g <- ggdraw(p9)
+p10.g <- ggdraw(p10)
+p11.g <- ggdraw(p11)
 
-pdf("./output/fig1.pdf",paper="a4r")
+d <- plot_grid(p1,plot_grid(p2.g,p3.g,nrow=2,align="v"),p4.g,p5,plot_grid(p6.g,p7.g,nrow=2,align="v"),p8.g,p12,plot_grid(p9.g,p10.g,nrow=2,align="v"),p11.g,nrow=3,ncol=3,rel_widths=c(5,1.5,2,5,1.5,2,5,1.5,2),align="h",axis="b",labels = c('a','b','c','d','e','f','g','h','i'),label_size = 9,hjust=c(0,2,2))
+
+pdf("./output/fig1.pdf",width=11.69, height=8.27)
 d
 dev.off()

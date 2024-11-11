@@ -1,6 +1,6 @@
-## Code for Figure 4
+## Code for Figure 2
 ## J.H. Pantel
-## 09-11-2024
+## 11-11-2024
 
 ## libraries
 library(ggplot2)
@@ -195,8 +195,8 @@ mc[101:150,5] <- b # community weighted mean trait value
 
 c0 <- ggplot(mc,aes(x,y)) + geom_point(aes(color=xt,size=div_a)) + facet_wrap(~t) + scale_color_gradient(low = "lightgrey", high = "forestgreen") + theme(axis.text.x=element_blank(),axis.text.y=element_blank())
 
-d <- plot_grid(plot_grid(c0,p0,ncol=1,rel_heights = c(1,1)),plot_grid(p1,p2,p3,nrow=3),ncol=2,rel_widths=c(2,1.2))
+d <- plot_grid(plot_grid(c0,p0,ncol=1,rel_heights = c(1,1)),plot_grid(p1,p2,p3,nrow=3),ncol=2,rel_widths=c(2,1.2),labels=c('a','c','b'))
 
-pdf("./output/fig4.pdf",paper="a4r")
+pdf("./output/fig2.pdf",width=11.69, height=8.27)
 d
 dev.off()
