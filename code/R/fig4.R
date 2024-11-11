@@ -87,7 +87,7 @@ counter <- 1
 for(v.d in c(1)){ # dlev
   for(v.h2 in c(2,4,10)){ # hlev
     ## Read in population size values
-    result <- paste("/Users/jhpantel/Nextcloud/Pantel/data/mc_v02/",h_lev[v.h2],d_lev[v.d],"_hmsc_v02.RData",sep="")
+    result <- paste("/Users/jhpantel/Nextcloud/Pantel/data/",h_lev[v.h2],d_lev[v.d],"_hmsc_v02_nospace.RData",sep="")
     load(result)
     s <- ncol(m.1$Y)
     VP <- computeVariancePartitioning(m.1, group = c(1,1,rep(2,s)), groupnames = c("Env","deltaX"))
