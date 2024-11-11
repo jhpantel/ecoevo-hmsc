@@ -84,7 +84,27 @@ h2_vals = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
 ## Get VarPart results across HMSC output
 begin <- seq(1,36,4)
 counter <- 1
-for(v.d in c(1,4,8)){ # dlev
+for(v.d in c(1)){ # dlev
+  for(v.h2 in c(2,4,10)){ # hlev
+    ## Read in population size values
+    result <- paste("./data/mc_v02/",h_lev[v.h2],d_lev[v.d],"_hmsc_v02_nospace.RData",sep="")
+    load(result)
+    s <- ncol(m.1$Y)
+    VP <- computeVariancePartitioning(m.1, group = c(1,1,rep(2,s)), groupnames = c("Env","deltaX"))
+    ng = dim(VP$vals)[1]
+    leg = VP$groupnames
+    for (r in 1:m.1$nr) {
+      leg = c(leg, paste("Random: ", m.1$rLNames[r], sep = ""))
+    }
+    means = round(100 * rowMeans(VP$vals), 1)
+    means = c(means[1],means[2],0,means[3])
+    data_bar[begin[counter]:(begin[counter]+3),3] <- means
+    data_bar[begin[counter]:(begin[counter]+3),1] <- d_vals[v.d]
+    data_bar[begin[counter]:(begin[counter]+3),2] <- h2_vals[v.h2]
+    counter <- counter + 1
+  }
+}
+for(v.d in c(4,8)){ # dlev
   for(v.h2 in c(2,4,10)){ # hlev
     ## Read in population size values
     result <- paste("./data/mc_v02/",h_lev[v.h2],d_lev[v.d],"_hmsc_v02.RData",sep="")
