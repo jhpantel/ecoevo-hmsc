@@ -1,0 +1,1570 @@
+---
+title: "Appendix S1. Linear regression models and non-linear population dynamics"
+author:
+  - Jelena H. Pantel^[Laboratoire Chrono-environnement,UMR 6249 CNRS-UFC, 16 Route de Gray, 25030 Besançon cedex, France, jelena.pantel@univ-fcomte.fr]
+  - Ruben J. Hermann^[University of Duisburg-Essen, Universitätsstraße 5, 45141 Essen, Germany, ruben.hermann@uni-due.de]
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::pdf_document2:
+    toc: no
+    fig_caption: yes
+    latex_engine: xelatex
+    extra_dependencies: ["float"]
+  bookdown::html_document2: default
+  word_document:
+    reference_docx: docx_template.docx
+header-includes:
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead[L]{Author Pantel and Hermann}
+- \fancyhead[R]{Detection of ecoevo dynamics}
+- \usepackage{lineno}
+- \linenumbers
+link-citations: yes
+linkcolor: blue
+csl: the-american-naturalist.csl
+bibliography: refs_S1.bib
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+```{r setup,echo=FALSE,message=FALSE}
+library(Hmsc)
+library(ggplot2)
+library(tidyr)
+library(coda)
+library(patchwork)
+library(jtools)
+library(bayesplot)
+library(reshape2)
+library(MASS)
+library(ecoevor)
+library(Hmisc)
+```
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+# Wrap long lines
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE,out.width="50%")
+```
+
+# One species, logistic growth
+Population growth over time in a single species is first modelled using a Beverton-Holt (discrete-time, logistic) model (@Beverton1957), using an intra-specific competition coefficient for density-dependent growth (@Hart2013) - thus $\alpha$ = $1/K$.
+
+$$ N_{i,t+1} = \frac{r_i N_{i,t}}{1 + \alpha_{ii} N_{i,t}}$$
+Note that in this model, the system is at equilibrium when $N_{i,t+1} = N_{i,t}$, and therefore: $$ N^* = N^*\frac{r_i}{1 + \alpha_{ii} N^*} $$
+
+$$ 1 = \frac{r_i}{1 + \alpha_{ii} N^*} $$
+
+$$ N^* = \frac{r_i - 1}{\alpha_{ii}} $$
+
+## Population dynamics simulation
+We simulate population growth using $r_i = 1.67$ and $\alpha_{ii}$ = 0.00125, with an initial population size $N_{1,0} = 10$. This is implemented using the `disc_log` function from the `ecoevor` package [https://github.com/jhpantel/ecoevoR](https://github.com/jhpantel/ecoevoR).
+
+```{r}
+set.seed(42)
+# Simulate initial species population growth
+N1.0 <- 10
+r1.0 <- 1.67
+alpha.11 <- 0.00125
+# Simulation of model for t time steps
+t <- 30
+N <- rep(NA, t)
+N[1] <- N1.0
+for (i in 2:t) {
+  N[i] <- disc_log(r=r1.0, N0=N[i-1], alpha=alpha.11)
+}
+```
+```{r figs1, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs1}Population size \\textit{N} over time \\textit{t} for a discrete-time logistic growth model, with parameters $r_i$ = 1.67, $N_{1,0}$ = 14, and $\\alpha_{11}$ = 0.00125."}
+# Plot simulation: ggplot
+dat <- as.data.frame(N)
+dat$time <- 1:t
+ggplot2::ggplot(dat, aes(time, N)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),
+    linetype = "dashed", color = "gray") +
+  theme_classic()
+```
+
+## Linear statistical model
+
+We fit the population time series data to a first-order auto-regressive model to predict $N_{t+1}$ as a function of $N_t$, and compare that to a linear regression. We use ln-N after @Ives1995, as also discussed in @Certain2018 and @Olivenca2021.
+
+$$ N_{t+1} = \beta_0 + \beta_1 N_t + \epsilon_t $$
+```{r,warning=FALSE}
+# Fit the model
+m.1.ar <- arima(x = log(N), order = c(1,0,0), include.mean = T, method="CSS")
+m.1.lm <- lm(log(dat$N[2:t]) ~ log(dat$N[1:(t-1)]))
+#plotting the series along with the fitted values
+m.1.ar.fit <- log(N) - residuals(m.1.ar)
+m.1.lm.fit <- log(dat$N[2:t]) - m.1.lm$resid
+dat$ar1.fit <- m.1.ar.fit
+dat$lm.fit <- NA
+dat$lm.fit[2:t] <- m.1.lm.fit
+```
+```{r figs2, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs2}Population size over time (black line) with fitted values from a first-order autoregressive (grey) and linear regression (orange) model.",warning=FALSE}
+colors <- c("data" = "black", "AR1 fit" = "gray", "lm fit"="orange")
+ggplot(data=dat,aes(x=time)) +
+  geom_point(aes(y=log(N),color="data")) +
+  geom_point(aes(y=ar1.fit, color = "AR1 fit"), alpha=0.5) +
+  geom_point(aes(y=lm.fit, color = "lm fit"), alpha=0.5) +
+  geom_line(aes(y=log(N), color="data"), linewidth=.4) +
+  geom_line(aes(y=ar1.fit, color = "AR1 fit"), alpha=0.5, linewidth=.4) +
+  geom_line(aes(y=lm.fit, color = "lm fit"), alpha=0.5, linewidth=.4) +
+  theme_bw() +
+  xlab("time") +
+  ylab("N") +
+  labs(color="Legend") +
+  scale_color_manual(values = colors)
+```
+
+The linear model is a good fit, and $N_{t+1}$ and $N_t$ are well-represented by a linear function:
+
+```{r figs3, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs3}Population size (logarithm) at one time step $N_{t+1}$ as a function of log-population size in the previous time step $N_t$. "}
+dN <- rep(NA, (t-1))
+for (i in 1:(t-1)) {
+  dN[i] <- log(N[i+1])-log(N[i])
+}
+d.dN <- as.data.frame(dN)
+d.dN$Nt <- log(dat$N[1:(t-1)])
+d.dN$Nt_plus_1 <- log(dat$N[2:t])
+ggplot2::ggplot(d.dN, aes(x=Nt,y=Nt_plus_1)) + geom_point() + theme_classic()
+```
+
+We also examine density dependence by plotting $\Delta N = N_{t+1} - N_t$ vs. $N_t$:
+
+```{r figs4, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs4} Change in population size from one time step to the next $\\Delta N$ as a function of $N_{t+1}$"}
+d.dN <- as.data.frame(dN)
+d.dN$Nt <- log(dat$N[1:(t-1)])
+d.dN$Nt_plus_1 <- log(dat$N[2:t])
+ggplot2::ggplot(d.dN, aes(Nt, dN)) + geom_point() + theme_classic()
+```
+## Bayesian linear statistical model: HMSC
+We can estimate the same model parameters using HMSC:
+
+```{r results='hide', message=FALSE, warning=FALSE}
+# prepare data in HMSC format
+Y <- as.matrix(log(dat$N[2:t]))
+XData <- data.frame(x=log(dat$N[1:(t-1)]))
+m.1.hmsc <- Hmsc(Y=Y,XData=XData,XFormula=~x)
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 1000
+transient <- 500*thin
+verbose <- 500*thin
+# sample MCMC
+m.1.sample <- sampleMcmc(m.1.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+```
+
+
+```{r}
+m.post.hmsc <- convertToCodaObject(m.1.sample)
+summary(m.post.hmsc$Beta)
+plot(m.post.hmsc$Beta)
+```
+
+These estimates match well with those from the AR1 and linear model:
+
+```{r}
+# AR1 coefficients (recall that the intercept is the term below multipled by 1 - phi1)
+m.1.ar$coef
+m.1.ar$coef[2]*(1-m.1.ar$coef[1])
+# linear model
+summary(m.1.lm)$coefficients[1:2,1:2]
+# Bayesian estimates
+summary(m.post.hmsc$Beta)$statistics[1:2,1:2]
+```
+
+```{r figs5, fig.pos = "H", fig.show="hold", fig.cap = "\\label{fig:figs5} Observed (grey) and model-fit (blue) values for population size at time t (x-axis) and t+1 (y-axis) using HMSC.",results='hide',fig.keep='all'}
+Gradient <- constructGradient(m.1.sample,focalVariable="x",ngrid=29)
+predY <- predict(m.1.sample,Gradient=Gradient,expected=TRUE)
+plotGradient(m.1.sample,Gradient,pred=predY,showData=T,measure="Y",main="",xlab="N_t",ylab="predicted N_t+1")
+```
+
+```{r figs6, fig.pos = "H", fig.show="hold", fig.cap = "\\label{fig:figs6} Observed (grey) and model-fit (blue) values for population size at time t (x-axis) and t+1 (y-axis) using lm.",results='hide',fig.keep='all',warning=FALSE,message=FALSE}
+lm_dat <- data.frame(cbind(log(dat$N[2:t]),log(dat$N[1:(t-1)])))
+colnames(lm_dat) <- c("Nt1","Nt")
+ggplot(lm_dat,aes(Nt,Nt1)) +
+  stat_summary(fun.data= mean_cl_normal) + 
+  geom_smooth(method='lm') + theme_classic()
+```
+
+## Conclusions
+In this example, a first-order auto-regressive model works well, bypassing the need to estimate logistic growth parameters $r_i$ and $\alpha_{ii}$. The density-dependence dynamics ($\Delta N \sim f(N_t)$) show an overall declining trend over time. The Bayesian estimation implemented in HMSC gives good parameter estimates.
+
+# One species, logistic growth, environmental covariate
+We now consider using a linear model to analyze population growth when the species growth rate is impacted by a single environmental covariate.
+
+## Growth depends on environment
+
+First we add environment-dependent growth rate. The growth rate $r_i$ becomes:
+
+$$ r_i = \hat{W}e^{-(E-x_{i,t})^2}$$
+
+Here, $\hat{W}$ is the maximal population growth rate (set to `r r1.0` as above), $E$ is the local environmental trait optimum value, and $x_{i,t}$ is species *i* trait value at time *t*. We see that if $E = x_{i,t}$ then the growth rate is at the value $r$ = `r r1.0`. Here, we begin with $E = x_{i,t} = 0.8$, then simulate the environment $E$ value fluctuating randomly over time, and finally use a linear model to fit $E$ as a covariate. We implement the simulation using the `disc_log_E` function from the `ecoevor` package.
+
+```{r}
+# Simulate initial species population growth with environment fluctuations
+N1.0 <- 10
+r1.0 <- 1.67
+alpha.11 <- 0.00125
+E.0 <- 0.8
+x1.0 <- 0.8
+# Simulation of model for t time steps
+t <- 40
+N <- rep(NA, t)
+N[1] <- N1.0
+E <- rep(NA, t)
+E[1] <- E.0
+for (i in 2:t) {
+  N[i] <- disc_log_E(r=r1.0, N0=N[i-1], alpha=alpha.11, E=E[i-1], x=x1.0)
+  E[i] <- E[i-1] + rnorm(1,0,.1)
+}
+```
+```{r figs7, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs7}Population size \\textit{N} over time \\textit{t} for a discrete-time logistic growth model, with parameters $r_i$ = 1.67, $N_{1,0}$ = 14, and $\\alpha_{11}$ = 0.00125. The value of E over time is also shown."}
+# Plot simulation: ggplot
+dat <- as.data.frame(cbind(N,E))
+dat$time <- 1:t
+p1 <- ggplot2::ggplot(dat, aes(time, N)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray") + theme_classic()
+p2 <- ggplot2::ggplot(dat, aes(time, E)) + geom_point() + theme_classic()
+p1 + p2
+```
+
+## Linear statistical model with environmental covariate
+
+We now include environment $E$ as a covariate in the linear model:
+
+$$ N_{t} = \beta_0 + \beta_1 N_{t-1} + \beta_2 E_{t-1}+ \epsilon_t $$
+
+```{r,warning=FALSE}
+# Fit the model
+m.2.ar <- arima(x = log(N), order = c(1,0,0), include.mean = T, method="CSS", xreg=E)
+m.2.lm <- lm(log(dat$N[2:t]) ~ log(dat$N[1:(t-1)]) + log(E[1:(t-1)]))
+#plotting the series along with the fitted values
+m.2.ar.fit <- log(N) - residuals(m.2.ar)
+m.2.lm.fit <- log(dat$N[2:t]) - m.2.lm$resid
+dat$ar2.fit <- m.2.ar.fit
+dat$lm2.fit <- NA
+dat$lm2.fit[2:t] <- m.2.lm.fit
+```
+
+```{r figs8, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs8} Population size over time (black line) with fitted values from a first-order autoregressive model (gray) and a linear model (orange).",warning=FALSE}
+
+colors <- c("data" = "black", "AR1 fit" = "gray", "lm fit"="orange")
+ggplot(data=dat,aes(x=time)) +
+  geom_point(aes(y=log(N),color="data")) +
+  geom_point(aes(y=ar2.fit, color = "AR1 fit"), alpha=0.5) +
+  geom_point(aes(y=lm2.fit, color = "lm fit"), alpha=0.5) +
+  geom_line(aes(y=log(N), color="data"), linewidth=.4) +
+  geom_line(aes(y=ar2.fit, color = "AR1 fit"), alpha=0.5, linewidth=.4) +
+  geom_line(aes(y=lm2.fit, color = "lm fit"), alpha=0.5, linewidth=.4) +
+  theme_bw() +
+  xlab("time") +
+  ylab("N") +
+  labs(color="Legend") +
+  scale_color_manual(values = colors)
+```
+
+The linear model is a good fit when including the environmental covariate. $N_{t+1}$ and $N_t$ can still be captured by a linear relationship. However we see that the relationship between $N_{t+1}$ and $E_t$ is non-linear.
+
+```{r figs9, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs9}Population size (logarithm) at one time step $N_{t+1}$ as a function of log-population size in the previous time step $N_t$. Also shown are change in population size $\\Delta N$ with population size and E."}
+dN <- rep(NA, (t-1))
+for (i in 1:(t-1)) {
+  dN[i] <- log(N[i+1])-log(N[i])
+}
+d.dN <- as.data.frame(dN)
+d.dN$Nt <- log(dat$N[1:(t-1)])
+d.dN$Nt_plus_1 <- log(dat$N[2:t])
+p1 <- ggplot2::ggplot(d.dN, aes(x=Nt,y=Nt_plus_1)) + geom_point() + theme_classic()
+
+d.dN <- as.data.frame(dN)
+d.dN$Nt <- log(dat$N[1:(t-1)])
+d.dN$Nt_plus_1 <- log(dat$N[2:t])
+d.dN$E <- log(dat$E[2:t])
+p2 <- ggplot2::ggplot(d.dN, aes(x=E,y=Nt_plus_1)) + geom_point() + theme_classic()
+p3 <- ggplot2::ggplot(d.dN, aes(Nt, dN)) + geom_point() + theme_classic()
+p4 <- ggplot2::ggplot(d.dN, aes(E, dN)) + geom_point() + theme_classic()
+
+p1+p2+p3+p4
+```
+
+This tells us that the lm is good for predictions, but not for inference (for capturing well the relationsip between the predictor and response variable). The use of linear relationships in JSDMs is discussed in [@Ingram2020], and in many applications (e.g. [@Erickson2023]) quadratic terms are used, which create bell-shaped response curves that may better match species with optimal niches (as opposed to linear, monotonically increasing relationships between population size and environmental predictors). We thus include a quadratic term for $E_t$ to provide a better fit to the data.
+
+```{r}
+df <- data.frame(cbind(log(dat$N[2:t]),log(dat$N[1:(t-1)]),E[1:(t-1)],E[1:(t-1)]^2))
+colnames(df) <- c("Nt1","Nt","E","Esq")
+m.2.lm <- lm(Nt1 ~ Nt + E + Esq,data=df)
+```
+
+```{r figs10, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs10} Population size (logarithm) at one time step $N_{t+1}$ as a function of environment E. Linear and quadratic fits are shown."}
+jtools::effect_plot(m.2.lm,pred=E,plot.points = TRUE)
+ggplot(data = df, aes(x = E, y = Nt1)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ x + I(x^2)) + theme_classic()
+```
+
+## Bayesian linear statistical model: HMSC
+We can estimate the same model parameters using HMSC:
+
+```{r results='hide', warning=FALSE, message=FALSE}
+# prepare data in HMSC format
+Y <- as.matrix(log(dat$N[2:t]))
+XData <- df
+m.2.hmsc <- Hmsc(Y=Y,XData=XData,XFormula=~Nt+E+Esq)
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 1000
+transient <- 500*thin
+verbose <- 500*thin
+# sample MCMC
+m.2.sample <- sampleMcmc(m.2.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+```
+
+```{r}
+m2.post.hmsc <- convertToCodaObject(m.2.sample)
+summary(m2.post.hmsc$Beta)
+bayesplot::mcmc_trace(m2.post.hmsc$Beta)
+bayesplot::mcmc_areas(m2.post.hmsc$Beta,area_method = c("equal height"))
+```
+
+These estimates match well with those from the AR1 and linear model:
+
+```{r}
+# AR1 coefficients (recall that the intercept is the term below multipled by 1 - phi1)
+m.2.ar$coef
+m.2.ar$coef[2]*(1-m.2.ar$coef[1])
+# linear model
+summary(m.2.lm)$coefficients[1:4,1:2]
+# Bayesian estimates
+summary(m2.post.hmsc$Beta)$statistics[1:4,1:2]
+```
+
+```{r}
+knitr::knit_exit()
+```
+
+We recall that the interpretation of the coefficients in an arimaX (arima with covariates) model is difficult. They do not give the impact on $N_t$ per unit increase in X as in a regression. So we do not interpret the causation implied by the coefficient in the arimaX model. In the regression model, we can see that $E$ has a positive impact on $N_t$.
+
+
+```{r figs11, fig.pos = "H", fig.show="hold", fig.cap = "\\label{fig:figs11} Observed (grey) and model-fit (blue) values for population size at time t (x-axis) and t+1 (y-axis).",results='hide',fig.keep='all'}
+Gradient <- constructGradient(m.2.sample,focalVariable="E",non.focalVariables=list(Nt=list(2),Esq=list(2)),ngrid=39)
+# Esq is manually constructed as gradient-produced E^2
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.2.sample,XData=Gradient$XDataNew,expected=TRUE)
+plotGradient(m.2.sample,Gradient,pred=predY,showData=T,measure="Y",main="",xlab="E_t",ylab="predicted N_t+1")
+```
+
+## Conclusions
+In this example, the linear regression again works well to describe the impact of $E_t$ for $N_t$ when using the quadratic formulation. The arimaX model works well for fitting and subsequent prediction, but less well for inference about the impacts of $E$. From the quadratic regression terms for $E$, we correctly see that the population size is maximal at the species trait value and decreases away from that value. We will continue to use log-transformed abundance and now introduce quadratic terms for the environmental parameter.
+
+# Two species, logistic growth, competition
+Here we investigate how a second species impacts the inference we can make from linear models.
+
+## Interspecific competition
+The growth equation for each species now becomes:
+
+$$ N_{i,t+1} = \frac{r_i N_{i,t}}{1 + \alpha_{ii} N_{i,t} + \alpha_{ij} N_{j,t}}$$
+We use a distinct growth rate for the 2nd species and introduce the interspecific interaction coefficient $\alpha_{ij}$.
+
+```{r}
+# Simulate initial species population growth with a second species present
+N1.0 <- 10
+N2.0 <- 10
+r1.0 <- 1.67
+r2.0 <- 1.7
+alpha.11 <- 0.00125
+alpha.22 <- 0.00125
+alpha.12 <- 0.008
+alpha.21 <- 0.008725
+# model function
+disc_LV_comp <- function(r1,r2,N1.0,N2.0,alpha.11,alpha.22,alpha.12,alpha.21) {
+    Nt1 <- (r1*N1.0) / (1+alpha.11*N1.0+alpha.12*N2.0)
+    Nt2 <- (r2*N2.0) / (1+alpha.22*N2.0+alpha.21*N1.0)
+    return(c(Nt1,Nt2))
+}
+# Simulation of model for t time steps
+t <- 40
+N <- array(NA,dim=c(t,2))
+N <- as.data.frame(N)
+colnames(N) <- c("N1","N2")
+N$N1[1] <- N1.0
+N$N2[1] <- N2.0
+for (i in 2:t) {
+  res <- disc_LV_comp(r1=r1.0,r2=r2.0,N1.0=N[i-1,1],N2.0=N[i-1,2],alpha.11=alpha.11,alpha.22=alpha.22,alpha.12=alpha.12,alpha.21=alpha.21)
+  N$N1[i] <- res[1]
+  N$N2[i] <- res[2]
+}
+```
+```{r figs12, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs12}Population size \\textit{N} over time \\textit{t} for a discrete-time logistic growth model, with parameters $r_1$ = 1.67, $r_2$ = 1.7, $N_{i,0}$ = 10, $\\alpha_{ii}$ = 0.00125, $\\alpha_{12}$ = 0.008, and $\\alpha_{21}$ = 0.008725."}
+# Plot simulation: ggplot
+N$time <- 1:t
+dat <- melt(N, id.vars="time")
+ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray")
+```
+## Linear statistical model with covariate for both species
+
+We fit each species' population time series to an arimaX and lm with population size of the others species as a covariate.
+
+$$ N_{1,t} = \beta_0 + \beta_1 N_{1,t-1} + \beta_2 N_{2,t-1}+ \epsilon_t $$
+
+```{r figs13, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs13}Population size \\textit{N} over time \\textit{t} for a discrete-time logistic growth model, with competition."}
+# Plot simulation: ggplot
+dat <- as.data.frame(cbind(N$N1,N$N2))
+colnames(dat) <- c("N1","N2")
+dat$time <- 1:t
+p1 <- ggplot2::ggplot(dat, aes(time, N1)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray")
+p2 <- ggplot2::ggplot(dat, aes(time, N2)) + geom_point()
+p1 + p2
+```
+
+```{r,warning=FALSE}
+## Fit the model for Species 1
+m.3.ar.n1 <- arima(x = log(N$N1), order = c(1,0,0), include.mean = T, method="CSS", xreg=N$N2)
+m.3.lm.n1 <- lm(log(dat$N1[2:t]) ~ log(dat$N1[1:(t-1)]) + log(dat$N2[1:(t-1)]))
+#plotting the series along with the fitted values
+m.3.ar.fit.n1 <- log(N$N1) - residuals(m.3.ar.n1)
+m.3.lm.fit.n1 <- log(dat$N1[2:t]) - m.3.lm.n1$resid
+dat$ar3.fit.n1 <- m.3.ar.fit.n1
+dat$lm3.fit.n1 <- NA
+dat$lm3.fit.n1[2:t] <- m.3.lm.fit.n1
+## Species 2
+m.3.ar.n2 <- arima(x = log(N$N2), order = c(1,0,0), include.mean = T, method="CSS", xreg=N$N1)
+m.3.lm.n2 <- lm(log(dat$N2[2:t]) ~ log(dat$N2[1:(t-1)]) + log(dat$N1[1:(t-1)]))
+#plotting the series along with the fitted values
+m.3.ar.fit.n2 <- log(N$N2) - residuals(m.3.ar.n2)
+m.3.lm.fit.n2 <- log(dat$N2[2:t]) - m.3.lm.n2$resid
+dat$ar3.fit.n2 <- m.3.ar.fit.n2
+dat$lm3.fit.n2 <- NA
+dat$lm3.fit.n2[2:t] <- m.3.lm.fit.n2
+```
+
+
+```{r figs14, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs14}Population size over time (black line) with fitted values from a first-order autoregressive model (gray line) and from a linear model (orange line).",warning=FALSE}
+colors <- c("data" = "black", "AR1 fit" = "gray", "lm fit"="orange")
+p1 <- ggplot(data=dat,aes(x=time)) +
+  geom_point(aes(y=log(N1),color="data")) +
+  geom_point(aes(y=ar3.fit.n1, color = "AR1 fit"), alpha=0.5) +
+  geom_point(aes(y=lm3.fit.n1, color = "lm fit"), alpha=0.5) +
+  geom_line(aes(y=log(N1), color="data"), linewidth=.4) +
+  geom_line(aes(y=ar3.fit.n1, color = "AR1 fit"), alpha=0.5, linewidth=.4) +
+  geom_line(aes(y=lm3.fit.n1, color = "lm fit"), alpha=0.5, linewidth=.4) +
+  theme_bw() +
+  xlab("time") +
+  ylab("N1") +
+  labs(color="Legend") +
+  scale_color_manual(values = colors)
+p2 <- ggplot(data=dat,aes(x=time)) +
+  geom_point(aes(y=log(N2),color="data")) +
+  geom_point(aes(y=ar3.fit.n2, color = "AR1 fit"), alpha=0.5) +
+  geom_point(aes(y=lm3.fit.n2, color = "lm fit"), alpha=0.5) +
+  geom_line(aes(y=log(N2), color="data"), linewidth=.4) +
+  geom_line(aes(y=ar3.fit.n2, color = "AR1 fit"), alpha=0.5, linewidth=.4) +
+  geom_line(aes(y=lm3.fit.n2, color = "lm fit"), alpha=0.5, linewidth=.4) +
+  theme_bw() +
+  xlab("time") +
+  ylab("N2") +
+  labs(color="Legend") +
+  scale_color_manual(values = colors)
+p1+p2
+```
+
+```{r figs15, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs15}Population size (logarithm) at one time step $N_{t+1}$ as a function of log-population size of Species 1 and Species 2 in the previous time step $N_t$. Also shown is the change in population size of Species 1 as a function of $N_t$ for both species."}
+dN1 <- rep(NA, (t-1))
+for (i in 1:(t-1)) {
+  dN1[i] <- log(N$N1[i+1])-log(N$N1[i])
+}
+d.dN1 <- as.data.frame(dN1)
+d.dN1$Nt <- log(dat$N1[1:(t-1)])
+d.dN1$Nt_plus_1 <- log(dat$N1[2:t])
+p1 <- ggplot2::ggplot(d.dN1, aes(x=Nt,y=Nt_plus_1)) + geom_point()
+
+d.dN1 <- as.data.frame(dN1)
+d.dN1$Nt <- log(dat$N1[1:(t-1)])
+d.dN1$Nt_plus_1 <- log(dat$N1[2:t])
+d.dN1$N2 <- log(dat$N2[2:t])
+p2 <- ggplot2::ggplot(d.dN1, aes(x=N2,y=Nt_plus_1)) + geom_point()
+p3 <- ggplot2::ggplot(d.dN1, aes(Nt, dN1)) + geom_point()
+p4 <- ggplot2::ggplot(d.dN1, aes(N2, dN1)) + geom_point()
+
+p1+p2+p3+p4
+```
+
+We can see that the population size of Species 2 does not have a linear relationship with that of Species 1.
+
+```{r}
+df <- data.frame(cbind(log(dat$N1[2:t]),log(dat$N1[1:(t-1)]),log(dat$N2[1:(t-1)])))
+colnames(df) <- c("Nt1","N1","N2")
+m.3.lm <- lm(Nt1 ~ I(1/N1) + I(1/N2),data=df)
+
+cor(df$Nt1, predict(m.3.lm))
+summary(m.3.lm)
+xx <- seq(0,100, length=1000)
+prediction<-data.frame(N2=xx,N1=100)
+plot(df$N2, df$Nt1, xlab = "N2", ylab="N.t+1" , pch=16)
+lines(prediction$N2, predict(m.3.lm, prediction), lty=2,col="red",lwd=3)
+
+```
+
+```{r figs16, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs16}Population size (logarithm) at one time step $N_{t+1}$ as a function of log-population size of the second species in the previous time step $N_t$. Fitted (line) and observed (points) values are shown."}
+jtools::effect_plot(m.3.lm,pred=N2,plot.points = TRUE)
+ggplot(data = df, aes(x = N2, y = Nt1)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ x)
+```
+We can already see that the linear model does not provide a useful fit to the data points (neither does taking the inverse function help). The regression parameters can predict well the population size of the other species, but they are not informative for inference. This has been observed previously (@Certain2018), and non-linear least squares models (among others) are more often used to estimate parameters for dynamics resulting from these kinds of species interaction models (@Kloppers2013; @Muhlbauer2020; @Olivenca2021). The inability of the linear models to reproduce the interaction coefficients is more clearly demonstrated in @Certain2018. However, they do indicate that the slope of the linear model can reflect the direction of effect for the interacting species.
+
+Instead of further exploring techniques to fit to time-series derived from non-linear competition processes, we look more closely at how HMSC manages to fit data emerging from competition dynamics and make inference about species interactions. Instead of estimating full interaction coefficients, or assuming sparse interactions, they instead assume that a reduced number of linear combinations of species abundances that are most relevant to determining future growth rates for species in the community can bypass the 'curse of dimensionality' problem. This is well presented in @Ovaskainen2017. We apply that approach here:
+
+## Bayesian linear statistical model: HMSC
+We can fit the data to a linear model using HMSC, with latent variables to capture the species associations. These are implemented by including a random effect at the time level. For this analysis, we do not expect the impact of Species 1 and 2 that results from competition to vary over time - competition will always have negative impacts for species abundances. Our goal is to estimate the overall impact of species covariance across all of the time points. We do not estimate these impacts as a function of the lag in time points. In other words, we assume that each time point has random variance and that species may covary in their response at each time point. We do not consider that species covariance is a function of distance between sampled time points (see @Ovaskainen2020, equation 5.9). We instead assume that site loadings $\eta$ are independent among the sampled time points.
+
+```{r}
+# prepare data in HMSC format
+Y <- as.matrix(cbind(log(dat$N1[2:t]),log(dat$N2[2:t])))
+XData <- df[,2:3]
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+studyDesign$sample <- as.factor(studyDesign$sample)
+rL.sample = HmscRandomLevel(units = studyDesign$sample)
+m.3.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~1, studyDesign = studyDesign, ranLevels = list(sample = rL.sample))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 1000
+transient <- 500*thin
+verbose <- 500*thin
+# sample MCMC
+m.3.sample <- sampleMcmc(m.3.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+```
+
+```{r}
+m3.post.hmsc <- convertToCodaObject(m.3.sample)
+summary(m3.post.hmsc$Beta)
+bayesplot::mcmc_trace(m3.post.hmsc$Beta)
+bayesplot::mcmc_areas(m3.post.hmsc$Beta,area_method = c("equal height"))
+```
+
+Now we look at the estimates for the species associations:
+
+```{r}
+OmegaCor = computeAssociations(m.3.sample)
+supportLevel = 0.95
+toPlot = ((OmegaCor[[1]]$support>supportLevel)
++ (OmegaCor[[1]]$support<(1-supportLevel))>0)*OmegaCor[[1]]$mean
+corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.3.sample$rLNames[1]), mar=c(0,0,1,0))
+```
+
+The model fixed effect estimates match well with those from the AR1 and linear model.
+
+```{r}
+# AR1 coefficients (recall that the intercept is the term below multipled by 1 - phi1)
+m.3.ar.n1$coef
+m.3.ar.n1$coef[2]*(1-m.3.ar.n1$coef[1])
+# linear model
+summary(m.3.lm.n1)$coefficients[1:3,1:2]
+# Bayesian estimates
+summary(m3.post.hmsc$Beta)$statistics[1:2,1:2]
+```
+
+The HMSC model correctly shows the negative association between the species (shown here as correlations - JSDM CHapter 7 tells us the intra-specific correlation is always 1).
+
+```{r}
+preds = computePredictedValues(m.3.sample)
+df <- data.frame(cbind(log(dat$N1[2:t]),log(dat$N2[2:t]),log(dat$N1[1:(t-1)]),log(dat$N2[1:(t-1)])))
+colnames(df) <- c("Nt1","Nt2","N1","N2")
+df$n1_25 <- NA
+df$n1_975 <- NA
+df$n2_25 <- NA
+df$n2_975 <- NA
+for(i in 1:39){
+  red <- preds[i,,]
+  a <- apply(red,1,quantile,probs=c(.025,.975))
+  df$n1_25[i] <- a[1,1]
+  df$n1_975[i] <- a[2,1]
+  df$n2_25[i] <- a[1,2]
+  df$n2_975[i] <- a[2,2]
+}
+plot(df$Nt1,pch=19,col="black",ylim=c(0,5))
+points(df$Nt2,pch=19,col="orange")
+lines(df$n1_25,col="black")
+lines(df$n1_975,col="black")
+lines(df$n2_25,col="orange")
+lines(df$n2_975,col="orange")
+```
+
+I try again with a next example where the only difference between species is the $\alpha_{ij}$.
+
+```{r}
+# Simulate initial species population growth with a second species present
+N1.0 <- 10
+N2.0 <- 10
+r1.0 <- 1.7
+r2.0 <- 1.7
+alpha.11 <- 0.01
+alpha.22 <- 0.01
+alpha.12 <- 0.005
+alpha.21 <- 0.01
+# model function
+disc_LV_comp <- function(r1,r2,N1.0,N2.0,alpha.11,alpha.22,alpha.12,alpha.21) {
+    Nt1 <- (r1*N1.0) / (1+alpha.11*N1.0+alpha.12*N2.0)
+    Nt2 <- (r2*N2.0) / (1+alpha.22*N2.0+alpha.21*N1.0)
+    return(c(Nt1,Nt2))
+}
+# Simulation of model for t time steps
+t <- 40
+N <- array(NA,dim=c(t,2))
+N <- as.data.frame(N)
+colnames(N) <- c("N1","N2")
+N$N1[1] <- N1.0
+N$N2[1] <- N2.0
+for (i in 2:t) {
+  res <- disc_LV_comp(r1=r1.0,r2=r2.0,N1.0=N[i-1,1],N2.0=N[i-1,2],alpha.11=alpha.11,alpha.22=alpha.22,alpha.12=alpha.12,alpha.21=alpha.21)
+  N$N1[i] <- res[1]
+  N$N2[i] <- res[2]
+}
+```
+```{r}
+# Plot simulation: ggplot
+N$time <- 1:t
+dat <- melt(N, id.vars="time")
+ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray")
+```
+
+```{r}
+# Plot simulation: ggplot
+dat <- as.data.frame(cbind(N$N1,N$N2))
+colnames(dat) <- c("N1","N2")
+dat$time <- 1:t
+df <- data.frame(cbind(log(dat$N1[2:t]),log(dat$N2[2:t])))
+colnames(df) <- c("Nt1","Nt2")
+# prepare data in HMSC format
+Y <- as.matrix(cbind(df$Nt1,df$Nt2))
+XData <- data.frame(cbind(log(dat$N1[1:(t-1)]),log(dat$N2[1:(t-1)])))
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+studyDesign$sample <- as.factor(studyDesign$sample)
+rL.sample = HmscRandomLevel(units = studyDesign$sample)
+m.4.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~1,studyDesign = studyDesign, ranLevels = list(sample = rL.sample))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 1000
+transient <- 500*thin
+verbose <- 500*thin
+# sample MCMC
+m.4.sample <- sampleMcmc(m.4.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+```
+
+```{r}
+m4.post.hmsc <- convertToCodaObject(m.4.sample)
+summary(m4.post.hmsc$Beta)
+bayesplot::mcmc_trace(m4.post.hmsc$Beta)
+bayesplot::mcmc_areas(m4.post.hmsc$Beta,area_method = c("equal height"))
+
+OmegaCor = computeAssociations(m.4.sample)
+supportLevel = 0.95
+toPlot = ((OmegaCor[[1]]$support>supportLevel)
++ (OmegaCor[[1]]$support<(1-supportLevel))>0)*OmegaCor[[1]]$mean
+corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.4.sample$rLNames[1]), mar=c(0,0,1,0))
+```
+
+The HMSC model correctly shows the negative association between the species (shown here as correlations - JSDM CHapter 7 tells us the intra-specific correlation is always 1).
+
+```{r}
+# explanatory power
+preds = computePredictedValues(m.4.sample)
+#evaluateModelFit(hM = m.4.sample, predY = preds)
+# predictive power / cross-validation
+#partition = createPartition(m.4.sample, nfolds = 2)
+#preds = computePredictedValues(m.4.sample, partition = partition, nParallel = nChains)
+#evaluateModelFit(hM = m.4.sample, predY = preds)
+## xx
+#preds = computePredictedValues(m.4.sample, partition=partition, partition.sp=c(1,2), mcmcStep=10, nParallel = nChains)
+#evaluateModelFit(hM=m.4.sample, predY=preds)
+# xx
+#etaPost=getPostEstimate(m.4.sample, "Eta")
+#lambdaPost=getPostEstimate(m.4.sample, "Lambda")
+#biPlot(m.4.sample, etaPost = etaPost, lambdaPost = lambdaPost, factors = c(1,2),"X1")
+```
+```{r}
+df$n1_25 <- NA
+df$n1_975 <- NA
+df$n2_25 <- NA
+df$n2_975 <- NA
+for(i in 1:39){
+  red <- preds[i,,]
+  a <- apply(red,1,quantile,probs=c(.025,.975))
+  df$n1_25[i] <- a[1,1]
+  df$n1_975[i] <- a[2,1]
+  df$n2_25[i] <- a[1,2]
+  df$n2_975[i] <- a[2,2]
+}
+plot(df$Nt1,pch=19,col="black",ylim=c(0,5))
+points(df$Nt2,pch=19,col="orange")
+lines(df$n1_25,col="blue")
+lines(df$n1_975,col="blue")
+lines(df$n2_25,col="blue")
+lines(df$n2_975,col="blue")
+```
+
+The residual associations should not be interpreted as interaction coefficients, but rather used for prediction. We can see here they are effective for this (shown above is the observed and model-predicted 95% CI).
+
+# Species growth, competition, with environmental change
+
+The goal of the process was to use HMSC's latent variable approach to study the results of non-linear processes in ecology using a linear model. We can infer the direction and magnitude of the species interaction. We now consider an environmental covariate that changes over time and impacts each species growth. We will use only HMSC from this point forward, as the species interactions represent a departure from what a linear or AR model can manage.
+
+In this example, the local environmental optimum trait value $E = 0.8$, and Species 1 $x_1 = 0.6$, while $x_1 = 0.8$.
+
+```{r}
+# Simulate initial species population growth with environment fluctuations
+N1.0 <- 10
+N2.0 <- 10
+r1.0 <- 1.7
+r2.0 <- 1.7
+alpha.11 <- 0.01
+alpha.22 <- 0.01
+alpha.12 <- 0.005
+alpha.21 <- 0.01
+E.0 <- 0.8
+x1.0 <- 0.6
+x2.0 <- 0.8
+
+# model function
+disc_LV_E <- function(r1,r2,N1.0,N2.0,alpha.11,alpha.22,alpha.12,alpha.21,E,x1,x2) {
+    Nt1 <- ((r1*exp(-(E-x1)^2))*N1.0) / (1+alpha.11*N1.0+alpha.12*N2.0)
+    Nt2 <- ((r2*exp(-(E-x2)^2))*N2.0) / (1+alpha.22*N2.0+alpha.21*N1.0)
+    return(c(Nt1,Nt2))
+}
+# Simulation of model for t time steps
+t <- 40
+N <- array(NA,dim=c(t,2))
+N <- as.data.frame(N)
+colnames(N) <- c("N1","N2")
+N$N1[1] <- N1.0
+N$N2[1] <- N2.0
+E <- rep(NA, t)
+E[1] <- E.0
+for (i in 2:t) {
+  res <- disc_LV_E(r1=r1.0,r2=r2.0,N1.0=N[i-1,1],N2.0=N[i-1,2],alpha.11=alpha.11,alpha.22=alpha.22,alpha.12=alpha.12,alpha.21=alpha.21,E=E[i-1],x1=x1.0,x2=x2.0)
+  N$N1[i] <- res[1]
+  N$N2[i] <- res[2]
+  E[i] <- E[i-1] + rnorm(1,0,.1)
+}
+```
+```{r}
+# Plot simulation: ggplot
+N$time <- 1:t
+dat <- melt(N, id.vars="time")
+ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray")
+```
+```{r}
+# Plot simulation: ggplot
+dat <- as.data.frame(cbind(log(N$N1),log(N$N2)))
+colnames(dat) <- c("N1","N2")
+dat$time <- 1:t
+df <- data.frame(cbind(dat$N1[2:t],dat$N2[2:t]))
+colnames(df) <- c("Nt1","Nt2")
+# prepare data in HMSC format
+Y <- as.matrix(cbind(df$Nt1,df$Nt2))
+XData <- data.frame(cbind(dat$N1[1:(t-1)],dat$N2[1:(t-1)]),E[1:(t-1)],E[1:(t-1)]^2)
+colnames(XData) <- c("n1","n2","E","Esq")
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+m.5.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 1000
+transient <- 500*thin
+verbose <- 500*thin
+# sample MCMC
+m.5.sample <- sampleMcmc(m.5.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+```
+
+```{r}
+m5.post.hmsc <- convertToCodaObject(m.5.sample)
+summary(m5.post.hmsc$Beta)
+bayesplot::mcmc_trace(m5.post.hmsc$Beta)
+bayesplot::mcmc_areas(m5.post.hmsc$Beta,area_method = c("equal height"))
+```
+
+```{r}
+# Bayesian estimates
+summary(m5.post.hmsc$Beta)$statistics[1:4,1:2]
+```
+
+```{r}
+OmegaCor = computeAssociations(m.5.sample)
+supportLevel = 0.95
+toPlot = ((OmegaCor[[1]]$support>supportLevel)
++ (OmegaCor[[1]]$support<(1-supportLevel))>0)*OmegaCor[[1]]$mean
+corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.5.sample$rLNames[1]), mar=c(0,0,1,0))
+```
+
+```{r}
+Gradient <- constructGradient(m.5.sample,focalVariable="E",non.focalVariables=list(Esq=list(2)),ngrid=39)
+predY <- predict(m.5.sample,XData=Gradient$XDataNew,expected=TRUE)
+a <- plotGradient(m.5.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="E_t",ylab="predicted N1_t+1")
+b <- plotGradient(m.5.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1")
+
+postBeta = getPostEstimate(m.5.sample, parName = "Beta")
+plotBeta(m.5.sample, post = postBeta, param = "Mean", supportLevel = 0.7)
+```
+We can see that the Environment has an overall negative impact for both species as $E$ drifts randomly towards more positive values (where Species 2 is closer because it has a higher trait value). We also see that the residual species association effects are strongly positive.
+
+We use variation partition to estimate the relative importance of environment and species associations for species abundances.
+
+```{r warning=FALSE}
+VP <- computeVariancePartitioning(m.5.sample,group=c(1,1,1),groupnames="Env")
+plotVariancePartitioning(m.5.sample,VP,args.legend=list(cex=0.75,bg="transparent"))
+```
+We evaluate this by greatly increasing the effects of interspecific competition (while decreasing the strength of environmental variation).
+
+```{r}
+# Simulate initial species population growth with environment fluctuations
+N1.0 <- 10
+N2.0 <- 10
+r1.0 <- 1.7
+r2.0 <- 1.7
+alpha.11 <- 0.01
+alpha.22 <- 0.01
+alpha.12 <- 0.015
+alpha.21 <- 0.02
+E.0 <- 0.8
+x1.0 <- 0.8
+x2.0 <- 0.8
+
+# model function
+disc_LV_E <- function(r1,r2,N1.0,N2.0,alpha.11,alpha.22,alpha.12,alpha.21,E,x1,x2) {
+    Nt1 <- ((r1*exp(-(E-x1)^2))*N1.0) / (1+alpha.11*N1.0+alpha.12*N2.0)
+    Nt2 <- ((r2*exp(-(E-x2)^2))*N2.0) / (1+alpha.22*N2.0+alpha.21*N1.0)
+    return(c(Nt1,Nt2))
+}
+# Simulation of model for t time steps
+t <- 40
+N <- array(NA,dim=c(t,2))
+N <- as.data.frame(N)
+colnames(N) <- c("N1","N2")
+N$N1[1] <- N1.0
+N$N2[1] <- N2.0
+E <- rep(NA, t)
+E[1] <- E.0
+for (i in 2:t) {
+  res <- disc_LV_E(r1=r1.0,r2=r2.0,N1.0=N[i-1,1],N2.0=N[i-1,2],alpha.11=alpha.11,alpha.22=alpha.22,alpha.12=alpha.12,alpha.21=alpha.21,E=E[i-1],x1=x1.0,x2=x2.0)
+  N$N1[i] <- res[1]
+  N$N2[i] <- res[2]
+  E[i] <- E[i-1] + rnorm(1,0,0.001)
+}
+```
+```{r}
+# Plot simulation: ggplot
+N$time <- 1:t
+dat <- melt(N, id.vars="time")
+ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray")
+```
+```{r}
+# Plot simulation: ggplot
+dat <- as.data.frame(cbind(log(N$N1),log(N$N2)))
+colnames(dat) <- c("N1","N2")
+dat$time <- 1:t
+df <- data.frame(cbind(dat$N1[2:t],dat$N2[2:t]))
+colnames(df) <- c("Nt1","Nt2")
+# prepare data in HMSC format
+Y <- as.matrix(cbind(df$Nt1,df$Nt2))
+XData <- data.frame(cbind(dat$N1[1:(t-1)],dat$N2[1:(t-1)]),E[1:(t-1)],E[1:(t-1)]^2)
+colnames(XData) <- c("n1","n2","E","Esq")
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+m.6.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 100*thin
+verbose <- 500*thin
+# sample MCMC
+m.6.sample <- sampleMcmc(m.6.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+```
+```{r}
+OmegaCor = computeAssociations(m.6.sample)
+supportLevel = 0.95
+toPlot = ((OmegaCor[[1]]$support>supportLevel)
++ (OmegaCor[[1]]$support<(1-supportLevel))>0)*OmegaCor[[1]]$mean
+corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.6.sample$rLNames[1]), mar=c(0,0,1,0))
+OmegaCor
+```
+```{r}
+Gradient <- constructGradient(m.6.sample,focalVariable="E",non.focalVariables=list(Esq=list(2)),ngrid=39)
+predY <- predict(m.6.sample,XData=Gradient$XDataNew,expected=TRUE)
+a <- plotGradient(m.6.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="E_t",ylab="predicted N1_t+1")
+b <- plotGradient(m.6.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1")
+
+postBeta = getPostEstimate(m.6.sample, parName = "Beta")
+plotBeta(m.6.sample, post = postBeta, param = "Mean", supportLevel = 0.7)
+```
+With the reduced impact of the environment, we now see the strong negative associations between the two competing species. We also correctly see a relatively weak impact of environment for species abundances.
+
+```{r warning=FALSE}
+VP <- computeVariancePartitioning(m.6.sample,group=c(1,1,1),groupnames="Env")
+plotVariancePartitioning(m.6.sample,VP,args.legend=list(cex=0.75,bg="transparent"))
+```
+```{r}
+preds = computePredictedValues(m.6.sample)
+df$n1_25 <- NA
+df$n1_975 <- NA
+df$n2_25 <- NA
+df$n2_975 <- NA
+for(i in 1:39){
+  red <- preds[i,,]
+  a <- apply(red,1,quantile,probs=c(.025,.975))
+  df$n1_25[i] <- a[1,1]
+  df$n1_975[i] <- a[2,1]
+  df$n2_25[i] <- a[1,2]
+  df$n2_975[i] <- a[2,2]
+}
+plot(df$Nt1,pch=19,col="black",ylim=c(0,5))
+points(df$Nt2,pch=19,col="orange")
+lines(df$n1_25,col="black")
+lines(df$n1_975,col="black")
+lines(df$n2_25,col="orange")
+lines(df$n2_975,col="orange")
+```
+
+# Species growth, competition, environmental change, and trait evolution
+
+We now consider that trait evolution can occur, with an impact on the species growth rate / fitness in the context of the environment.
+
+## Trait evolution
+
+Previously the population growth rate was fixed as \( r_i = \hat{W}e^{-(E-x_{i,t})^2}\). However, we now introduce the quantitative genetic model of evolutionary rescue [@Gomulkiewicz1995].
+
+The growth equation for each species now becomes:
+
+$$ N_{i,t+1} =\frac{\hat{W}e^ \frac{-[(\frac{w+(1-h^2)P} {P+w})(E-x_{i,t})]^2}{2(P+w)}N_{i,t}} {1 + \alpha_{ii}N_{i,t} + \alpha_{ij} N_{j,t}} $$
+
+where \( \hat{W} \) is calculated as \( \hat{W}=W_{max}\sqrt(\frac{w}{P+w}) \), \(W_{max}\) is the species' maximum per-capita growth rate, *w* is the width of the Gaussian fitness function (which determines the strength of selection, as increasing values indicate a weaker reduction in fitness with distance from optimum trait value), *P* is the width of the distribution of the phenotype *x*, and $h^2$ is the heritability of the trait *x*. For the simulation we use \(W_{max}\) = 2, *P* = 1, and *w* = 2.
+
+The change in the average trait value each time step is given by:
+
+$$ d_{i,t+1} = k d_{i,t} $$
+where \( k = \frac{w + (1-h^2) P}{w + P} \) and \( d_{i,t} = E_t - x_{i,t} \).
+
+## Population dynamics simulation
+
+We use one of the same examples as above, with weak strength of interspecific interactions. We use initial trait values that favor the weaker competitor, and we simulate random increasing shifts in the local environment.
+
+```{r}
+# Case 1: Weaker interactions, stronger environment
+# Simulate initial species population growth with environment fluctuations
+N1.0 <- 10
+N2.0 <- 10
+alpha.11 <- 0.01
+alpha.22 <- 0.01
+alpha.12 <- 0.005
+alpha.21 <- 0.01
+E.0 <- 0.8
+x1.0 <- 0.1
+x2.0 <- 0.8
+P <- 1
+w <- 2
+Wmax <- 2
+h2 <- 1
+k <- (w + (1 - h2) * P)/(P + w)
+
+# model function
+disc_LV_evol <- function(N1.0,N2.0,alpha.11,alpha.22,alpha.12,alpha.21,E,x1.0,x2.0,P,w,Wmax,h2) {
+  What <- Wmax*sqrt(w/(P+w))
+  r1 <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E-x1.0))^2)/(2*(P+w)))
+  Nt1 <- (r1*N1.0) / (1+alpha.11*N1.0+alpha.12*N2.0)
+  r2 <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E-x2.0))^2)/(2*(P+w)))
+  Nt2 <- (r2*N2.0) / (1+alpha.22*N2.0+alpha.21*N1.0)
+  return(c(Nt1,Nt2,r1,r2))
+}
+# Simulation of model for t time steps
+t <- 40
+N <- array(NA,dim=c(t,2))
+N <- as.data.frame(N)
+colnames(N) <- c("N1","N2")
+x <- array(NA,dim=c(t,2))
+x <- as.data.frame(x)
+colnames(x) <- c("x1","x2")
+r <- array(NA,dim=c(t,2))
+r <- as.data.frame(r)
+colnames(r) <- c("r1","r2")
+N$N1[1] <- N1.0
+N$N2[1] <- N2.0
+x$x1[1] <- x1.0
+x$x2[1] <- x2.0
+What <- Wmax*sqrt(w/(P+w))
+r$r1[1] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x1.0))^2)/(2*(P+w))))
+r$r2[1] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x2.0))^2)/(2*(P+w))))
+E <- rep(NA, t)
+E[1] <- E.0
+for (i in 2:t) {
+  res <- disc_LV_evol(N1.0=N[i-1,1],N2.0=N[i-1,2],alpha.11=alpha.11,alpha.22=alpha.22,alpha.12=alpha.12,alpha.21=alpha.21,E=E[i-1],x1=x[i-1,1],x2=x[i-1,2],P=P,w=w,Wmax=Wmax,h2=h2)
+  N$N1[i] <- res[1]
+  N$N2[i] <- res[2]
+  r$r1[i] <- res[3]
+  r$r2[i] <- res[4]
+  # trait change
+  d1 <- E[i-1] - x[i-1,1]
+  d2 <- E[i-1] - x[i-1,2]
+  d1.1 <- k*d1
+  d2.1 <- k*d2
+  x$x1[i] <- E[i-1] - d1.1
+  x$x2[i] <- E[i-1] - d2.1
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0.05))
+}
+```
+```{r}
+# Plot simulation: ggplot
+N$time <- 1:t
+dat <- melt(N, id.vars="time")
+ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point()
+```
+
+The overall research goal is to determine the effect of trait evolution for species abundances. We hypothesize that \( \lvert x_{t+1} - x_{i,t} \rvert \) is an important driver of species abundances, alongside the environment and species interactions. We plan to fit a statistical model to estimate the impact of $E$, $E^2$, and \( \lvert x_{t+1} - x_{i,t} \rvert \) as fixed effects, and time points as a random effect (to estimate species-to-species associations). We first plot the effects of interest as scatter plots with species abundances.
+
+```{r}
+dat2 <- as.data.frame(cbind(log(N$N1),log(N$N2),x$x1,x$x2))
+colnames(dat2) <- c("N1","N2","x1","x2")
+dat2$time <- 1:t
+df <- data.frame(cbind(dat2$N1[2:t],dat2$N2[2:t],dat2$x1[2:t],dat2$x2[2:t]))
+colnames(df) <- c("Nt1","Nt2","xt1","xt2")
+df$dx1 <- abs(dat2$x1[2:t] - dat2$x1[1:(t-1)])
+df$dx2 <- abs(dat2$x2[2:t] - dat2$x2[1:(t-1)])
+# Plot
+p1 <- ggplot2::ggplot(df, aes(dx1, Nt1)) + geom_point()
+p2 <- ggplot2::ggplot(df, aes(dx2, Nt1)) + geom_point()
+p3 <- ggplot2::ggplot(df, aes(dx1, Nt2)) + geom_point()
+p4 <- ggplot2::ggplot(df, aes(dx2, Nt2)) + geom_point()
+p1 + p2 + p3 + p4
+```
+We expect that change in traits in Species 1 will have an effect on Species abundances, and we do not expect a strong impact of change in traits in Species 2.
+
+We now use the species abundances as the response variable in the model, with $E$, $E^2$, and \( \lvert x_{t+1} - x_{i,t} \rvert \) as fixed effects, and time points as a random effect (to estimate species-to-species associations). We use the absolute value of the change in trait value from one time point to the next (the total amount of trait change, regardless of direction) as a fixed effect in the HMSC.
+
+```{r}
+# Plot simulation: ggplot
+dat <- as.data.frame(cbind(log(N$N1), log(N$N2), x$x1, x$x2))
+colnames(dat) <- c("N1", "N2", "x1", "x2")
+dat$time <- 1:t
+df <- data.frame(cbind(dat$N1[2:t], dat$N2[2:t], dat$x1[2:t], dat$x2[2:t]))
+colnames(df) <- c("Nt1", "Nt2", "xt1", "xt2")
+df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t - 1)])
+df$dx2 <- abs(dat$x2[2:t] - dat$x2[1:(t - 1)])
+# prepare data in HMSC format
+Y <- as.matrix(cbind(df$Nt1, df$Nt2))
+XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)]),abs(dat$x2[2:t] - dat$x2[1:(t-1)])))
+colnames(XData) <- c("E","Esq","dx1","dx2")
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+m.7.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list(sample = rL.sample))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.7.sample <- sampleMcmc(m.7.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+```
+```{r}
+m7.post.hmsc <- convertToCodaObject(m.7.sample)
+summary(m7.post.hmsc$Beta)
+bayesplot::mcmc_trace(m7.post.hmsc$Beta)
+bayesplot::mcmc_areas(m7.post.hmsc$Beta,area_method = c("equal height"))
+```
+
+```{r}
+# Bayesian estimates
+cbind(summary(m7.post.hmsc$Beta)$statistics[1:10, 1], summary(m7.post.hmsc$Beta)$quantiles[, c(1, 5)])
+```
+
+```{r}
+OmegaCor = computeAssociations(m.7.sample)
+supportLevel = 0.95
+toPlot = ((OmegaCor[[1]]$support>supportLevel)
++ (OmegaCor[[1]]$support<(1-supportLevel))>0)*OmegaCor[[1]]$mean
+corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.7.sample$rLNames[1]), mar=c(0,0,1,0))
+OmegaCor
+```
+
+```{r}
+Gradient <- constructGradient(m.7.sample,focalVariable="E",non.focalVariables=list(Esq=list(2),dx1=list(1),dx2=list(1)),ngrid=39)
+# Esq is manually constructed as gradient-produced E^2
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.7.sample,XData=Gradient$XDataNew,expected=TRUE)
+a <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="E_t",ylab="predicted N1_t+1")
+b <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1")
+
+postBeta = getPostEstimate(m.7.sample, parName = "Beta")
+plotBeta(m.7.sample, post = postBeta, param = "Mean", supportLevel = 0.95)
+```
+```{r warning=FALSE}
+VP <- computeVariancePartitioning(m.7.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
+plotVariancePartitioning(m.7.sample,VP,cols=c("white","skyblue","darkgrey","orange"),args.legend=list(cex=0.75,bg="transparent"))
+```
+We can also look at a gradient plot for the effect of evolution in Species 1 for abundance in Species 1 and Species 2.
+
+```{r}
+Gradient <- constructGradient(m.7.sample,focalVariable="dx1",non.focalVariables=list(E=list(1),Esq=list(2),dx2=list(1)),ngrid=39)
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.7.sample,XData=Gradient$XDataNew,expected=TRUE)
+a <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx1_t",ylab="predicted N1_t+1")
+b <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="dx1_t",ylab="predicted N2_t+1")
+
+postBeta = getPostEstimate(m.7.sample, parName = "Beta")
+plotBeta(m.7.sample, post = postBeta, param = "Mean", supportLevel = 0.95)
+```
+
+We repeat this plot for the effect of evolution in Species 2 for abundance in Species 1 and Species 2.
+
+```{r}
+Gradient <- constructGradient(m.7.sample,focalVariable="dx2",non.focalVariables=list(E=list(1),Esq=list(2),dx1=list(1)),ngrid=39)
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.7.sample,XData=Gradient$XDataNew,expected=TRUE)
+a <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx2_t",ylab="predicted N1_t+1")
+b <- plotGradient(m.7.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="dx2_t",ylab="predicted N2_t+1")
+```
+
+The analysis indicates that we can successfully use the HMSC analysis to partition drivers of species abundances that include evolving traits. We see that change in Species 1 trait is a strong driver of abundances in Species1 and 2, and that trait change in Species 2 has a weaker impact. This aligns well with the observed simulation results.
+
+Though some of the main effect coefficients aren't well reflected in the data, we recall the model has strong predictive power when the elements are combined, with high predictive power to the observed data.
+
+```{r echo=FALSE}
+pd.1 <- predict(m.7.sample,XData=XData)
+# What do the predicted vs. observed values look like?
+## Calculate HPDI for each data point
+s <- ncol(m.7.sample$Y)
+pdv.1 <- lapply(pd.1,as.vector)
+pdm.1 <- do.call(rbind, pdv.1)
+pd_hdpi_25.1 <- apply(pdm.1,2,quantile,probs=0.025)
+pd_hdpi_975.1 <- apply(pdm.1,2,quantile,probs=0.975)
+pdm_hdpi_25.1 <- matrix(pd_hdpi_25.1,nrow=dim(pd.1[[1]])[1],ncol=dim(pd.1[[1]])[2],byrow=FALSE)
+pdm_hdpi_975.1 <- matrix(pd_hdpi_975.1,nrow=dim(pd.1[[1]])[1],ncol=dim(pd.1[[1]])[2],byrow=FALSE)
+plotY <- Y
+plot_25 <- pdm_hdpi_25.1
+plot_975 <- pdm_hdpi_975.1
+
+p_25 <- matrix(0,nrow=39,ncol=s)
+p_975 <- matrix(0,nrow=39,ncol=s)
+p_Y <- matrix(0,nrow=39,ncol=s)
+for (i in 1:s) {
+  p_25[,i] <- plot_25[,i]
+  p_975[,i] <- plot_975[,i]
+  p_Y[,i] <- plotY[,i]
+}
+d_25 <-as.data.frame(p_25)
+d_975 <-as.data.frame(p_975)
+d_Y <-as.data.frame(p_Y)
+
+d_25$time <- 2:40
+d_975$time <- 2:40
+d_Y$time <- 2:40
+
+d_25l <- pivot_longer(d_25,cols=1:2,names_to = "species",values_to = "Y")
+d_975l <- pivot_longer(d_975,cols=1:2,names_to = "species",values_to = "Y")
+d_Yl <- pivot_longer(d_Y,cols=1:2,names_to = "species",values_to = "Y")
+
+ggplot(d_Yl,aes(x=time,y=Y,group=species))+
+  geom_line(data=d_25l,aes(x=time,y=Y,group=species),color="orange",linewidth=0.35)+
+  geom_line(data=d_975l,aes(x=time,y=Y,group=species),color="orange",linewidth=0.35)+
+  geom_line(color="black",linewidth=0.35)+
+  theme_classic()+
+  ylab("Population density")
+```
+
+However, we can see the coefficients are less informative for inference. It is specific to this set of simulation conditions that the degree of evolution occurs at the beginning of the simulation, when the species is more mal-adapted. To better consider how trait evolution drives changes in population size, we use this change as the response variable Y in the predictive model.
+
+```{r}
+# Plot simulation: ggplot
+dat <- as.data.frame(cbind(log(N$N1), log(N$N2), x$x1, x$x2))
+colnames(dat) <- c("N1", "N2", "x1", "x2")
+dat$time <- 1:t
+df <- data.frame(cbind(dat$N1[2:t], dat$N2[2:t], dat$x1[2:t], dat$x2[2:t]))
+colnames(df) <- c("Nt1", "Nt2", "xt1", "xt2")
+df$dN1 <- abs(dat$N1[2:t] - dat$N1[1:(t - 1)])
+df$dN2 <- abs(dat$N2[2:t] - dat$N2[1:(t - 1)])
+df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t - 1)])
+df$dx2 <- abs(dat$x2[2:t] - dat$x2[1:(t - 1)])
+# prepare data in HMSC format
+Y <- as.matrix(cbind(df$dN1, df$dN2))
+XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)]),abs(dat$x2[2:t] - dat$x2[1:(t-1)])))
+colnames(XData) <- c("E","Esq","dx1","dx2")
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+m.8.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list(sample = rL.sample))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.8.sample <- sampleMcmc(m.8.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+```
+```{r}
+m8.post.hmsc <- convertToCodaObject(m.8.sample)
+summary(m8.post.hmsc$Beta)
+bayesplot::mcmc_trace(m8.post.hmsc$Beta)
+bayesplot::mcmc_areas(m8.post.hmsc$Beta,area_method = c("equal height"))
+```
+
+```{r}
+Gradient <- constructGradient(m.8.sample,focalVariable="dx1",non.focalVariables=list(E=list(1),Esq=list(2),dx2=list(1)),ngrid=39)
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.8.sample,XData=Gradient$XDataNew,expected=TRUE)
+a <- plotGradient(m.8.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx1_t",ylab="predicted dN1_t+1")
+b <- plotGradient(m.8.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="dx1_t",ylab="predicted dN2_t+1")
+
+postBeta = getPostEstimate(m.8.sample, parName = "Beta")
+plotBeta(m.8.sample, post = postBeta, param = "Mean", supportLevel = 0.95)
+```
+
+We repeat this plot for the effect of evolution in Species 2 for abundance in Species 1 and Species 2.
+
+```{r}
+Gradient <- constructGradient(m.8.sample,focalVariable="dx2",non.focalVariables=list(E=list(1),Esq=list(2),dx1=list(1)),ngrid=39)
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.8.sample,XData=Gradient$XDataNew,expected=TRUE)
+a <- plotGradient(m.8.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx2_t",ylab="predicted dN1_t+1")
+b <- plotGradient(m.8.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="dx2_t",ylab="predicted dN2_t+1")
+```
+
+```{r warning=FALSE}
+VP <- computeVariancePartitioning(m.8.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
+plotVariancePartitioning(m.8.sample,VP,cols=c("white","skyblue","darkgrey","orange"),args.legend=list(cex=0.75,bg="transparent"))
+```
+Here we can see that trait evolution in Species 1 had a strong positive relationship with the *change* in population size for both species. Trait evolution in Species 2 had much less of an effect.
+
+# Species growth, competition, environmental change, and trait evolution in a spatially structured environment
+
+We now consider that trait evolution can occur, with an impact on the species growth rate / fitness in the context of the environment.
+
+A final consideration to add to the model is the existence of multiple sites that may have correlation structure in the variance of species abundances. We consider this in our simulation by adding multiple (10) sites, with no vs. high spatial covariance. We then consider spatial random effects in HMSC, where covariance is considered as a function of distance between sites.
+
+## Population dynamics simulation
+
+We use the same example as above, but now with 10 sites. To illustrate how HMSC can estimate the impacts of distance-dependent spatial covariance, we duplicate the population time series obtained in the example above, but we add in site variance and among-site covariance.
+
+```{r}
+# Case 1: Weaker interactions, stronger environment
+# Simulate initial species population growth with environment fluctuations
+N1.0 <- 10
+N2.0 <- 10
+alpha.11 <- 0.01
+alpha.22 <- 0.01
+alpha.12 <- 0.005
+alpha.21 <- 0.01
+E.0 <- 0.8
+x1.0 <- 0.1
+x2.0 <- 0.8
+P <- 1
+w <- 2
+Wmax <- 2
+h2 <- 1
+k <- (w + (1 - h2) * P)/(P + w)
+
+# model function
+disc_LV_evol <- function(N1.0,N2.0,alpha.11,alpha.22,alpha.12,alpha.21,E,x1.0,x2.0,P,w,Wmax,h2) {
+  What <- Wmax*sqrt(w/(P+w))
+  r1 <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E-x1.0))^2)/(2*(P+w)))
+  Nt1 <- (r1*N1.0) / (1+alpha.11*N1.0+alpha.12*N2.0)
+  r2 <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E-x2.0))^2)/(2*(P+w)))
+  Nt2 <- (r2*N2.0) / (1+alpha.22*N2.0+alpha.21*N1.0)
+  return(c(Nt1,Nt2,r1,r2))
+}
+# Simulation of model for t time steps, i sites
+j <- 10
+# random site locations
+xycoords = matrix(runif(2*j), ncol = 2)
+rownames(xycoords) <- 1:j
+t <- 40
+N <- array(NA,dim=c(j*t,2))
+N <- as.data.frame(N)
+colnames(N) <- c("N1","N2")
+x <- array(NA,dim=c(j*t,2))
+x <- as.data.frame(x)
+colnames(x) <- c("x1","x2")
+r <- array(NA,dim=c(j*t,2))
+r <- as.data.frame(r)
+colnames(r) <- c("r1","r2")
+N$N1[1:j] <- N1.0
+N$N2[1:j] <- N2.0
+x$x1[1:j] <- x1.0
+x$x2[1:j] <- x2.0
+What <- Wmax*sqrt(w/(P+w))
+r$r1[1:j] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x1.0))^2)/(2*(P+w))))
+r$r2[1:j] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x2.0))^2)/(2*(P+w))))
+E <- rep(NA, t)
+E[1] <- E.0
+# Keep track of site and time
+study <- array(NA,dim=c(j*t,3))
+study <- as.data.frame(study)
+colnames(study) <- c("obs","site","time")
+study$obs <- 1:dim(study)[1]
+study$site <- rep(1:j,times=t)
+study$time <- rep(1:t,each=j)
+
+for (i in 2:t) {
+  for(z in 1:j){
+    res <- disc_LV_evol(N1.0=N[study$site==z & study$time==i-1,1],N2.0=N[study$site==z & study$time==i-1,2],alpha.11=alpha.11,alpha.22=alpha.22,alpha.12=alpha.12,alpha.21=alpha.21,E=E[i-1],x1=x[study$site==z & study$time==i-1,1],x2=x[study$site==z & study$time==i-1,2],P=P,w=w,Wmax=Wmax,h2=h2)
+    N$N1[study$site==z & study$time==i] <- res[1]
+    N$N2[study$site==z & study$time==i] <- res[2]
+    r$r1[study$site==z & study$time==i] <- res[3]
+    r$r2[study$site==z & study$time==i] <- res[4]
+    # trait change
+    d1 <- E[i-1] - x[study$site==z & study$time==i-1,1]
+    d2 <- E[i-1] - x[study$site==z & study$time==i-1,2]
+    d1.1 <- k*d1
+    d2.1 <- k*d2
+    x$x1[study$site==z & study$time==i] <- E[i-1] - d1.1
+    x$x2[study$site==z & study$time==i] <- E[i-1] - d2.1
+  }
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0.05))
+}
+# site-level random effect
+sigma <- 0
+sigma.spatial <- 2
+alpha.spatial <- 0.5
+Sigma = sigma.spatial^2*exp(-as.matrix(dist(xycoords))/alpha.spatial)
+# draw from covariance matrix
+a = mvrnorm(mu=rep(0,j), Sigma = Sigma)
+for(i in 1:t){
+  N$N1[study$time==i] <- N$N1[study$time==i] + a
+}
+a = mvrnorm(mu=rep(0,j), Sigma = Sigma)
+for(i in 1:t){
+  N$N2[study$time==i] <- N$N2[study$time==i] + a
+}
+```
+```{r}
+# Plot simulation: ggplot
+N$site <- study$site
+N$time <- study$time
+dat <- melt(N, id.vars=c("site","time"))
+ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + facet_wrap(~site,nrow=2)
+```
+We now fit a spatial random effect, and add that to the HMSC model.
+
+```{r}
+# Plot simulation: ggplot
+#N[N <0] <- 0.01
+dat <- as.data.frame(cbind(log(N$N1), log(N$N2), x$x1, x$x2))
+colnames(dat) <- c("N1", "N2", "x1", "x2")
+dat$time <- 1:t
+df <- data.frame(cbind(dat$N1[dat$time !=1], dat$N2[dat$time !=1], dat$x1[dat$time !=1], dat$x2[dat$time !=1]))
+colnames(df) <- c("Nt1", "Nt2", "xt1", "xt2")
+df$dx1 <- abs(dat$x1[dat$time != 1] - dat$x1[dat$time != t])
+df$dx2 <- abs(dat$x2[dat$time != 1] - dat$x2[dat$time != t])
+# prepare data in HMSC format
+Y <- as.matrix(cbind(df$Nt1, df$Nt2))
+XData <- data.frame(cbind(rep(E[1:(t-1)],times=j),rep(E[1:(t-1)],times=j)^2,abs(dat$x1[dat$time != 1] - dat$x1[dat$time != t]),abs(dat$x2[dat$time != 1] - dat$x2[dat$time != t])))
+colnames(XData) <- c("E","Esq","dx1","dx2")
+# Update study design to include spatial random effects
+samp1 <- 1:(j*t)
+samp1 <- as.data.frame(samp1)
+samp1 <- subset(samp1,samp1>10)
+rownames(XData) <- row.names(samp1)
+studyDesign = data.frame(sample=1:(j*(t-1)),site=study$site[study$time > 1])
+studyDesign$sample <- as.factor(studyDesign$sample)
+studyDesign$site <- as.factor(studyDesign$site)
+rL.spatial = HmscRandomLevel(sData = xycoords)  
+rL.sample = HmscRandomLevel(units = studyDesign$sample)
+# Fit HMSC model
+m.9.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list("sample"=rL.sample,"site"=rL.spatial))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.9.sample <- sampleMcmc(m.9.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+```
+
+```{r}
+m9.post.hmsc <- convertToCodaObject(m.9.sample)
+summary(m9.post.hmsc$Beta)
+bayesplot::mcmc_trace(m9.post.hmsc$Beta)
+bayesplot::mcmc_areas(m9.post.hmsc$Beta,area_method = c("equal height"))
+```
+```{r warning=FALSE}
+VP <- computeVariancePartitioning(m.9.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
+plotVariancePartitioning(m.9.sample,VP,cols=c("white","skyblue","darkgrey","orange","pink"),args.legend=list(cex=0.75,bg="transparent"))
+```
+
+```{r}
+OmegaCor = computeAssociations(m.9.sample)
+supportLevel = 0.95
+toPlot = ((OmegaCor[[1]]$support>supportLevel)
++ (OmegaCor[[1]]$support<(1-supportLevel))>0)*OmegaCor[[1]]$mean
+corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.9.sample$rLNames[1]), mar=c(0,0,1,0))
+OmegaCor
+toPlot = ((OmegaCor[[2]]$support>supportLevel)
++ (OmegaCor[[2]]$support<(1-supportLevel))>0)*OmegaCor[[2]]$mean
+corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.9.sample$rLNames[2]), mar=c(0,0,1,0))
+```
+We can see that the model considers spatial random effects by removing the spatial covariance, and only including spatial variance.
+
+```{r}
+# Case 1: Weaker interactions, stronger environment
+# Simulate initial species population growth with environment fluctuations
+N1.0 <- 10
+N2.0 <- 10
+alpha.11 <- 0.01
+alpha.22 <- 0.01
+alpha.12 <- 0.005
+alpha.21 <- 0.01
+E.0 <- 0.8
+x1.0 <- 0.1
+x2.0 <- 0.8
+P <- 1
+w <- 2
+Wmax <- 2
+h2 <- 1
+k <- (w + (1 - h2) * P)/(P + w)
+
+# model function
+disc_LV_evol <- function(N1.0,N2.0,alpha.11,alpha.22,alpha.12,alpha.21,E,x1.0,x2.0,P,w,Wmax,h2) {
+  What <- Wmax*sqrt(w/(P+w))
+  r1 <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E-x1.0))^2)/(2*(P+w)))
+  Nt1 <- (r1*N1.0) / (1+alpha.11*N1.0+alpha.12*N2.0)
+  r2 <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E-x2.0))^2)/(2*(P+w)))
+  Nt2 <- (r2*N2.0) / (1+alpha.22*N2.0+alpha.21*N1.0)
+  return(c(Nt1,Nt2,r1,r2))
+}
+# Simulation of model for t time steps, i sites
+j <- 10
+# random site locations
+xycoords = matrix(runif(2*j), ncol = 2)
+rownames(xycoords) <- 1:j
+t <- 40
+N <- array(NA,dim=c(j*t,2))
+N <- as.data.frame(N)
+colnames(N) <- c("N1","N2")
+x <- array(NA,dim=c(j*t,2))
+x <- as.data.frame(x)
+colnames(x) <- c("x1","x2")
+r <- array(NA,dim=c(j*t,2))
+r <- as.data.frame(r)
+colnames(r) <- c("r1","r2")
+N$N1[1:j] <- N1.0
+N$N2[1:j] <- N2.0
+x$x1[1:j] <- x1.0
+x$x2[1:j] <- x2.0
+What <- Wmax*sqrt(w/(P+w))
+r$r1[1:j] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x1.0))^2)/(2*(P+w))))
+r$r2[1:j] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x2.0))^2)/(2*(P+w))))
+E <- rep(NA, t)
+E[1] <- E.0
+# Keep track of site and time
+study <- array(NA,dim=c(j*t,3))
+study <- as.data.frame(study)
+colnames(study) <- c("obs","site","time")
+study$obs <- 1:dim(study)[1]
+study$site <- rep(1:j,times=t)
+study$time <- rep(1:t,each=j)
+
+for (i in 2:t) {
+  for(z in 1:j){
+    res <- disc_LV_evol(N1.0=N[study$site==z & study$time==i-1,1],N2.0=N[study$site==z & study$time==i-1,2],alpha.11=alpha.11,alpha.22=alpha.22,alpha.12=alpha.12,alpha.21=alpha.21,E=E[i-1],x1=x[study$site==z & study$time==i-1,1],x2=x[study$site==z & study$time==i-1,2],P=P,w=w,Wmax=Wmax,h2=h2)
+    N$N1[study$site==z & study$time==i] <- res[1]
+    N$N2[study$site==z & study$time==i] <- res[2]
+    r$r1[study$site==z & study$time==i] <- res[3]
+    r$r2[study$site==z & study$time==i] <- res[4]
+    # trait change
+    d1 <- E[i-1] - x[study$site==z & study$time==i-1,1]
+    d2 <- E[i-1] - x[study$site==z & study$time==i-1,2]
+    d1.1 <- k*d1
+    d2.1 <- k*d2
+    x$x1[study$site==z & study$time==i] <- E[i-1] - d1.1
+    x$x2[study$site==z & study$time==i] <- E[i-1] - d2.1
+  }
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0.05))
+}
+# site-level random effect
+sigma <- 0
+sigma.spatial <- 10
+alpha.spatial <- 0.5
+Sigma = sigma.spatial^2*exp(-as.matrix(dist(xycoords))/alpha.spatial)
+# draw from covariance matrix
+a = mvrnorm(mu=rep(0,j), Sigma = Sigma)
+for(i in 1:t){
+  N$N1[study$time==i] <- N$N1[study$time==i] + a
+}
+a = mvrnorm(mu=rep(0,j), Sigma = Sigma)
+for(i in 1:t){
+  N$N2[study$time==i] <- N$N2[study$time==i] + a
+}
+```
+```{r}
+# Plot simulation: ggplot
+N$site <- study$site
+N$time <- study$time
+dat <- melt(N, id.vars=c("site","time"))
+ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + facet_wrap(~site,nrow=2)
+```
+```{r}
+# Plot simulation: ggplot
+N[N <0] <- 0.01
+dat <- as.data.frame(cbind(log(N$N1), log(N$N2), x$x1, x$x2))
+colnames(dat) <- c("N1", "N2", "x1", "x2")
+dat$time <- 1:t
+df <- data.frame(cbind(dat$N1[dat$time !=1], dat$N2[dat$time !=1], dat$x1[dat$time !=1], dat$x2[dat$time !=1]))
+colnames(df) <- c("Nt1", "Nt2", "xt1", "xt2")
+df$dx1 <- abs(dat$x1[dat$time != 1] - dat$x1[dat$time != t])
+df$dx2 <- abs(dat$x2[dat$time != 1] - dat$x2[dat$time != t])
+# prepare data in HMSC format
+Y <- as.matrix(cbind(df$Nt1, df$Nt2))
+XData <- data.frame(cbind(rep(E[1:(t-1)],times=j),rep(E[1:(t-1)],times=j)^2,abs(dat$x1[dat$time != 1] - dat$x1[dat$time != t]),abs(dat$x2[dat$time != 1] - dat$x2[dat$time != t])))
+colnames(XData) <- c("E","Esq","dx1","dx2")
+# Update study design to include spatial random effects
+samp1 <- 1:(j*t)
+samp1 <- as.data.frame(samp1)
+samp1 <- subset(samp1,samp1>10)
+rownames(XData) <- row.names(samp1)
+studyDesign = data.frame(sample=1:(j*(t-1)),site=study$site[study$time > 1])
+studyDesign$sample <- as.factor(studyDesign$sample)
+studyDesign$site <- as.factor(studyDesign$site)
+rL.spatial = HmscRandomLevel(sData = xycoords)  
+rL.sample = HmscRandomLevel(units = studyDesign$sample)
+# Fit HMSC model
+m.10.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list("sample"=rL.sample,"site"=rL.spatial))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.10.sample <- sampleMcmc(m.10.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+```
+```{r}
+m10.post.hmsc <- convertToCodaObject(m.10.sample)
+summary(m10.post.hmsc$Beta)
+bayesplot::mcmc_trace(m10.post.hmsc$Beta)
+bayesplot::mcmc_areas(m10.post.hmsc$Beta,area_method = c("equal height"))
+```
+```{r warning=FALSE}
+VP <- computeVariancePartitioning(m.10.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
+plotVariancePartitioning(m.10.sample,VP,cols=c("white","skyblue","darkgrey","orange","pink"),args.legend=list(cex=0.75,bg="transparent"))
+```
+
+```{r}
+OmegaCor = computeAssociations(m.9.sample)
+supportLevel = 0.95
+toPlot = ((OmegaCor[[1]]$support>supportLevel)
++ (OmegaCor[[1]]$support<(1-supportLevel))>0)*OmegaCor[[1]]$mean
+corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.9.sample$rLNames[1]), mar=c(0,0,1,0))
+OmegaCor
+toPlot = ((OmegaCor[[2]]$support>supportLevel)
++ (OmegaCor[[2]]$support<(1-supportLevel))>0)*OmegaCor[[2]]$mean
+corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", m.9.sample$rLNames[2]), mar=c(0,0,1,0))
+```
+
+# References
