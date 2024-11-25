@@ -268,7 +268,7 @@ ggplot(data=dat,aes(x=time)) +
 
 The linear model is a good fit when including the environmental covariate. $N_{t+1}$ and $N_t$ can still be captured by a linear relationship. However we see that the relationship between $N_{t+1}$ and $E_t$ is non-linear.
 
-```{r figs9, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs9}Population size (logarithm) at one time step $N_{t+1}$ as a function of log-population size in the previous time step $N_t$. Also shown are change in population size $\\Delta N$ with population size and E."}
+```{r figs9, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs9}Population size (logarithm) at one time step $N_{t+1}$ as a function of log-population size in the previous time step $N_t$ and of environmental value $E_t$. Also shown are change in population size $\\Delta N$ with population size and E."}
 dN <- rep(NA, (t-1))
 for (i in 1:(t-1)) {
   dN[i] <- log(N[i+1])-log(N[i])
@@ -341,14 +341,10 @@ summary(m.2.lm)$coefficients[1:4,1:2]
 summary(m2.post.hmsc$Beta)$statistics[1:4,1:2]
 ```
 
-```{r}
-knitr::knit_exit()
-```
-
 We recall that the interpretation of the coefficients in an arimaX (arima with covariates) model is difficult. They do not give the impact on $N_t$ per unit increase in X as in a regression. So we do not interpret the causation implied by the coefficient in the arimaX model. In the regression model, we can see that $E$ has a positive impact on $N_t$.
 
 
-```{r figs11, fig.pos = "H", fig.show="hold", fig.cap = "\\label{fig:figs11} Observed (grey) and model-fit (blue) values for population size at time t (x-axis) and t+1 (y-axis).",results='hide',fig.keep='all'}
+```{r figs11, fig.pos = "H", fig.show="hold", fig.cap = "\\label{fig:figs11} Observed (grey) and model-fit (blue) values for population size at time t+1 (y-axis) as a function of environment $E_t$ (x-axis).",results='hide',fig.keep='all'}
 Gradient <- constructGradient(m.2.sample,focalVariable="E",non.focalVariables=list(Nt=list(2),Esq=list(2)),ngrid=39)
 # Esq is manually constructed as gradient-produced E^2
 Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
@@ -401,7 +397,7 @@ for (i in 2:t) {
 # Plot simulation: ggplot
 N$time <- 1:t
 dat <- melt(N, id.vars="time")
-ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray")
+ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray") + theme_classic()
 ```
 ## Linear statistical model with covariate for both species
 
@@ -409,13 +405,13 @@ We fit each species' population time series to an arimaX and lm with population 
 
 $$ N_{1,t} = \beta_0 + \beta_1 N_{1,t-1} + \beta_2 N_{2,t-1}+ \epsilon_t $$
 
-```{r figs13, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs13}Population size \\textit{N} over time \\textit{t} for a discrete-time logistic growth model, with competition."}
+```{r figs13, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs13}Population size \\textit{N} over time \\textit{t} for a discrete-time logistic growth model, with competition between 2 species ($N_1$ and $N_2$)."}
 # Plot simulation: ggplot
 dat <- as.data.frame(cbind(N$N1,N$N2))
 colnames(dat) <- c("N1","N2")
 dat$time <- 1:t
-p1 <- ggplot2::ggplot(dat, aes(time, N1)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray")
-p2 <- ggplot2::ggplot(dat, aes(time, N2)) + geom_point()
+p1 <- ggplot2::ggplot(dat, aes(time, N1)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray") + theme_classic()
+p2 <- ggplot2::ggplot(dat, aes(time, N2)) + geom_point() + theme_classic()
 p1 + p2
 ```
 
@@ -452,7 +448,7 @@ p1 <- ggplot(data=dat,aes(x=time)) +
   geom_line(aes(y=lm3.fit.n1, color = "lm fit"), alpha=0.5, linewidth=.4) +
   theme_bw() +
   xlab("time") +
-  ylab("N1") +
+  ylab("log(N1)") +
   labs(color="Legend") +
   scale_color_manual(values = colors)
 p2 <- ggplot(data=dat,aes(x=time)) +
@@ -464,13 +460,13 @@ p2 <- ggplot(data=dat,aes(x=time)) +
   geom_line(aes(y=lm3.fit.n2, color = "lm fit"), alpha=0.5, linewidth=.4) +
   theme_bw() +
   xlab("time") +
-  ylab("N2") +
+  ylab("log(N2)") +
   labs(color="Legend") +
   scale_color_manual(values = colors)
 p1+p2
 ```
 
-```{r figs15, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs15}Population size (logarithm) at one time step $N_{t+1}$ as a function of log-population size of Species 1 and Species 2 in the previous time step $N_t$. Also shown is the change in population size of Species 1 as a function of $N_t$ for both species."}
+```{r figs15, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs15}Population size (logarithm) in species 1 at one time step $N_{1,t+1}$ as a function of log-population size of Species 1 and Species 2 in the previous time step $N_t$. Also shown is the change in population size of Species 1 as a function of $N_t$ for both species."}
 dN1 <- rep(NA, (t-1))
 for (i in 1:(t-1)) {
   dN1[i] <- log(N$N1[i+1])-log(N$N1[i])
@@ -478,22 +474,22 @@ for (i in 1:(t-1)) {
 d.dN1 <- as.data.frame(dN1)
 d.dN1$Nt <- log(dat$N1[1:(t-1)])
 d.dN1$Nt_plus_1 <- log(dat$N1[2:t])
-p1 <- ggplot2::ggplot(d.dN1, aes(x=Nt,y=Nt_plus_1)) + geom_point()
+p1 <- ggplot2::ggplot(d.dN1, aes(x=Nt,y=Nt_plus_1)) + geom_point() + xlab("log(N1)") + ylab("log(N1_t+1)") + theme_classic()
 
 d.dN1 <- as.data.frame(dN1)
 d.dN1$Nt <- log(dat$N1[1:(t-1)])
 d.dN1$Nt_plus_1 <- log(dat$N1[2:t])
 d.dN1$N2 <- log(dat$N2[2:t])
-p2 <- ggplot2::ggplot(d.dN1, aes(x=N2,y=Nt_plus_1)) + geom_point()
-p3 <- ggplot2::ggplot(d.dN1, aes(Nt, dN1)) + geom_point()
-p4 <- ggplot2::ggplot(d.dN1, aes(N2, dN1)) + geom_point()
+p2 <- ggplot2::ggplot(d.dN1, aes(x=N2,y=Nt_plus_1)) + geom_point() + theme_classic() + xlab("log(N2)") + ylab("log(N1_t+1)")
+p3 <- ggplot2::ggplot(d.dN1, aes(Nt, dN1)) + geom_point() + xlab("log(N1)") + theme_classic()
+p4 <- ggplot2::ggplot(d.dN1, aes(N2, dN1)) + geom_point() + theme_classic() + xlab("log(N2)")
 
 p1+p2+p3+p4
 ```
 
 We can see that the population size of Species 2 does not have a linear relationship with that of Species 1.
 
-```{r}
+```{r figs16, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs16}Population size (logarithm) in species 1 at one time step $N_{1,t+1}$ as a function of log-population size of Species 2 in the previous time step $N_t$."}
 df <- data.frame(cbind(log(dat$N1[2:t]),log(dat$N1[1:(t-1)]),log(dat$N2[1:(t-1)])))
 colnames(df) <- c("Nt1","N1","N2")
 m.3.lm <- lm(Nt1 ~ I(1/N1) + I(1/N2),data=df)
@@ -504,18 +500,18 @@ xx <- seq(0,100, length=1000)
 prediction<-data.frame(N2=xx,N1=100)
 plot(df$N2, df$Nt1, xlab = "N2", ylab="N.t+1" , pch=16)
 lines(prediction$N2, predict(m.3.lm, prediction), lty=2,col="red",lwd=3)
-
 ```
 
-```{r figs16, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs16}Population size (logarithm) at one time step $N_{t+1}$ as a function of log-population size of the second species in the previous time step $N_t$. Fitted (line) and observed (points) values are shown."}
+```{r figs17, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs17} Linear model-predicted population size (logarithm) at one time step $N_{t+1}$ as a function of log-population size of the second species in the previous time step $N_t$. Fitted (line) and observed (points) values are shown.", warning=FALSE}
 jtools::effect_plot(m.3.lm,pred=N2,plot.points = TRUE)
-ggplot(data = df, aes(x = N2, y = Nt1)) +
-  geom_point() +
-  geom_smooth(method = "lm", formula = y ~ x)
+# ggplot(data = df, aes(x = N2, y = Nt1)) +
+#   geom_point() +
+#   geom_smooth(method = "lm", formula = y ~ x) + theme_classic()
 ```
+
 We can already see that the linear model does not provide a useful fit to the data points (neither does taking the inverse function help). The regression parameters can predict well the population size of the other species, but they are not informative for inference. This has been observed previously (@Certain2018), and non-linear least squares models (among others) are more often used to estimate parameters for dynamics resulting from these kinds of species interaction models (@Kloppers2013; @Muhlbauer2020; @Olivenca2021). The inability of the linear models to reproduce the interaction coefficients is more clearly demonstrated in @Certain2018. However, they do indicate that the slope of the linear model can reflect the direction of effect for the interacting species.
 
-Instead of further exploring techniques to fit to time-series derived from non-linear competition processes, we look more closely at how HMSC manages to fit data emerging from competition dynamics and make inference about species interactions. Instead of estimating full interaction coefficients, or assuming sparse interactions, they instead assume that a reduced number of linear combinations of species abundances that are most relevant to determining future growth rates for species in the community can bypass the 'curse of dimensionality' problem. This is well presented in @Ovaskainen2017. We apply that approach here:
+Instead of further exploring techniques to fit to time-series derived from non-linear competition processes, we look more closely at how HMSC manages to fit data emerging from competition dynamics and make inference about species interactions. Instead of estimating full interaction coefficients, or assuming sparse interactions, they instead assume that a reduced number of linear combinations of species abundances that are most relevant to determining future growth rates for species in the community can bypass the 'curse of dimensionality' problem. This is well presented in @Ovaskainen2017. We apply that approach here.
 
 ## Bayesian linear statistical model: HMSC
 We can fit the data to a linear model using HMSC, with latent variables to capture the species associations. These are implemented by including a random effect at the time level. For this analysis, we do not expect the impact of Species 1 and 2 that results from competition to vary over time - competition will always have negative impacts for species abundances. Our goal is to estimate the overall impact of species covariance across all of the time points. We do not estimate these impacts as a function of the lag in time points. In other words, we assume that each time point has random variance and that species may covary in their response at each time point. We do not consider that species covariance is a function of distance between sampled time points (see @Ovaskainen2020, equation 5.9). We instead assume that site loadings $\eta$ are independent among the sampled time points.
@@ -569,7 +565,7 @@ summary(m3.post.hmsc$Beta)$statistics[1:2,1:2]
 
 The HMSC model correctly shows the negative association between the species (shown here as correlations - JSDM CHapter 7 tells us the intra-specific correlation is always 1).
 
-```{r}
+```{r figs18, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs18} Observed (points) and HMSC model-predicted population size (logarithm) for Species 1 (black) and Species 2 (orange), using environment $E_t$ as a fixed effect predictor and specifying temporal random effects to capture the species interactions."}
 preds = computePredictedValues(m.3.sample)
 df <- data.frame(cbind(log(dat$N1[2:t]),log(dat$N2[2:t]),log(dat$N1[1:(t-1)]),log(dat$N2[1:(t-1)])))
 colnames(df) <- c("Nt1","Nt2","N1","N2")
@@ -593,7 +589,11 @@ lines(df$n2_25,col="orange")
 lines(df$n2_975,col="orange")
 ```
 
-I try again with a next example where the only difference between species is the $\alpha_{ij}$.
+```{r}
+knitr::knit_exit()
+```
+
+To show that the HMSC model correctly allocates variance to the contributing components of the model (here environment, intra-specific and interspecific density-dependence, implemented as temporal random effects), we simulate a new example where the only difference between species is the $\alpha_{ij}$.
 
 ```{r}
 # Simulate initial species population growth with a second species present
@@ -628,7 +628,7 @@ for (i in 2:t) {
 # Plot simulation: ggplot
 N$time <- 1:t
 dat <- melt(N, id.vars="time")
-ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray")
+ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = ((r1.0 - 1)/alpha.11),linetype = "dashed", color = "gray") = theme_classic()
 ```
 
 ```{r}

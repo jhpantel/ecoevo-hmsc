@@ -86,6 +86,60 @@ eprint = {https://nsojournals.onlinelibrary.wiley.com/doi/pdf/10.1111/ecog.06500
 abstract = {Species distribution models are useful for estimating the distribution and environmental preferences of rare species, but these same species are challenging to model on account of sparse data. We contrast a traditional single-species approach (generalized linear models, GLMs) with two promising frameworks for modeling rare species: ensembles of small models (ESMs), which average across simple models; and multi-species distribution models (MSDMs), which allow rarer species to benefit from statistical ‘borrowing of strength' from more common species. Using a virtual species within a community of real species, we evaluated how model accuracy was influenced by the number of occurrences of the rare species (N = 2–64), niche breadth, and similarity to more numerous species' niches. For discriminating between presence and absence, ESMs with just linear terms (ESM-L) performed best for N ≤ 4, whereas for GLMs and ESMs with polynomial terms (ESM-P) were best for N ≥ 8. For calibrating the species' response to influential variables, the MSDM hierarchical modeling of species communities (HMSC) and ESM-P were best for species with niches similar to those of other species. For species with dissimilar niches, ESM-P did best for N ≥ 8, but no model was well calibrated for smaller sample sizes. For identifying uninfluential variables, ESM-L and species archetype models (SAMs), a type of MSDM, did well for ≤ 4, and ESM-L for N ≥ 8. Models of species with narrow niches dissimilar to others had the highest discrimination capacity compared to models for generalist species and/or species with niches similar to other species' niches. ‘Borrowing of strength' in MSDMs can assist with some inference tasks, but does not necessarily improve predictions for rare species; simpler, single-species models may be better at a given task. The best algorithm depends on modeling goal (discrimination versus calibration), sample size, and niche breadth and similarity. Keywords: borrowing of strength, calibration, data-deficient species, discrimination, presence–absence, rare species},
 year = {2023}
 }
+@article{Kloppers2013,
+title = {Lotka–Volterra model parameter estimation using experiential data},
+journal = {Applied Mathematics and Computation},
+volume = {224},
+pages = {817-825},
+year = {2013},
+issn = {0096-3003},
+doi = {https://doi.org/10.1016/j.amc.2013.08.093},
+url = {https://www.sciencedirect.com/science/article/pii/S0096300313009806},
+author = {P.H. Kloppers and J.C. Greeff},
+keywords = {Systems modelling, Integral method, Log Integral method, Estimation of parameters, Linear regression},
+abstract = {The purpose of mathematical models is, in principle, to assist management with decision-making processes in various fields of science. These models invariably include a number of parameters, of which the method of estimation is often in question when the models as managerial tools are evaluated. Advanced software packages involving artificial intelligence are available to estimate these parameters, and have been proven to be extremely effective. However, these techniques are expensive, require expert knowledge and often are not accessible to scientists. In this paper we discuss two alternative methods to estimate the parameters, using basic mathematical and statistical principles and a standard linear regression software package. The first method is referred to as the Integral method and the second as the Log Integral method. As an example, both these techniques are applied to determine the unknown parameters in a system of non-linear differential equations that describe an available set of data. To illustrate the effectiveness of these simplistic methods, a three competing species Lotka–Volterra model is used as vehicle: For a given data set the model parameters obtained by an advanced artificial intelligence method are compared to the parameter values obtained when applying the proposed methods. The different approaches result in completely different estimates of the parameter values for the system, yet the solutions, using these different sets of parameters values, fit the raw data equally well. The Integral and Log Integral methods are accessible to researchers with little knowledge of mathematics, statistics or technology, and are not restricted by the nature of the problem, the number of equations or number of parameters involved. These methods are applicable to a broad spectrum of dynamical systems originating in the fields of environmental, physical, biological and social sciences.}
+}
+@article{Muhlbauer2020,
+author = {Mühlbauer, Lina K. and Schulze, Maximilienne and Harpole, W. Stanley and Clark, Adam T.},
+title = {gauseR: Simple methods for fitting Lotka-Volterra models describing Gause’s “Struggle for Existence”},
+journal = {Ecology and Evolution},
+volume = {10},
+number = {23},
+pages = {13275-13283},
+keywords = {competition, differential equation, growth rate, logistic growth, optimization, predator-prey},
+doi = {https://doi.org/10.1002/ece3.6926},
+url = {https://onlinelibrary.wiley.com/doi/abs/10.1002/ece3.6926},
+eprint = {https://onlinelibrary.wiley.com/doi/pdf/10.1002/ece3.6926},
+abstract = {Abstract Point 1: The ecological models of Alfred J. Lotka and Vito Volterra have had an enormous impact on ecology over the past century. Some of the earliest—and clearest—experimental tests of these models were famously conducted by Georgy Gause in the 1930s. Although well known, the data from these experiments are not widely available and are often difficult to analyze using standard statistical and computational tools. Point 2: Here, we introduce the gauseR package, a collection of tools for fitting Lotka-Volterra models to time series data of one or more species. The package includes several methods for parameter estimation and optimization, and includes 42 datasets from Gause's species interaction experiments and related work. Additionally, we include with this paper a short blog post discussing the historical importance of these data and models, and an R vignette with a walk-through introducing the package methods. The package is available for download at github.com/adamtclark/gauseR. Point 3: To demonstrate the package, we apply it to several classic experimental studies from Gause, as well as two other well-known datasets on multi-trophic dynamics on Isle Royale, and in spatially structured mite populations. In almost all cases, models fit observations closely and fitted parameter values make ecological sense. Point 4: Taken together, we hope that the methods, data, and analyses that we present here provide a simple and user-friendly way to interact with complex ecological data. We are optimistic that these methods will be especially useful to students and educators who are studying ecological dynamics, as well as researchers who would like a fast tool for basic analyses.},
+year = {2020}
+}
+@article{Ovaskainen2017,
+author = {Ovaskainen, Otso  and Tikhonov, Gleb  and Dunson, David  and Grøtan, Vidar  and Engen, Steinar  and Sæther, Bernt-Erik  and Abrego, Nerea },
+title = {How are species interactions structured in species-rich communities? A new method for analysing time-series data},
+journal = {Proceedings of the Royal Society B: Biological Sciences},
+volume = {284},
+number = {1855},
+pages = {20170768},
+year = {2017},
+doi = {10.1098/rspb.2017.0768},
+
+URL = {https://royalsocietypublishing.org/doi/abs/10.1098/rspb.2017.0768},
+eprint = {https://royalsocietypublishing.org/doi/pdf/10.1098/rspb.2017.0768}
+,
+    abstract = { Estimation of intra- and interspecific interactions from time-series on species-rich communities is challenging due to the high number of potentially interacting species pairs. The previously proposed sparse interactions model overcomes this challenge by assuming that most species pairs do not interact. We propose an alternative model that does not assume that any of the interactions are necessarily zero, but summarizes the influences of individual species by a small number of community-level drivers. The community-level drivers are defined as linear combinations of species abundances, and they may thus represent e.g. the total abundance of all species or the relative proportions of different functional groups. We show with simulated and real data how our approach can be used to compare different hypotheses on community structure. In an empirical example using aquatic microorganisms, the community-level drivers model clearly outperformed the sparse interactions model in predicting independent validation data. }
+}
+@book{Ovaskainen2020,
+title = "Joint Species Distribution Modelling: With Applications in R",
+keywords = "1181 Ecology, evolutionary biology",
+author = "Otso Ovaskainen and Nerea Abrego",
+year = "2020",
+doi = "10.1017/9781108591720",
+language = "English",
+isbn = "978-1-108-71678-9",
+series = "Ecology Biodiversity and Conservation",
+publisher = "Cambridge University Press",
+address = "United Kingdom",
+}
 
 
 
