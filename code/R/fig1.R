@@ -123,7 +123,6 @@ Wmax <- 2
 h2 <- 1
 k <- (w + (1 - h2) * P)/(P + w)
 # Simulation of model for t time steps
-# Simulation of model for t time steps
 t <- 40
 N <- array(NA,dim=c(t,length(N0)))
 N <- as.data.frame(N)
