@@ -1,6 +1,6 @@
 ## Code for Figure 1
 ## J.H. Pantel
-## 08-11-2024
+## 29-11-2024
 
 ## libraries
 library(ecoevor)
@@ -12,6 +12,7 @@ library(reshape2)
 library(cowplot)
 library(MASS)
 library(gridGraphics)
+library(svglite)
 ## functions
 source("./code/R/plot_grad_ylim.R")
 
@@ -83,11 +84,17 @@ yrep <- as.matrix(data.frame(hold2))
 ### Mod1 plot ###
 par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
 color_scheme_set("brightblue")
-#ppc_dens_overlay(y, yrep[1:50, ])
-p1 <- ppc_intervals(y,yrep,x=rep(dat$time[1:(t-1)],times=2),prob = 0.95) +
-  labs(x = "time",y = "ln(N)",) +
-  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
-  theme(legend.position = "none")
+gg_dat <- data.frame(y=y)
+gg_dat$species <- rep(c(1,2),each=39)
+gg_dat$species <- as.factor(gg_dat$species)
+gg_dat$time <- rep((1:(t-1)),times=2)
+gg_dat$ci_025 <- apply(yrep,2,quantile,probs=.025)
+gg_dat$ci_975 <- apply(yrep,2,quantile,probs=.975)
+p1 <- ggplot2::ggplot(gg_dat, aes(time, y, col=species)) + geom_point(size = 0.7) + scale_color_manual(values = c("1" = "skyblue", "2" = "darkgrey")) + geom_errorbar(aes(ymin=ci_025, ymax=ci_975), alpha=0.5) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm"),panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black")) +
+  theme(legend.position = "none",strip.text = element_text(size=6)) + ylab("log(N)")
+
 ### Gradient plot ###
 Gradient <- constructGradient(m.1.sample,focalVariable="E",non.focalVariables=list(Esq=list(2)),ngrid=39)
 Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
@@ -194,11 +201,16 @@ yrep <- as.matrix(data.frame(hold2))
 ### Mod2 plot ###
 par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
 color_scheme_set("brightblue")
-#ppc_dens_overlay(y, yrep[1:50, ])
-p5 <- ppc_intervals(y,yrep,x=rep(dat$time[1:(t-1)],times=2),prob = 0.95) +
-  labs(x = "time",y = "ln(N)",) +
-  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
-  theme(legend.position = "none")
+gg_dat <- data.frame(y=y)
+gg_dat$species <- rep(c(1,2),each=39)
+gg_dat$species <- as.factor(gg_dat$species)
+gg_dat$time <- rep((1:(t-1)),times=2)
+gg_dat$ci_025 <- apply(yrep,2,quantile,probs=.025)
+gg_dat$ci_975 <- apply(yrep,2,quantile,probs=.975)
+p5 <- ggplot2::ggplot(gg_dat, aes(time, y, col=species)) + geom_point(size = 0.7) + scale_color_manual(values = c("1" = "skyblue", "2" = "darkgrey")) + geom_errorbar(aes(ymin=ci_025, ymax=ci_975), alpha=0.5) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm"),panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black")) +
+  theme(legend.position = "none",strip.text = element_text(size=6)) + ylab("log(N)")
 ### Gradient plot ###
 Gradient <- constructGradient(m.2.sample,focalVariable="dx1",non.focalVariables=list(E=list(2),Esq=list(2),dx2=list(2)),,ngrid=39)
 Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
@@ -373,7 +385,8 @@ gg_dat$time <- rep(study$time[study$time !=1],times=2)
 gg_dat$ci_025 <- apply(yrep,2,quantile,probs=.025)
 gg_dat$ci_975 <- apply(yrep,2,quantile,probs=.975)
 p12 <- ggplot2::ggplot(gg_dat, aes(time, y, col=species)) + geom_point(size = 0.5) + facet_wrap(~site,nrow=2) + geom_errorbar(aes(ymin=ci_025, ymax=ci_975), alpha=0.5) +
-  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm"),panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black")) +
   theme(legend.position = "none",strip.text = element_text(size=6))
 
 ### ### ### ### ### ### ###
@@ -397,6 +410,7 @@ p11.g <- ggdraw(p11)
 
 d <- plot_grid(p1,plot_grid(p2.g,p3.g,nrow=2,align="v"),p4.g,p5,plot_grid(p6.g,p7.g,nrow=2,align="v"),p8.g,p12,plot_grid(p9.g,p10.g,nrow=2,align="v"),p11.g,nrow=3,ncol=3,rel_widths=c(5,1.5,2,5,1.5,2,5,1.5,2),align="h",axis="b",labels = c('a','b','c','d','e','f','g','h','i'),label_size = 9,hjust=c(0,2,2))
 
-pdf("./output/fig1.pdf",width=11.69, height=8.27)
-d
-dev.off()
+ggsave(file="./output/fig1.svg",plot=d,width=297,height=210,units="mm")
+# pdf("./output/fig1.pdf",width=11.69, height=8.27)
+# d
+# dev.off()
