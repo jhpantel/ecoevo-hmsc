@@ -1,5 +1,5 @@
 ---
-title: "Appendix S3. Hypotheses and tests for increased importance of evolutionary drivers for species and community dynamics"
+title: "Appendix S3. The relative importance of evolution in populations and communities"
 author:
   - Jelena H. Pantel^[Laboratoire Chrono-environnement,UMR 6249 CNRS-UFC, 16 Route de Gray, 25030 Besançon cedex, France, jelena.pantel@univ-fcomte.fr]
   - Ruben J. Hermann^[University of Duisburg-Essen, Universitätsstraße 5, 45141 Essen, Germany, ruben.hermann@uni-due.de]
@@ -33,328 +33,1258 @@ knitr::opts_chunk$set(
 )
 ```
 ```{r setup,echo=FALSE,message=FALSE}
-library(Hmsc)
+library(ecoevor)
 library(ggplot2)
-library(tidyr)
-library(coda)
-library(patchwork)
-library(jtools)
-library(bayesplot)
 library(reshape2)
+library(Hmsc)
+library(bayesplot)
 ```
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
 # Wrap long lines
 knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE,out.width="50%")
 ```
 
-# Background
+# Logistic growth and trait evolution
 
-First I establish a metacommunity simulation scenario where environment, spatial random effects, and year-based Random Effects (species interactions) all play a role in driving species abundances. I then add in trait evolution, and look at its relative importance.
-
-# Model for population growth, competition, environmental change, and evolution
-
-The growth equation for each species is:
+The goal of this analysis is to show that a hierarchical Bayesian linear model (HMSC) can successfully estimate the relative importance of different drivers of population dynamics, and to evaluate how the importance of evolution for population dynamics changes with heritability $h^2$ level. This analysis supports the findings for the **Evolution in metacommunities and HMSC** section in the main text. We create simulations of evolutionary rescue in a population, where adaptive evolution rescues a population from extinction, at a speed that depends on the heritability level in the system. Population dynamics are modelled as:
 
 $$ N_{i,t+1} =\frac{\hat{W}e^ \frac{-[(\frac{w+(1-h^2)P} {P+w})(E-x_{i,t})]^2}{2(P+w)}N_{i,t}} {1 + \alpha_{ii}N_{i,t} + \alpha_{ij} N_{j,t}} $$
 
-We simulate population growth under particular parameter values, to generate population dynamics where species interactions, environment, and trait evolution all drive population dynamics.
+where \( \hat{W} \) is calculated as \( \hat{W}=W_{max}\sqrt(\frac{w}{P+w}) \), \(W_{max}\) is the species' maximum per-capita growth rate, *w* is the width of the Gaussian fitness function (which determines the strength of selection, as increasing values indicate a weaker reduction in fitness with distance from optimum trait value), *P* is the width of the distribution of the phenotype *x*, and $h^2$ is the heritability of the trait *x*. For the simulation we use \(W_{max}\) = 2, *P* = 1, and *w* = 2.
+
+The change in the average trait value each time step is given by:
+
+$$ d_{i,t+1} = k d_{i,t} $$
+where \( k = \frac{w + (1-h^2) P}{w + P} \) and \( d_{i,t} = E_t - x_{i,t} \).
+
+## Population dynamics simulation
+
+We simulate population dynamics for 1 species, keeping all conditions constant except for heritability, which is evaluated at $h^2 = 0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.075, 0.1, 0.4, 0.9, 1$. The simulation code for only $h^2 = 0$ is shown.
 
 ```{r}
-set.seed(42)
-# Case 1: Weaker interactions, stronger environment
-# Simulate initial species population growth with environment fluctuations
-N1.0 <- 10
-N2.0 <- 10
+### 1 species, h2=0 ###
+# Initial conditions
+N0 <- 10
 alpha.11 <- 0.01
-alpha.22 <- 0.01
-alpha.12 <- 0.005
-alpha.21 <- 0.01
+alpha <- matrix(alpha.11,byrow=FALSE)
 E.0 <- 0.8
-x1.0 <- 0.1
-x2.0 <- 0.8
 P <- 1
-w <- 2
+w <- 0.5
+# Draw initial trait value using degree of initial maladaptation
+B0 <- 1
+d0 = sqrt(B0*(w+P))
+x.0 = E.0-d0
+Wmax <- 2
+h2 <- 0
+k <- (w + (1 - h2) * P)/(P + w)
+# Simulation of model for t time steps
+# Simulation of model for t time steps
+t <- 60
+N <- array(NA,dim=c(t,length(N0)))
+N <- as.data.frame(N)
+colnames(N) <- paste0("N",1:length(N0))
+N[1,] <- N0
+E <- rep(NA, t)
+E[1] <- E.0
+x <- array(NA,dim=c(t,length(N0)))
+x <- as.data.frame(x)
+colnames(x) <- paste0("x",1:length(N0))
+x[1,] <- x.0
+r <- array(NA,dim=c(t,length(N0)))
+r <- as.data.frame(r)
+colnames(r) <- paste0("r",1:length(N0))
+What <- Wmax*sqrt(w/(P+w))
+r[1,] <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E[1]-x[1,]))^2)/(2*(P+w)))
+for (i in 2:t) {
+  res <- disc_LV_evol(N0=N[i-1,],alpha=alpha,E=E[i-1],x=x[i-1,],P=P,w=w,Wmax=Wmax,h2=h2)
+  N[i,] <- res$Nt1
+  r[i,] <- res$r
+  # trait change
+  d <- E[i-1] - x[i-1,]
+  d1 <- k*d
+  x[i,] <- E[i-1] - d1
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0))
+}
+# Arrange to save across scenarios
+gdat <- N
+gdat$time <- 1:t
+gdat$h2 <- h2
+gdat$x1 <- x$x1
+gdat$E <- E
+```
+```{r echo=FALSE}
+### 1 species, h2=0.01 ###
+# Initial conditions
+N0 <- 10
+alpha.11 <- 0.01
+alpha <- matrix(alpha.11,byrow=FALSE)
+E.0 <- 0.8
+P <- 1
+w <- 0.5
+# Draw initial trait value using degree of initial maladaptation
+B0 <- 1
+d0 = sqrt(B0*(w+P))
+x.0 = E.0-d0
+Wmax <- 2
+h2 <- 0.01
+k <- (w + (1 - h2) * P)/(P + w)
+# Simulation of model for t time steps
+# Simulation of model for t time steps
+t <- 60
+N <- array(NA,dim=c(t,length(N0)))
+N <- as.data.frame(N)
+colnames(N) <- paste0("N",1:length(N0))
+N[1,] <- N0
+E <- rep(NA, t)
+E[1] <- E.0
+x <- array(NA,dim=c(t,length(N0)))
+x <- as.data.frame(x)
+colnames(x) <- paste0("x",1:length(N0))
+x[1,] <- x.0
+r <- array(NA,dim=c(t,length(N0)))
+r <- as.data.frame(r)
+colnames(r) <- paste0("r",1:length(N0))
+What <- Wmax*sqrt(w/(P+w))
+r[1,] <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E[1]-x[1,]))^2)/(2*(P+w)))
+for (i in 2:t) {
+  res <- disc_LV_evol(N0=N[i-1,],alpha=alpha,E=E[i-1],x=x[i-1,],P=P,w=w,Wmax=Wmax,h2=h2)
+  N[i,] <- res$Nt1
+  r[i,] <- res$r
+  # trait change
+  d <- E[i-1] - x[i-1,]
+  d1 <- k*d
+  x[i,] <- E[i-1] - d1
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0))
+}
+# Arrange to save across scenarios
+gdat <- rbind(gdat,data.frame(N,time=1:t,h2=rep(h2,t),x1=x$x1,E=E))
+```
+```{r echo=FALSE}
+### 1 species, h2=0.02 ###
+# Initial conditions
+N0 <- 10
+alpha.11 <- 0.01
+alpha <- matrix(alpha.11,byrow=FALSE)
+E.0 <- 0.8
+P <- 1
+w <- 0.5
+# Draw initial trait value using degree of initial maladaptation
+B0 <- 1
+d0 = sqrt(B0*(w+P))
+x.0 = E.0-d0
+Wmax <- 2
+h2 <- 0.02
+k <- (w + (1 - h2) * P)/(P + w)
+# Simulation of model for t time steps
+# Simulation of model for t time steps
+t <- 60
+N <- array(NA,dim=c(t,length(N0)))
+N <- as.data.frame(N)
+colnames(N) <- paste0("N",1:length(N0))
+N[1,] <- N0
+E <- rep(NA, t)
+E[1] <- E.0
+x <- array(NA,dim=c(t,length(N0)))
+x <- as.data.frame(x)
+colnames(x) <- paste0("x",1:length(N0))
+x[1,] <- x.0
+r <- array(NA,dim=c(t,length(N0)))
+r <- as.data.frame(r)
+colnames(r) <- paste0("r",1:length(N0))
+What <- Wmax*sqrt(w/(P+w))
+r[1,] <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E[1]-x[1,]))^2)/(2*(P+w)))
+for (i in 2:t) {
+  res <- disc_LV_evol(N0=N[i-1,],alpha=alpha,E=E[i-1],x=x[i-1,],P=P,w=w,Wmax=Wmax,h2=h2)
+  N[i,] <- res$Nt1
+  r[i,] <- res$r
+  # trait change
+  d <- E[i-1] - x[i-1,]
+  d1 <- k*d
+  x[i,] <- E[i-1] - d1
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0))
+}
+# Arrange to save across scenarios
+gdat <- rbind(gdat,data.frame(N,time=1:t,h2=rep(h2,t),x1=x$x1,E=E))
+```
+```{r echo=FALSE}
+### 1 species, h2=0.03 ###
+# Initial conditions
+N0 <- 10
+alpha.11 <- 0.01
+alpha <- matrix(alpha.11,byrow=FALSE)
+E.0 <- 0.8
+P <- 1
+w <- 0.5
+# Draw initial trait value using degree of initial maladaptation
+B0 <- 1
+d0 = sqrt(B0*(w+P))
+x.0 = E.0-d0
+Wmax <- 2
+h2 <- 0.03
+k <- (w + (1 - h2) * P)/(P + w)
+# Simulation of model for t time steps
+# Simulation of model for t time steps
+t <- 60
+N <- array(NA,dim=c(t,length(N0)))
+N <- as.data.frame(N)
+colnames(N) <- paste0("N",1:length(N0))
+N[1,] <- N0
+E <- rep(NA, t)
+E[1] <- E.0
+x <- array(NA,dim=c(t,length(N0)))
+x <- as.data.frame(x)
+colnames(x) <- paste0("x",1:length(N0))
+x[1,] <- x.0
+r <- array(NA,dim=c(t,length(N0)))
+r <- as.data.frame(r)
+colnames(r) <- paste0("r",1:length(N0))
+What <- Wmax*sqrt(w/(P+w))
+r[1,] <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E[1]-x[1,]))^2)/(2*(P+w)))
+for (i in 2:t) {
+  res <- disc_LV_evol(N0=N[i-1,],alpha=alpha,E=E[i-1],x=x[i-1,],P=P,w=w,Wmax=Wmax,h2=h2)
+  N[i,] <- res$Nt1
+  r[i,] <- res$r
+  # trait change
+  d <- E[i-1] - x[i-1,]
+  d1 <- k*d
+  x[i,] <- E[i-1] - d1
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0))
+}
+# Arrange to save across scenarios
+gdat <- rbind(gdat,data.frame(N,time=1:t,h2=rep(h2,t),x1=x$x1,E=E))
+```
+```{r echo=FALSE}
+### 1 species, h2=0.04 ###
+# Initial conditions
+N0 <- 10
+alpha.11 <- 0.01
+alpha <- matrix(alpha.11,byrow=FALSE)
+E.0 <- 0.8
+P <- 1
+w <- 0.5
+# Draw initial trait value using degree of initial maladaptation
+B0 <- 1
+d0 = sqrt(B0*(w+P))
+x.0 = E.0-d0
+Wmax <- 2
+h2 <- 0.04
+k <- (w + (1 - h2) * P)/(P + w)
+# Simulation of model for t time steps
+# Simulation of model for t time steps
+t <- 60
+N <- array(NA,dim=c(t,length(N0)))
+N <- as.data.frame(N)
+colnames(N) <- paste0("N",1:length(N0))
+N[1,] <- N0
+E <- rep(NA, t)
+E[1] <- E.0
+x <- array(NA,dim=c(t,length(N0)))
+x <- as.data.frame(x)
+colnames(x) <- paste0("x",1:length(N0))
+x[1,] <- x.0
+r <- array(NA,dim=c(t,length(N0)))
+r <- as.data.frame(r)
+colnames(r) <- paste0("r",1:length(N0))
+What <- Wmax*sqrt(w/(P+w))
+r[1,] <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E[1]-x[1,]))^2)/(2*(P+w)))
+for (i in 2:t) {
+  res <- disc_LV_evol(N0=N[i-1,],alpha=alpha,E=E[i-1],x=x[i-1,],P=P,w=w,Wmax=Wmax,h2=h2)
+  N[i,] <- res$Nt1
+  r[i,] <- res$r
+  # trait change
+  d <- E[i-1] - x[i-1,]
+  d1 <- k*d
+  x[i,] <- E[i-1] - d1
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0))
+}
+# Arrange to save across scenarios
+gdat <- rbind(gdat,data.frame(N,time=1:t,h2=rep(h2,t),x1=x$x1,E=E))
+```
+```{r echo=FALSE}
+### 1 species, h2=0.05 ###
+# Initial conditions
+N0 <- 10
+alpha.11 <- 0.01
+alpha <- matrix(alpha.11,byrow=FALSE)
+E.0 <- 0.8
+P <- 1
+w <- 0.5
+# Draw initial trait value using degree of initial maladaptation
+B0 <- 1
+d0 = sqrt(B0*(w+P))
+x.0 = E.0-d0
+Wmax <- 2
+h2 <- 0.05
+k <- (w + (1 - h2) * P)/(P + w)
+# Simulation of model for t time steps
+# Simulation of model for t time steps
+t <- 60
+N <- array(NA,dim=c(t,length(N0)))
+N <- as.data.frame(N)
+colnames(N) <- paste0("N",1:length(N0))
+N[1,] <- N0
+E <- rep(NA, t)
+E[1] <- E.0
+x <- array(NA,dim=c(t,length(N0)))
+x <- as.data.frame(x)
+colnames(x) <- paste0("x",1:length(N0))
+x[1,] <- x.0
+r <- array(NA,dim=c(t,length(N0)))
+r <- as.data.frame(r)
+colnames(r) <- paste0("r",1:length(N0))
+What <- Wmax*sqrt(w/(P+w))
+r[1,] <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E[1]-x[1,]))^2)/(2*(P+w)))
+for (i in 2:t) {
+  res <- disc_LV_evol(N0=N[i-1,],alpha=alpha,E=E[i-1],x=x[i-1,],P=P,w=w,Wmax=Wmax,h2=h2)
+  N[i,] <- res$Nt1
+  r[i,] <- res$r
+  # trait change
+  d <- E[i-1] - x[i-1,]
+  d1 <- k*d
+  x[i,] <- E[i-1] - d1
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0))
+}
+# Arrange to save across scenarios
+gdat <- rbind(gdat,data.frame(N,time=1:t,h2=rep(h2,t),x1=x$x1,E=E))
+```
+```{r echo=FALSE}
+### 1 species, h2=0.075 ###
+# Initial conditions
+N0 <- 10
+alpha.11 <- 0.01
+alpha <- matrix(alpha.11,byrow=FALSE)
+E.0 <- 0.8
+P <- 1
+w <- 0.5
+# Draw initial trait value using degree of initial maladaptation
+B0 <- 1
+d0 = sqrt(B0*(w+P))
+x.0 = E.0-d0
+Wmax <- 2
+h2 <- 0.075
+k <- (w + (1 - h2) * P)/(P + w)
+# Simulation of model for t time steps
+# Simulation of model for t time steps
+t <- 60
+N <- array(NA,dim=c(t,length(N0)))
+N <- as.data.frame(N)
+colnames(N) <- paste0("N",1:length(N0))
+N[1,] <- N0
+E <- rep(NA, t)
+E[1] <- E.0
+x <- array(NA,dim=c(t,length(N0)))
+x <- as.data.frame(x)
+colnames(x) <- paste0("x",1:length(N0))
+x[1,] <- x.0
+r <- array(NA,dim=c(t,length(N0)))
+r <- as.data.frame(r)
+colnames(r) <- paste0("r",1:length(N0))
+What <- Wmax*sqrt(w/(P+w))
+r[1,] <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E[1]-x[1,]))^2)/(2*(P+w)))
+for (i in 2:t) {
+  res <- disc_LV_evol(N0=N[i-1,],alpha=alpha,E=E[i-1],x=x[i-1,],P=P,w=w,Wmax=Wmax,h2=h2)
+  N[i,] <- res$Nt1
+  r[i,] <- res$r
+  # trait change
+  d <- E[i-1] - x[i-1,]
+  d1 <- k*d
+  x[i,] <- E[i-1] - d1
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0))
+}
+# Arrange to save across scenarios
+gdat <- rbind(gdat,data.frame(N,time=1:t,h2=rep(h2,t),x1=x$x1,E=E))
+```
+```{r echo=FALSE}
+### 1 species, h2=0.1 ###
+# Initial conditions
+N0 <- 10
+alpha.11 <- 0.01
+alpha <- matrix(alpha.11,byrow=FALSE)
+E.0 <- 0.8
+P <- 1
+w <- 0.5
+# Draw initial trait value using degree of initial maladaptation
+B0 <- 1
+d0 = sqrt(B0*(w+P))
+x.0 = E.0-d0
+Wmax <- 2
+h2 <- 0.1
+k <- (w + (1 - h2) * P)/(P + w)
+# Simulation of model for t time steps
+# Simulation of model for t time steps
+t <- 60
+N <- array(NA,dim=c(t,length(N0)))
+N <- as.data.frame(N)
+colnames(N) <- paste0("N",1:length(N0))
+N[1,] <- N0
+E <- rep(NA, t)
+E[1] <- E.0
+x <- array(NA,dim=c(t,length(N0)))
+x <- as.data.frame(x)
+colnames(x) <- paste0("x",1:length(N0))
+x[1,] <- x.0
+r <- array(NA,dim=c(t,length(N0)))
+r <- as.data.frame(r)
+colnames(r) <- paste0("r",1:length(N0))
+What <- Wmax*sqrt(w/(P+w))
+r[1,] <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E[1]-x[1,]))^2)/(2*(P+w)))
+for (i in 2:t) {
+  res <- disc_LV_evol(N0=N[i-1,],alpha=alpha,E=E[i-1],x=x[i-1,],P=P,w=w,Wmax=Wmax,h2=h2)
+  N[i,] <- res$Nt1
+  r[i,] <- res$r
+  # trait change
+  d <- E[i-1] - x[i-1,]
+  d1 <- k*d
+  x[i,] <- E[i-1] - d1
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0))
+}
+# Arrange to save across scenarios
+gdat <- rbind(gdat,data.frame(N,time=1:t,h2=rep(h2,t),x1=x$x1,E=E))
+```
+```{r echo=FALSE}
+### 1 species, h2=0.4 ###
+# Initial conditions
+N0 <- 10
+alpha.11 <- 0.01
+alpha <- matrix(alpha.11,byrow=FALSE)
+E.0 <- 0.8
+P <- 1
+w <- 0.5
+# Draw initial trait value using degree of initial maladaptation
+B0 <- 1
+d0 = sqrt(B0*(w+P))
+x.0 = E.0-d0
+Wmax <- 2
+h2 <- 0.4
+k <- (w + (1 - h2) * P)/(P + w)
+# Simulation of model for t time steps
+# Simulation of model for t time steps
+t <- 60
+N <- array(NA,dim=c(t,length(N0)))
+N <- as.data.frame(N)
+colnames(N) <- paste0("N",1:length(N0))
+N[1,] <- N0
+E <- rep(NA, t)
+E[1] <- E.0
+x <- array(NA,dim=c(t,length(N0)))
+x <- as.data.frame(x)
+colnames(x) <- paste0("x",1:length(N0))
+x[1,] <- x.0
+r <- array(NA,dim=c(t,length(N0)))
+r <- as.data.frame(r)
+colnames(r) <- paste0("r",1:length(N0))
+What <- Wmax*sqrt(w/(P+w))
+r[1,] <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E[1]-x[1,]))^2)/(2*(P+w)))
+for (i in 2:t) {
+  res <- disc_LV_evol(N0=N[i-1,],alpha=alpha,E=E[i-1],x=x[i-1,],P=P,w=w,Wmax=Wmax,h2=h2)
+  N[i,] <- res$Nt1
+  r[i,] <- res$r
+  # trait change
+  d <- E[i-1] - x[i-1,]
+  d1 <- k*d
+  x[i,] <- E[i-1] - d1
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0))
+}
+# Arrange to save across scenarios
+gdat <- rbind(gdat,data.frame(N,time=1:t,h2=rep(h2,t),x1=x$x1,E=E))
+```
+```{r echo=FALSE}
+### 1 species, h2=0.9 ###
+# Initial conditions
+N0 <- 10
+alpha.11 <- 0.01
+alpha <- matrix(alpha.11,byrow=FALSE)
+E.0 <- 0.8
+P <- 1
+w <- 0.5
+# Draw initial trait value using degree of initial maladaptation
+B0 <- 1
+d0 = sqrt(B0*(w+P))
+x.0 = E.0-d0
+Wmax <- 2
+h2 <- 0.9
+k <- (w + (1 - h2) * P)/(P + w)
+# Simulation of model for t time steps
+# Simulation of model for t time steps
+t <- 60
+N <- array(NA,dim=c(t,length(N0)))
+N <- as.data.frame(N)
+colnames(N) <- paste0("N",1:length(N0))
+N[1,] <- N0
+E <- rep(NA, t)
+E[1] <- E.0
+x <- array(NA,dim=c(t,length(N0)))
+x <- as.data.frame(x)
+colnames(x) <- paste0("x",1:length(N0))
+x[1,] <- x.0
+r <- array(NA,dim=c(t,length(N0)))
+r <- as.data.frame(r)
+colnames(r) <- paste0("r",1:length(N0))
+What <- Wmax*sqrt(w/(P+w))
+r[1,] <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E[1]-x[1,]))^2)/(2*(P+w)))
+for (i in 2:t) {
+  res <- disc_LV_evol(N0=N[i-1,],alpha=alpha,E=E[i-1],x=x[i-1,],P=P,w=w,Wmax=Wmax,h2=h2)
+  N[i,] <- res$Nt1
+  r[i,] <- res$r
+  # trait change
+  d <- E[i-1] - x[i-1,]
+  d1 <- k*d
+  x[i,] <- E[i-1] - d1
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0))
+}
+# Arrange to save across scenarios
+gdat <- rbind(gdat,data.frame(N,time=1:t,h2=rep(h2,t),x1=x$x1,E=E))
+```
+```{r echo=FALSE}
+### 1 species, h2=1 ###
+# Initial conditions
+N0 <- 10
+alpha.11 <- 0.01
+alpha <- matrix(alpha.11,byrow=FALSE)
+E.0 <- 0.8
+P <- 1
+w <- 0.5
+# Draw initial trait value using degree of initial maladaptation
+B0 <- 1
+d0 = sqrt(B0*(w+P))
+x.0 = E.0-d0
 Wmax <- 2
 h2 <- 1
 k <- (w + (1 - h2) * P)/(P + w)
-
-# model function
-disc_LV_evol <- function(N1.0,N2.0,alpha.11,alpha.22,alpha.12,alpha.21,E,x1.0,x2.0,P,w,Wmax,h2) {
-  What <- Wmax*sqrt(w/(P+w))
-  r1 <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E-x1.0))^2)/(2*(P+w)))
-  Nt1 <- (r1*N1.0) / (1+alpha.11*N1.0+alpha.12*N2.0)
-  r2 <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E-x2.0))^2)/(2*(P+w)))
-  Nt2 <- (r2*N2.0) / (1+alpha.22*N2.0+alpha.21*N1.0)
-  return(c(Nt1,Nt2,r1,r2))
-}
 # Simulation of model for t time steps
-t <- 40
-N <- array(NA,dim=c(t,2))
+# Simulation of model for t time steps
+t <- 60
+N <- array(NA,dim=c(t,length(N0)))
 N <- as.data.frame(N)
-colnames(N) <- c("N1","N2")
-x <- array(NA,dim=c(t,2))
-x <- as.data.frame(x)
-colnames(x) <- c("x1","x2")
-r <- array(NA,dim=c(t,2))
-r <- as.data.frame(r)
-colnames(r) <- c("r1","r2")
-N$N1[1] <- N1.0
-N$N2[1] <- N2.0
-x$x1[1] <- x1.0
-x$x2[1] <- x2.0
-What <- Wmax*sqrt(w/(P+w))
-r$r1[1] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x1.0))^2)/(2*(P+w))))
-r$r2[1] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x2.0))^2)/(2*(P+w))))
+colnames(N) <- paste0("N",1:length(N0))
+N[1,] <- N0
 E <- rep(NA, t)
 E[1] <- E.0
-for (i in 2:t) {
-  res <- disc_LV_evol(N1.0=N[i-1,1],N2.0=N[i-1,2],alpha.11=alpha.11,alpha.22=alpha.22,alpha.12=alpha.12,alpha.21=alpha.21,E=E[i-1],x1=x[i-1,1],x2=x[i-1,2],P=P,w=w,Wmax=Wmax,h2=h2)
-  N$N1[i] <- res[1]
-  N$N2[i] <- res[2]
-  r$r1[i] <- res[3]
-  r$r2[i] <- res[4]
-  # trait change
-  d1 <- E[i-1] - x[i-1,1]
-  d2 <- E[i-1] - x[i-1,2]
-  d1.1 <- k*d1
-  d2.1 <- k*d2
-  x$x1[i] <- E[i-1] - d1.1
-  x$x2[i] <- E[i-1] - d2.1
-  # environmental change
-  E[i] <- E[i-1] + abs(rnorm(1,0,0.05))
-}
-```
-```{r}
-# Plot simulation: ggplot
-N$time <- 1:t
-dat <- melt(N, id.vars="time")
-ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = (1/alpha.11),linetype = "dashed", color = "gray")
-```
-
-We can check the impact evolution had for this system by re-running dynamics with $h^2 = 0$:
-
-```{r echo = FALSE}
-h2 <- 0
-k <- (w+(1-h2)*P)/(P+w)
-# Simulation of model for t time steps
-Na <- array(NA,dim=c(t,2))
-Na <- as.data.frame(Na)
-colnames(Na) <- c("N1","N2")
-xa <- array(NA,dim=c(t,2))
-xa <- as.data.frame(xa)
-colnames(xa) <- c("x1","x2")
-ra <- array(NA,dim=c(t,2))
-ra <- as.data.frame(ra)
-colnames(ra) <- c("r1","r2")
-Na$N1[1] <- N1.0
-Na$N2[1] <- N2.0
-xa$x1[1] <- x1.0
-xa$x2[1] <- x2.0
+x <- array(NA,dim=c(t,length(N0)))
+x <- as.data.frame(x)
+colnames(x) <- paste0("x",1:length(N0))
+x[1,] <- x.0
+r <- array(NA,dim=c(t,length(N0)))
+r <- as.data.frame(r)
+colnames(r) <- paste0("r",1:length(N0))
 What <- Wmax*sqrt(w/(P+w))
-ra$r1[1] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x1.0))^2)/(2*(P+w))))
-ra$r2[1] <- What*(exp((-(((w+(1-h2)*P)/(P+w))*(E.0-x2.0))^2)/(2*(P+w))))
+r[1,] <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E[1]-x[1,]))^2)/(2*(P+w)))
 for (i in 2:t) {
-  res <- disc_LV_evol(N1.0=Na[i-1,1],N2.0=Na[i-1,2],alpha.11=alpha.11,alpha.22=alpha.22,alpha.12=alpha.12,alpha.21=alpha.21,E=E[i-1],x1=xa[i-1,1],x2=xa[i-1,2],P=P,w=w,Wmax=Wmax,h2=h2)
-  Na$N1[i] <- res[1]
-  Na$N2[i] <- res[2]
-  ra$r1[i] <- res[3]
-  ra$r2[i] <- res[4]
+  res <- disc_LV_evol(N0=N[i-1,],alpha=alpha,E=E[i-1],x=x[i-1,],P=P,w=w,Wmax=Wmax,h2=h2)
+  N[i,] <- res$Nt1
+  r[i,] <- res$r
   # trait change
-  d1 <- E[i-1] - xa[i-1,1]
-  d2 <- E[i-1] - xa[i-1,2]
-  d1.1 <- k*d1
-  d2.1 <- k*d2
-  xa$x1[i] <- E[i-1] - d1.1
-  xa$x2[i] <- E[i-1] - d2.1
+  d <- E[i-1] - x[i-1,]
+  d1 <- k*d
+  x[i,] <- E[i-1] - d1
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0))
 }
-# Plot simulation: ggplot
-Na$time <- 1:t
-data <- melt(Na, id.vars="time")
-ggplot2::ggplot(data, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = (1/alpha.11),linetype = "dashed", color = "gray")
+# Arrange to save across scenarios
+gdat <- rbind(gdat,data.frame(N,time=1:t,h2=rep(h2,t),x1=x$x1,E=E))
 ```
 
-# Hypotheses for evolution as a driver of species abundances
+```{r figs1, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs1} Plot of population size over time for a discete-time evolutionary rescue model, across a range of heritability $h^2$ values."}
+### Plot of time series ###
+gdat$h2 <- as.factor(gdat$h2)
+ggplot2::ggplot(gdat, aes(time, N1, col=h2)) + geom_point()
+### ###
+```
 
-The growth equation is not linear, yet we fit abundance data to a hierarchical model with linear predictors because in most natural systems, a single theoretical growth model can't adequately capture the complexity in a given system. Linear models don't capture mechanistic relationships, but instead correlative. They are useful for inferring direction and magnitude of effect sizes. In Appendix S1, we explore how non-linear dynamics are captured when fit to a linear model. Here, we explore different forms to encode evolution in the trait $x$ that determines the organism's fitness in this system.
+## HMSC model fit
 
-## H1. Raw trait value drives species abundances
+The goal of fitting the data to a statistical model is to estimate the relative important of trait evolution for the population dynamics.
 
-```{r}
-# Plot simulation: ggplot
-dat <- as.data.frame(cbind(log(N$N1),log(N$N2),x$x1,x$x2))
-colnames(dat) <- c("N1","N2","x1","x2")
+```{r results='hide'}
+### Model 1, h2=00 ###
+dat <- cbind(log(gdat$N1[gdat$h2==0]),gdat$x1[gdat$h2==0])
+dat <- as.data.frame(dat)
+colnames(dat) <- c("N1","x1")
 dat$time <- 1:t
-df <- data.frame(cbind(dat$N1[2:t],dat$N2[2:t],dat$x1[2:t],dat$x2[2:t]))
-colnames(df) <- c("Nt1","Nt2","xt1","xt2")
-# Plot
-p1 <- ggplot2::ggplot(df, aes(xt1, Nt1)) + geom_point()
-p2 <- ggplot2::ggplot(df, aes(xt2, Nt1)) + geom_point()
-p3 <- ggplot2::ggplot(df, aes(xt1, Nt2)) + geom_point()
-p4 <- ggplot2::ggplot(df, aes(xt2, Nt2)) + geom_point()
-p1 + p2 + p3 + p4
-```
-
-We do not hypothesize that the raw trait value is the best predictor of species abundances, because the impacts of this evolved trait depend on the context of the environment.
-
-## H2. Absolute value of trait distance from optimum drives species abundances
-
-```{r}
-# Plot simulation: ggplot
-df$E <- E[2:t]
-df$abs_Ex1 <- abs(df$E - df$xt1)
-df$abs_Ex2 <- abs(df$E - df$xt2)
-# Plot
-p1 <- ggplot2::ggplot(df, aes(abs_Ex1, Nt1)) + geom_point()
-p2 <- ggplot2::ggplot(df, aes(abs_Ex2, Nt1)) + geom_point()
-p3 <- ggplot2::ggplot(df, aes(abs_Ex1, Nt2)) + geom_point()
-p4 <- ggplot2::ggplot(df, aes(abs_Ex2, Nt2)) + geom_point()
-p1 + p2 + p3 + p4
-```
-
-We hypothesize that this represents the true impact on species abundances, via the direct impact this measure has on fitness and consequent population growth. However, we also acknowledge this is likely difficult to measure in most empirical systems.
-
-## H3. Absolute value of trait change from one time to the next drives species abundances
-
-We now onsider the magnitude of trait change from one time step to the next as a driver for species abundances.
-
-```{r}
-df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t-1)])
-df$dx2 <- abs(dat$x2[2:t] - dat$x2[1:(t-1)])
-# Plot
-p1 <- ggplot2::ggplot(df, aes(dx1, Nt1)) + geom_point()
-p2 <- ggplot2::ggplot(df, aes(dx2, Nt1)) + geom_point()
-p3 <- ggplot2::ggplot(df, aes(dx1, Nt2)) + geom_point()
-p4 <- ggplot2::ggplot(df, aes(dx2, Nt2)) + geom_point()
-p1 + p2 + p3 + p4
-```
-
-The measures correlate highly with one another, as the amount of trait change (the amount of evolution) is determined by the distance to the optimum trait value (given that P and w remain constant in the simulation).
-
-```{r}
-cor(df$dx1, df$abs_Ex1)
-cor(df$dx2, df$abs_Ex2)
-# Plot
-p1 <- ggplot2::ggplot(df, aes(abs_Ex1,dx1)) + geom_point()
-p2 <- ggplot2::ggplot(df, aes(abs_Ex2,dx2)) + geom_point()
-p1 + p2
-```
-
-# Statistical model for evolution as a driver of species abundances
-
-We hypothesize that \( \lvert E_t - x_{i,t} \rvert \) will be the best predictor of species abundances, and that \( \lvert x_{t+1} - x_{i,t} \rvert \) will have similar explanatory power.
-
-```{r}
+dat <- as.data.frame(dat)
+df <- data.frame(dat[(2:t),-3])
+colnames(df) <- c("Nt1", "xt1")
+df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t - 1)])
 # prepare data in HMSC format
-dat <- as.data.frame(cbind(log(N$N1),log(N$N2),x$x1,x$x2))
-colnames(dat) <- c("N1","N2","x1","x2")
-dat$time <- 1:t
-df <- data.frame(cbind(dat$N1[2:t],dat$N2[2:t],dat$x1[2:t],dat$x2[2:t]))
-colnames(df) <- c("Nt1","Nt2","xt1","xt2")
-df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t-1)])
-df$dx2 <- abs(dat$x2[2:t] - dat$x2[1:(t-1)])
-# Y matrix
-Y <- as.matrix(cbind(df$Nt1,df$Nt2))
-# X matrix
-XData <- data.frame(cbind(dat$N1[1:(t-1)],dat$N2[1:(t-1)]),E[1:(t-1)],E[1:(t-1)]^2,dat$x1[1:(t-1)],dat$x2[1:(t-1)],abs(dat$x1[2:t] - dat$x1[1:(t-1)]),abs(dat$x2[2:t] - dat$x2[1:(t-1)]),abs(E[1:(t-1)] - dat$x1[1:(t-1)]),abs(E[1:(t-1)] - dat$x2[1:(t-1)]))
-colnames(XData) <- c("n1","n2","E","Esq","x1","x2","dx1","dx2","dEx1","dEx2")
-# Prepare HMSC model
+Y <- as.matrix(df$Nt1)
+XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)])))
+colnames(XData) <- c("E","Esq","dx1")
+
 studyDesign = data.frame(sample = as.factor(1:(t-1)))
 rL = HmscRandomLevel(units = studyDesign$sample)
-# Design and fit 4 alternative HMSC models
-models = list()
-for(i in 1:4){
-  XFormula = switch(i, ~1, ~E+Esq+x1+x2, ~E+Esq+dEx1+dEx2, ~E+Esq+dx1+dx2)
-  m = Hmsc(Y = Y, XData = XData, XFormula = XFormula, studyDesign = studyDesign, ranLevels = list(sample = rL))
-  models[[i]] = m
-}
+
+m.1.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1, studyDesign = studyDesign, ranLevels = list(sample = rL))
 # Bayesian model parameters
 nChains <- 2
 thin <- 5
 samples <- 2000
-transient <- 100*thin
+transient <- 1000*thin
 verbose <- 500*thin
-for(i in 1:4){
-  models[[i]] = sampleMcmc(models[[i]],thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
-}
+# sample MCMC
+m.1.sample <- sampleMcmc(m.1.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+m1.post.hmsc <- convertToCodaObject(m.1.sample)
 ```
-
-We check the explanatory and predictive power of each model using cross-validation.
-
-```{r}
-# After Ovaskainen & Abrego 2020, Chapter 7
-partition = createPartition(m,nfolds=2,column="sample")
-partition.sp = c(1,2)
-result = matrix(NA,nrow=3,ncol=4)
-for(i in 1:4){
-  m = models[[i]]
-  # Explanatory power
-  preds = computePredictedValues(m)
-  MF = evaluateModelFit(hM=m,predY=preds)
-  result[1,i] = mean(MF$R2)
-  # Predictive power based on cross-validation
-  preds = computePredictedValues(m,partition=partition)
-  MF = evaluateModelFit(hM=m,predY=preds)
-  result[2,i] <- mean(MF$R2)
-  # Predictive power based on conditional cross-validation
-  preds = computePredictedValues(m,partition=partition,partition.sp=partition.sp,mcmcStep=100)
-  MF = evaluateModelFit(hM=m,predY=preds)
-  result[3,i] = mean(MF$R2)
-}
-```
-
-
-```{r}
-colnames(result) <- c("null","xt","dEx","dx")
-rownames(result) <- c("R2_expl","R2_pred","R2_pred_cross")
-result
-```
-
-An important conclusion from this analysis is that the \( \lvert E_t - x_{i,t} \rvert \) and \( \lvert x_{t+1} - x_{i,t} \rvert \) do have similar explanatory power, and that - even though the species traits were the stronger predictor of species abundances - the model with total change in trait value can be used to assess the question "How does evolution impact species abundances?"
-
-```{r}
-m.post.hmsc <- convertToCodaObject(models[[4]])
-bayesplot::mcmc_trace(m.post.hmsc$Beta)
-bayesplot::mcmc_areas(m.post.hmsc$Beta,area_method = c("equal height"))
-```
-
-```{r}
-# Bayesian estimates
-cbind(summary(m.post.hmsc$Beta)$statistics[1:10,1],summary(m.post.hmsc$Beta)$quantiles[,c(1,5)])
-```
-
-```{r}
-OmegaCor = computeAssociations(models[[4]])
-supportLevel = 0.7
-toPlot = ((OmegaCor[[1]]$support>supportLevel)
-+ (OmegaCor[[1]]$support<(1-supportLevel))>0)*OmegaCor[[1]]$mean
-corrplot::corrplot(toPlot, method = "color",col = colorRampPalette(c("blue","white","red"))(200),title = paste("random effect level:", models[[4]]$rLNames[1]), mar=c(0,0,1,0))
-OmegaCor
-```
-We can also look at a gradient plot for the effect of evolution in Species 1 for abundance in Species 1 and Species 2.
-
-```{r}
-Gradient <- constructGradient(models[[4]],focalVariable="dx1",non.focalVariables=list(E=list(2),Esq=list(2),dx2=list(2)),ngrid=39)
-Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
-predY <- predict(models[[4]],XData=Gradient$XDataNew,expected=TRUE)
-a <- plotGradient(models[[4]],Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx1_t",ylab="predicted N1_t+1")
-b <- plotGradient(models[[4]],Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="dx1_t",ylab="predicted N2_t+1")
-
-postBeta = getPostEstimate(models[[4]], parName = "Beta")
-plotBeta(models[[4]], post = postBeta, param = "Mean", supportLevel = 0.7)
-```
-We repeat this plot for the effect of evolution in Species 2 for abundance in Species 1 and Species 2.
-
-```{r}
-Gradient <- constructGradient(models[[4]],focalVariable="dx2",non.focalVariables=list(E=list(2),Esq=list(2),dx1=list(2)),ngrid=39)
-Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
-predY <- predict(models[[4]],XData=Gradient$XDataNew,expected=TRUE)
-a <- plotGradient(models[[4]],Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx2_t",ylab="predicted N1_t+1")
-b <- plotGradient(models[[4]],Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="dx2_t",ylab="predicted N2_t+1")
-```
-To evaluate the relative importance of evolution for species abundances, we use variation partition:
 
 ```{r warning=FALSE}
-VP <- computeVariancePartitioning(models[[4]],group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
-plotVariancePartitioning(models[[4]],VP,cols=c("white","skyblue","darkgrey","orange"),args.legend=list(cex=0.75,bg="transparent"))
+VP1 <- computeVariancePartitioning(m.1.sample,group=c(1,1,1,2),groupnames=c("Env","x1"))
+plotVariancePartitioning(m.1.sample,VP1,cols=c("white","skyblue","darkgrey"),args.legend=list(cex=0.75,bg="transparent"))
 ```
-We see that trait evolution in Species 1 is an important driver of abundances in both Species 1 and Species 2.
+```{r figs2, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs2} Simulated (dark blue points) population size over time for $h^2 = 0$, with posterior predicted mean (light blue points) and 95% highest density intervals (light blue bars)."}
+# prepare for plot
+pred2 <- predict(m.1.sample)
+hold1 <- list()
+hold2 <- list()
+for(i in 1:length(N0)){
+  hold1[[i]] <- as.numeric(Y[,i])
+  data <- lapply(pred2, function(x) x[, colnames(x)[i], drop = FALSE])
+  hold2[[i]] <- matrix(unlist(data), nrow=length(pred2), byrow=TRUE)
+}
+y <- unlist(hold1) # vector of each species' observed N across time points
+yrep <- as.matrix(data.frame(hold2))
+### Mod2 plot ###
+par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
+color_scheme_set("brightblue")
+#ppc_dens_overlay(y, yrep[1:50, ])
+ppc_intervals(y,yrep,x=dat$time[1:(t-1)],prob = 0.95) +
+  labs(x = "time",y = "ln(N)",) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+  theme(legend.position = "none")
+```
+
+```{r results='hide'}
+### Model 2, h2=0.01 ###
+dat <- cbind(log(gdat$N1[gdat$h2==0.01]),gdat$x1[gdat$h2==0.01])
+dat <- as.data.frame(dat)
+colnames(dat) <- c("N1","x1")
+dat$time <- 1:t
+dat <- as.data.frame(dat)
+df <- data.frame(dat[(2:t),-3])
+colnames(df) <- c("Nt1", "xt1")
+df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t - 1)])
+# prepare data in HMSC format
+Y <- as.matrix(df$Nt1)
+XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)])))
+colnames(XData) <- c("E","Esq","dx1")
+
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+
+m.2.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.2.sample <- sampleMcmc(m.2.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+m2.post.hmsc <- convertToCodaObject(m.2.sample)
+```
+```{r}
+m2.post.hmsc <- convertToCodaObject(m.2.sample)
+summary(m2.post.hmsc$Beta)
+bayesplot::mcmc_trace(m2.post.hmsc$Beta)
+bayesplot::mcmc_areas(m2.post.hmsc$Beta,area_method = c("equal height"))
+```
+```{r}
+Gradient <- constructGradient(m.2.sample,focalVariable="dx1",non.focalVariables=list(E=list(2),Esq=list(2)),ngrid=59)
+# Esq is manually constructed as gradient-produced E^2
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.2.sample,XData=Gradient$XDataNew,expected=TRUE)
+plotGradient(m.2.sample,Gradient,pred=predY,showData=T,measure="Y",main="",xlab="dx1_t",ylab="predicted N_t+1")
+```
+
+We can see that the system is unpredictable, as population size is extremely low during the simulation due to maladaptation.
+
+```{r warning=FALSE}
+VP2 <- computeVariancePartitioning(m.2.sample,group=c(1,1,1,2),groupnames=c("Env","x1"))
+plotVariancePartitioning(m.2.sample,VP2,cols=c("white","skyblue","darkgrey"),args.legend=list(cex=0.75,bg="transparent"))
+```
+```{r figs3, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs3} Simulated (dark blue points) population size over time for $h^2 = 0.01$, with posterior predicted mean (light blue points) and 95% highest density intervals (light blue bars)."}
+# prepare for plot
+pred2 <- predict(m.2.sample)
+hold1 <- list()
+hold2 <- list()
+for(i in 1:length(N0)){
+  hold1[[i]] <- as.numeric(Y[,i])
+  data <- lapply(pred2, function(x) x[, colnames(x)[i], drop = FALSE])
+  hold2[[i]] <- matrix(unlist(data), nrow=length(pred2), byrow=TRUE)
+}
+y <- unlist(hold1) # vector of each species' observed N across time points
+yrep <- as.matrix(data.frame(hold2))
+### Mod2 plot ###
+par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
+color_scheme_set("brightblue")
+#ppc_dens_overlay(y, yrep[1:50, ])
+ppc_intervals(y,yrep,x=dat$time[1:(t-1)],prob = 0.95) +
+  labs(x = "time",y = "ln(N)",) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+  theme(legend.position = "none")
+```
+
+```{r results='hide'}
+### Model 3, h2=0.02 ###
+dat <- cbind(log(gdat$N1[gdat$h2==0.02]),gdat$x1[gdat$h2==0.02])
+dat <- as.data.frame(dat)
+colnames(dat) <- c("N1","x1")
+dat$time <- 1:t
+dat <- as.data.frame(dat)
+df <- data.frame(dat[(2:t),-3])
+colnames(df) <- c("Nt1", "xt1")
+df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t - 1)])
+# prepare data in HMSC format
+Y <- as.matrix(df$Nt1)
+XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)])))
+colnames(XData) <- c("E","Esq","dx1")
+
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+
+m.3.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.3.sample <- sampleMcmc(m.3.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+m3.post.hmsc <- convertToCodaObject(m.3.sample)
+```
+
+```{r warning=FALSE}
+VP3 <- computeVariancePartitioning(m.3.sample,group=c(1,1,1,2),groupnames=c("Env","x1"))
+plotVariancePartitioning(m.3.sample,VP3,cols=c("white","skyblue","darkgrey"),args.legend=list(cex=0.75,bg="transparent"))
+```
+```{r figs4, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs4} Simulated (dark blue points) population size over time for $h^2 = 0.02$, with posterior predicted mean (light blue points) and 95% highest density intervals (light blue bars)."}
+# prepare for plot
+pred2 <- predict(m.3.sample)
+hold1 <- list()
+hold2 <- list()
+for(i in 1:length(N0)){
+  hold1[[i]] <- as.numeric(Y[,i])
+  data <- lapply(pred2, function(x) x[, colnames(x)[i], drop = FALSE])
+  hold2[[i]] <- matrix(unlist(data), nrow=length(pred2), byrow=TRUE)
+}
+y <- unlist(hold1) # vector of each species' observed N across time points
+yrep <- as.matrix(data.frame(hold2))
+### Mod2 plot ###
+par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
+color_scheme_set("brightblue")
+#ppc_dens_overlay(y, yrep[1:50, ])
+ppc_intervals(y,yrep,x=dat$time[1:(t-1)],prob = 0.95) +
+  labs(x = "time",y = "ln(N)",) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+  theme(legend.position = "none")
+```
+
+```{r results='hide'}
+### Model 4, h2=0.03 ###
+dat <- cbind(log(gdat$N1[gdat$h2==0.03]),gdat$x1[gdat$h2==0.03])
+dat <- as.data.frame(dat)
+colnames(dat) <- c("N1","x1")
+dat$time <- 1:t
+dat <- as.data.frame(dat)
+df <- data.frame(dat[(2:t),-3])
+colnames(df) <- c("Nt1", "xt1")
+df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t - 1)])
+# prepare data in HMSC format
+Y <- as.matrix(df$Nt1)
+XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)])))
+colnames(XData) <- c("E","Esq","dx1")
+
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+
+m.4.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.4.sample <- sampleMcmc(m.4.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+m4.post.hmsc <- convertToCodaObject(m.4.sample)
+```
+
+```{r warning=FALSE}
+VP4 <- computeVariancePartitioning(m.4.sample,group=c(1,1,1,2),groupnames=c("Env","x1"))
+plotVariancePartitioning(m.4.sample,VP4,cols=c("white","skyblue","darkgrey"),args.legend=list(cex=0.75,bg="transparent"))
+```
+```{r figs5, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs5} Simulated (dark blue points) population size over time for $h^2 = 0.03$, with posterior predicted mean (light blue points) and 95% highest density intervals (light blue bars)."}
+# prepare for plot
+pred2 <- predict(m.4.sample)
+hold1 <- list()
+hold2 <- list()
+for(i in 1:length(N0)){
+  hold1[[i]] <- as.numeric(Y[,i])
+  data <- lapply(pred2, function(x) x[, colnames(x)[i], drop = FALSE])
+  hold2[[i]] <- matrix(unlist(data), nrow=length(pred2), byrow=TRUE)
+}
+y <- unlist(hold1) # vector of each species' observed N across time points
+yrep <- as.matrix(data.frame(hold2))
+### Mod2 plot ###
+par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
+color_scheme_set("brightblue")
+#ppc_dens_overlay(y, yrep[1:50, ])
+ppc_intervals(y,yrep,x=dat$time[1:(t-1)],prob = 0.95) +
+  labs(x = "time",y = "ln(N)",) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+  theme(legend.position = "none")
+```
+```{r results = 'hide'}
+### Model 5, h2=0.04 ###
+dat <- cbind(log(gdat$N1[gdat$h2==0.04]),gdat$x1[gdat$h2==0.04])
+dat <- as.data.frame(dat)
+colnames(dat) <- c("N1","x1")
+dat$time <- 1:t
+dat <- as.data.frame(dat)
+df <- data.frame(dat[(2:t),-3])
+colnames(df) <- c("Nt1", "xt1")
+df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t - 1)])
+# prepare data in HMSC format
+Y <- as.matrix(df$Nt1)
+XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)])))
+colnames(XData) <- c("E","Esq","dx1")
+
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+
+m.5.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.5.sample <- sampleMcmc(m.5.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+m5.post.hmsc <- convertToCodaObject(m.5.sample)
+```
+
+```{r warning=FALSE}
+VP5 <- computeVariancePartitioning(m.5.sample,group=c(1,1,1,2),groupnames=c("Env","x1"))
+plotVariancePartitioning(m.5.sample,VP5,cols=c("white","skyblue","darkgrey"),args.legend=list(cex=0.75,bg="transparent"))
+```
+```{r figs6, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs6} Simulated (dark blue points) population size over time for $h^2 = 0.01$, with posterior predicted mean (light blue points) and 95% highest density intervals (light blue bars)."}
+# prepare for plot
+pred2 <- predict(m.5.sample)
+hold1 <- list()
+hold2 <- list()
+for(i in 1:length(N0)){
+  hold1[[i]] <- as.numeric(Y[,i])
+  data <- lapply(pred2, function(x) x[, colnames(x)[i], drop = FALSE])
+  hold2[[i]] <- matrix(unlist(data), nrow=length(pred2), byrow=TRUE)
+}
+y <- unlist(hold1) # vector of each species' observed N across time points
+yrep <- as.matrix(data.frame(hold2))
+### Mod2 plot ###
+par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
+color_scheme_set("brightblue")
+#ppc_dens_overlay(y, yrep[1:50, ])
+ppc_intervals(y,yrep,x=dat$time[1:(t-1)],prob = 0.95) +
+  labs(x = "time",y = "ln(N)",) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+  theme(legend.position = "none")
+```
+```{r results='hide'}
+### Model 6, h2=0.05 ###
+dat <- cbind(log(gdat$N1[gdat$h2==0.05]),gdat$x1[gdat$h2==0.05])
+dat <- as.data.frame(dat)
+colnames(dat) <- c("N1","x1")
+dat$time <- 1:t
+dat <- as.data.frame(dat)
+df <- data.frame(dat[(2:t),-3])
+colnames(df) <- c("Nt1", "xt1")
+df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t - 1)])
+# prepare data in HMSC format
+Y <- as.matrix(df$Nt1)
+XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)])))
+colnames(XData) <- c("E","Esq","dx1")
+
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+
+m.6.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.6.sample <- sampleMcmc(m.6.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+m6.post.hmsc <- convertToCodaObject(m.6.sample)
+```
+
+```{r warning=FALSE}
+VP6 <- computeVariancePartitioning(m.6.sample,group=c(1,1,1,2),groupnames=c("Env","x1"))
+plotVariancePartitioning(m.6.sample,VP6,cols=c("white","skyblue","darkgrey"),args.legend=list(cex=0.75,bg="transparent"))
+```
+```{r figs7, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs7} Simulated (dark blue points) population size over time for $h^2 = 0.02$, with posterior predicted mean (light blue points) and 95% highest density intervals (light blue bars)."}
+# prepare for plot
+pred2 <- predict(m.6.sample)
+hold1 <- list()
+hold2 <- list()
+for(i in 1:length(N0)){
+  hold1[[i]] <- as.numeric(Y[,i])
+  data <- lapply(pred2, function(x) x[, colnames(x)[i], drop = FALSE])
+  hold2[[i]] <- matrix(unlist(data), nrow=length(pred2), byrow=TRUE)
+}
+y <- unlist(hold1) # vector of each species' observed N across time points
+yrep <- as.matrix(data.frame(hold2))
+### Mod2 plot ###
+par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
+color_scheme_set("brightblue")
+#ppc_dens_overlay(y, yrep[1:50, ])
+ppc_intervals(y,yrep,x=dat$time[1:(t-1)],prob = 0.95) +
+  labs(x = "time",y = "ln(N)",) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+  theme(legend.position = "none")
+```
+
+```{r results='hide'}
+### Model 7, h2=0.075 ###
+dat <- cbind(log(gdat$N1[gdat$h2==0.075]),gdat$x1[gdat$h2==0.075])
+dat <- as.data.frame(dat)
+colnames(dat) <- c("N1","x1")
+dat$time <- 1:t
+dat <- as.data.frame(dat)
+df <- data.frame(dat[(2:t),-3])
+colnames(df) <- c("Nt1", "xt1")
+df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t - 1)])
+# prepare data in HMSC format
+Y <- as.matrix(df$Nt1)
+XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)])))
+colnames(XData) <- c("E","Esq","dx1")
+
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+
+m.7.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.7.sample <- sampleMcmc(m.7.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+m7.post.hmsc <- convertToCodaObject(m.7.sample)
+```
+
+```{r warning=FALSE}
+VP7 <- computeVariancePartitioning(m.7.sample,group=c(1,1,1,2),groupnames=c("Env","x1"))
+plotVariancePartitioning(m.7.sample,VP7,cols=c("white","skyblue","darkgrey"),args.legend=list(cex=0.75,bg="transparent"))
+```
+```{r figs8, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs8} Simulated (dark blue points) population size over time for $h^2 = 0.075$, with posterior predicted mean (light blue points) and 95% highest density intervals (light blue bars)."}
+# prepare for plot
+pred2 <- predict(m.7.sample)
+hold1 <- list()
+hold2 <- list()
+for(i in 1:length(N0)){
+  hold1[[i]] <- as.numeric(Y[,i])
+  data <- lapply(pred2, function(x) x[, colnames(x)[i], drop = FALSE])
+  hold2[[i]] <- matrix(unlist(data), nrow=length(pred2), byrow=TRUE)
+}
+y <- unlist(hold1) # vector of each species' observed N across time points
+yrep <- as.matrix(data.frame(hold2))
+### Mod2 plot ###
+par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
+color_scheme_set("brightblue")
+#ppc_dens_overlay(y, yrep[1:50, ])
+ppc_intervals(y,yrep,x=dat$time[1:(t-1)],prob = 0.95) +
+  labs(x = "time",y = "ln(N)",) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+  theme(legend.position = "none")
+```
+```{r results='hide'}
+### Model 8, h2=0.1 ###
+dat <- cbind(log(gdat$N1[gdat$h2==0.1]),gdat$x1[gdat$h2==0.1])
+dat <- as.data.frame(dat)
+colnames(dat) <- c("N1","x1")
+dat$time <- 1:t
+dat <- as.data.frame(dat)
+df <- data.frame(dat[(2:t),-3])
+colnames(df) <- c("Nt1", "xt1")
+df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t - 1)])
+# prepare data in HMSC format
+Y <- as.matrix(df$Nt1)
+XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)])))
+colnames(XData) <- c("E","Esq","dx1")
+
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+
+m.8.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.8.sample <- sampleMcmc(m.8.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+m8.post.hmsc <- convertToCodaObject(m.8.sample)
+```
+
+```{r warning=FALSE}
+VP8 <- computeVariancePartitioning(m.8.sample,group=c(1,1,1,2),groupnames=c("Env","x1"))
+plotVariancePartitioning(m.8.sample,VP8,cols=c("white","skyblue","darkgrey"),args.legend=list(cex=0.75,bg="transparent"))
+```
+```{r figs9, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs9} Simulated (dark blue points) population size over time for $h^2 = 1$, with posterior predicted mean (light blue points) and 95% highest density intervals (light blue bars)."}
+# prepare for plot
+pred2 <- predict(m.8.sample)
+hold1 <- list()
+hold2 <- list()
+for(i in 1:length(N0)){
+  hold1[[i]] <- as.numeric(Y[,i])
+  data <- lapply(pred2, function(x) x[, colnames(x)[i], drop = FALSE])
+  hold2[[i]] <- matrix(unlist(data), nrow=length(pred2), byrow=TRUE)
+}
+y <- unlist(hold1) # vector of each species' observed N across time points
+yrep <- as.matrix(data.frame(hold2))
+### Mod2 plot ###
+par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
+color_scheme_set("brightblue")
+#ppc_dens_overlay(y, yrep[1:50, ])
+ppc_intervals(y,yrep,x=dat$time[1:(t-1)],prob = 0.95) +
+  labs(x = "time",y = "ln(N)",) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+  theme(legend.position = "none")
+```
+```{r results='hide'}
+### Model 9, h2=0.4 ###
+dat <- cbind(log(gdat$N1[gdat$h2==0.4]),gdat$x1[gdat$h2==0.4])
+dat <- as.data.frame(dat)
+colnames(dat) <- c("N1","x1")
+dat$time <- 1:t
+dat <- as.data.frame(dat)
+df <- data.frame(dat[(2:t),-3])
+colnames(df) <- c("Nt1", "xt1")
+df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t - 1)])
+# prepare data in HMSC format
+Y <- as.matrix(df$Nt1)
+XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)])))
+colnames(XData) <- c("E","Esq","dx1")
+
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+
+m.9.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.9.sample <- sampleMcmc(m.9.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+m9.post.hmsc <- convertToCodaObject(m.9.sample)
+```
+
+```{r warning=FALSE}
+VP9 <- computeVariancePartitioning(m.9.sample,group=c(1,1,1,2),groupnames=c("Env","x1"))
+plotVariancePartitioning(m.9.sample,VP9,cols=c("white","skyblue","darkgrey"),args.legend=list(cex=0.75,bg="transparent"))
+```
+```{r figs10, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs10} Simulated (dark blue points) population size over time for $h^2 = 0.4$, with posterior predicted mean (light blue points) and 95% highest density intervals (light blue bars)."}
+# prepare for plot
+pred2 <- predict(m.9.sample)
+hold1 <- list()
+hold2 <- list()
+for(i in 1:length(N0)){
+  hold1[[i]] <- as.numeric(Y[,i])
+  data <- lapply(pred2, function(x) x[, colnames(x)[i], drop = FALSE])
+  hold2[[i]] <- matrix(unlist(data), nrow=length(pred2), byrow=TRUE)
+}
+y <- unlist(hold1) # vector of each species' observed N across time points
+yrep <- as.matrix(data.frame(hold2))
+### Mod2 plot ###
+par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
+color_scheme_set("brightblue")
+#ppc_dens_overlay(y, yrep[1:50, ])
+ppc_intervals(y,yrep,x=dat$time[1:(t-1)],prob = 0.95) +
+  labs(x = "time",y = "ln(N)",) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+  theme(legend.position = "none")
+```
+```{r results='hide'}
+### Model 10, h2=0.9 ###
+dat <- cbind(log(gdat$N1[gdat$h2==0.9]),gdat$x1[gdat$h2==0.9])
+dat <- as.data.frame(dat)
+colnames(dat) <- c("N1","x1")
+dat$time <- 1:t
+dat <- as.data.frame(dat)
+df <- data.frame(dat[(2:t),-3])
+colnames(df) <- c("Nt1", "xt1")
+df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t - 1)])
+# prepare data in HMSC format
+Y <- as.matrix(df$Nt1)
+XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)])))
+colnames(XData) <- c("E","Esq","dx1")
+
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+
+m.10.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.10.sample <- sampleMcmc(m.10.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+m10.post.hmsc <- convertToCodaObject(m.10.sample)
+```
+
+```{r warning=FALSE}
+VP10 <- computeVariancePartitioning(m.10.sample,group=c(1,1,1,2),groupnames=c("Env","x1"))
+plotVariancePartitioning(m.10.sample,VP10,cols=c("white","skyblue","darkgrey"),args.legend=list(cex=0.75,bg="transparent"))
+```
+```{r figs11, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs11} Simulated (dark blue points) population size over time for $h^2 = 0.9$, with posterior predicted mean (light blue points) and 95% highest density intervals (light blue bars)."}
+# prepare for plot
+pred2 <- predict(m.10.sample)
+hold1 <- list()
+hold2 <- list()
+for(i in 1:length(N0)){
+  hold1[[i]] <- as.numeric(Y[,i])
+  data <- lapply(pred2, function(x) x[, colnames(x)[i], drop = FALSE])
+  hold2[[i]] <- matrix(unlist(data), nrow=length(pred2), byrow=TRUE)
+}
+y <- unlist(hold1) # vector of each species' observed N across time points
+yrep <- as.matrix(data.frame(hold2))
+### Mod2 plot ###
+par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
+color_scheme_set("brightblue")
+#ppc_dens_overlay(y, yrep[1:50, ])
+ppc_intervals(y,yrep,x=dat$time[1:(t-1)],prob = 0.95) +
+  labs(x = "time",y = "ln(N)",) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+  theme(legend.position = "none")
+```
+```{r results='hide'}
+### Model 11, h2=1 ###
+dat <- cbind(log(gdat$N1[gdat$h2==1]),gdat$x1[gdat$h2==1])
+dat <- as.data.frame(dat)
+colnames(dat) <- c("N1","x1")
+dat$time <- 1:t
+dat <- as.data.frame(dat)
+df <- data.frame(dat[(2:t),-3])
+colnames(df) <- c("Nt1", "xt1")
+df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t - 1)])
+# prepare data in HMSC format
+Y <- as.matrix(df$Nt1)
+XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)])))
+colnames(XData) <- c("E","Esq","dx1")
+
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+
+m.11.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# Bayesian model parameters
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.11.sample <- sampleMcmc(m.11.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+m11.post.hmsc <- convertToCodaObject(m.11.sample)
+```
+```{r}
+m11.post.hmsc <- convertToCodaObject(m.11.sample)
+summary(m11.post.hmsc$Beta)
+bayesplot::mcmc_trace(m11.post.hmsc$Beta)
+bayesplot::mcmc_areas(m11.post.hmsc$Beta,area_method = c("equal height"))
+```
+```{r warning=FALSE}
+VP11 <- computeVariancePartitioning(m.11.sample,group=c(1,1,1,2),groupnames=c("Env","x1"))
+plotVariancePartitioning(m.11.sample,VP11,cols=c("white","skyblue","darkgrey"),args.legend=list(cex=0.75,bg="transparent"))
+```
+```{r figs12, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs12} Simulated (dark blue points) population size over time for $h^2 = 1$, with posterior predicted mean (light blue points) and 95% highest density intervals (light blue bars)."}
+# prepare for plot
+pred2 <- predict(m.11.sample)
+hold1 <- list()
+hold2 <- list()
+for(i in 1:length(N0)){
+  hold1[[i]] <- as.numeric(Y[,i])
+  data <- lapply(pred2, function(x) x[, colnames(x)[i], drop = FALSE])
+  hold2[[i]] <- matrix(unlist(data), nrow=length(pred2), byrow=TRUE)
+}
+y <- unlist(hold1) # vector of each species' observed N across time points
+yrep <- as.matrix(data.frame(hold2))
+### Mod2 plot ###
+par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
+color_scheme_set("brightblue")
+#ppc_dens_overlay(y, yrep[1:50, ])
+ppc_intervals(y,yrep,x=dat$time[1:(t-1)],prob = 0.95) +
+  labs(x = "time",y = "ln(N)",) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+  theme(legend.position = "none")
+```
+
+```{r figs13, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs13} Estimation of linear regression coefficient for trait evolution across $h^2$ levels.", warning=FALSE, message=FALSE}
+mc_dat_1 <- mcmc_intervals_data(m1.post.hmsc$Beta, pars="B[dx1 (C4), sp1 (S1)]")
+mc_dat_2 <- mcmc_intervals_data(m2.post.hmsc$Beta, pars="B[dx1 (C4), sp1 (S1)]")
+mc_dat_3 <- mcmc_intervals_data(m3.post.hmsc$Beta, pars="B[dx1 (C4), sp1 (S1)]")
+mc_dat_4 <- mcmc_intervals_data(m4.post.hmsc$Beta, pars="B[dx1 (C4), sp1 (S1)]")
+mc_dat_5 <- mcmc_intervals_data(m5.post.hmsc$Beta, pars="B[dx1 (C4), sp1 (S1)]")
+mc_dat_6 <- mcmc_intervals_data(m6.post.hmsc$Beta, pars="B[dx1 (C4), sp1 (S1)]")
+mc_dat_7 <- mcmc_intervals_data(m7.post.hmsc$Beta, pars="B[dx1 (C4), sp1 (S1)]")
+mc_dat_8 <- mcmc_intervals_data(m8.post.hmsc$Beta, pars="B[dx1 (C4), sp1 (S1)]")
+mc_dat_9 <- mcmc_intervals_data(m9.post.hmsc$Beta, pars="B[dx1 (C4), sp1 (S1)]")
+mc_dat_10 <- mcmc_intervals_data(m10.post.hmsc$Beta, pars="B[dx1 (C4), sp1 (S1)]")
+mc_dat_11 <- mcmc_intervals_data(m11.post.hmsc$Beta, pars="B[dx1 (C4), sp1 (S1)]")
+
+
+combined <- rbind(mc_dat_1,mc_dat_2,mc_dat_3,mc_dat_4,mc_dat_5,mc_dat_6,mc_dat_7,mc_dat_8,mc_dat_9,mc_dat_10,mc_dat_11)
+combined$model <- rep(c("0","0.01","0.02","0.03","0.04","0.05","0.075","0.1","0.4","0.9","1"),times=c(dim(mc_dat_1)[1],dim(mc_dat_2)[1],dim(mc_dat_3)[1],dim(mc_dat_4)[1],dim(mc_dat_5)[1],dim(mc_dat_6)[1],dim(mc_dat_7)[1],dim(mc_dat_8)[1],dim(mc_dat_9)[1],dim(mc_dat_10)[1],dim(mc_dat_11)[1]))
+
+# make the plot using ggplot 
+theme_set(bayesplot::theme_default())
+pos <- position_nudge(y = c(0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1))
+ggplot(combined, aes(x = m, y = parameter, color = model)) + 
+  geom_linerange(aes(xmin = l, xmax = h), position = pos, size=2)+
+  geom_linerange(aes(xmin = ll, xmax = hh), position = pos)+
+  geom_point(aes(color=model),position = pos)+
+  coord_flip()+
+  geom_vline(xintercept=0,linetype="dashed")
+```
+
+We can see that the variation in Y is a combination of the relative importance of density-dependence and of trait evolution. We can see that relative importance changes across $h^2$ levels. What drives changes in this relative importance?
+
+```{r}
+d_dat <- gdat[gdat$time != 1,c(1,2,3,5)]
+d_dat <- as.data.frame(d_dat)
+d_dat$dxt <- NA
+d_dat$ddt <- NA
+d_dat$dN <- NA
+d_dat$dd <- NA
+for(i in 1:11){
+  sub <- gdat[gdat$h2==levels(gdat$h2)[i],]
+  d_dat$dxt[d_dat$h2==levels(d_dat$h2)[i]] <- abs(sub$x1[2:60]-sub$x1[1:59]) # absolute value of change in trait value
+  d_dat$ddt[d_dat$h2==levels(d_dat$h2)[i]] <- alpha[1,1]*sub$N1[2:60] - alpha[1,1]*sub$N1[1:59]
+  d_dat$dN[d_dat$h2==levels(d_dat$h2)[i]] <- sub$N1[2:60] - sub$N1[1:59]
+  d_dat$dd[d_dat$h2==levels(d_dat$h2)[i]] <- alpha[1,1]*d_dat$N1[d_dat$h2==levels(d_dat$h2)[i]]
+}
+```
+```{r figs14, fig.pos = "H",echo=FALSE, fig.show="hold", fig.cap = "\\label{fig:figs14} Density dependence varies in importance for change in population size (dN) across heritability levels. When heritability is very low, $|\\Delta x|$ can be higher for more time steps, as the population is slow to adapt to the optimum trait value. This effect diminishes with increasing $h^2$. Density dependence ($dd = (\\alpha_{ii} N_t) -  (\\alpha_{ii} N_{t-1})$) on the other hand increases with increasing heritability.", warning=FALSE, message=FALSE}
+### Plot of time xx ###
+d_dat <- d_dat[d_dat$h2 != 0,]
+d_dat$ln_N <- log(d_dat$N1)
+ggplot2::ggplot(d_dat, aes(dxt, dN, col=h2)) + geom_line() + geom_point()
+ggplot2::ggplot(d_dat, aes(ddt, dN, col=h2)) + geom_line() + geom_point()
+### ###
+```

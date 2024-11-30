@@ -1,9 +1,9 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.11.11)  26 NOV 2024 02:49
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.11.11)  30 NOV 2024 00:50
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**Appendix_S1_v02.tex
-(./Appendix_S1_v02.tex
+**Appendix_S2_v02.tex
+(./Appendix_S2_v02.tex
 LaTeX2e <2024-11-01>
 L3 programming layer <2024-11-02>
 (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/base/article.cls
@@ -312,21 +312,17 @@ Package graphics Info: Driver file: xetex.def on input line 106.
 )
 \Gin@req@height=\dimen185
 \Gin@req@width=\dimen186
-)
-\cslhangindent=\skip64
-\csllabelwidth=\skip65
-\cslentryspacingunit=\skip66
-(/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty
+) (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty
 Package: fancyhdr 2024/07/23 v4.3.1 Extensive control of page headers and footers
-\f@nch@headwidth=\skip67
-\f@nch@O@elh=\skip68
-\f@nch@O@erh=\skip69
-\f@nch@O@olh=\skip70
-\f@nch@O@orh=\skip71
-\f@nch@O@elf=\skip72
-\f@nch@O@erf=\skip73
-\f@nch@O@olf=\skip74
-\f@nch@O@orf=\skip75
+\f@nch@headwidth=\skip64
+\f@nch@O@elh=\skip65
+\f@nch@O@erh=\skip66
+\f@nch@O@olh=\skip67
+\f@nch@O@orh=\skip68
+\f@nch@O@elf=\skip69
+\f@nch@O@erf=\skip70
+\f@nch@O@olf=\skip71
+\f@nch@O@orf=\skip72
 ) (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/lineno/lineno.sty
 Package: lineno 2023/05/20 line numbers on paragraphs v5.3
 Invalid UTF-8 byte or sequence at line 292 replaced by U+FFFD.
@@ -457,13 +453,13 @@ Package: uniquecounter 2019/12/15 v1.4 Provide unlimited unique counter (HO)
 )
 Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 285.
 )
-\Hy@SectionHShift=\skip76
+\Hy@SectionHShift=\skip73
 ) (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def
 File: bkm-dvipdfm.def 2023-12-10 v1.31 bookmark driver for dvipdfm (HO)
 \BKM@id=\count336
 ))
-Package hyperref Info: Option `colorlinks' set `true' on input line 152.
-(./Appendix_S1_v02.aux
+Package hyperref Info: Option `colorlinks' set `true' on input line 129.
+(./Appendix_S2_v02.aux
 
 LaTeX Warning: Label `fig:figs1' multiply defined.
 
@@ -474,117 +470,48 @@ LaTeX Warning: Label `fig:figs2' multiply defined.
 LaTeX Warning: Label `fig:figs3' multiply defined.
 
 
-LaTeX Warning: Label `fig:figs4' multiply defined.
-
-
 LaTeX Warning: Label `fig:figs5' multiply defined.
 
 
 LaTeX Warning: Label `fig:figs6' multiply defined.
 
-
-LaTeX Warning: Label `fig:figs7' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs8' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs9' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs10' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs11' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs12' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs13' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs14' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs15' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs16' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs17' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs18' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs19' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs20' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs21' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs22' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs23' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs24' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs25' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs26' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs27' multiply defined.
-
-
-LaTeX Warning: Label `fig:figs28' multiply defined.
-
 )
-\openout1 = `Appendix_S1_v02.aux'.
+\openout1 = `Appendix_S2_v02.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 158.
-LaTeX Font Info:    ... okay on input line 158.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 158.
-LaTeX Font Info:    ... okay on input line 158.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 158.
-LaTeX Font Info:    ... okay on input line 158.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 158.
-LaTeX Font Info:    ... okay on input line 158.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 158.
-LaTeX Font Info:    ... okay on input line 158.
-LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 158.
-LaTeX Font Info:    ... okay on input line 158.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 158.
-LaTeX Font Info:    ... okay on input line 158.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 158.
-LaTeX Font Info:    ... okay on input line 158.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 158.
-LaTeX Font Info:    ... okay on input line 158.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 158.
-LaTeX Font Info:    ... okay on input line 158.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
 LaTeX Font Info:    Overwriting math alphabet `\mathrm' in version `normal'
-(Font)                  OT1/lmr/m/n --> TU/lmr/m/n on input line 158.
+(Font)                  OT1/lmr/m/n --> TU/lmr/m/n on input line 135.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
-(Font)                  OT1/lmr/m/it --> TU/lmr/m/it on input line 158.
+(Font)                  OT1/lmr/m/it --> TU/lmr/m/it on input line 135.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
-(Font)                  OT1/lmr/bx/n --> TU/lmr/bx/n on input line 158.
+(Font)                  OT1/lmr/bx/n --> TU/lmr/bx/n on input line 135.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
-(Font)                  OT1/lmss/m/n --> TU/lmss/m/n on input line 158.
+(Font)                  OT1/lmss/m/n --> TU/lmss/m/n on input line 135.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  OT1/lmss/bx/n --> TU/lmss/bx/n on input line 158.
+(Font)                  OT1/lmss/bx/n --> TU/lmss/bx/n on input line 135.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
-(Font)                  OT1/lmtt/m/n --> TU/lmtt/m/n on input line 158.
+(Font)                  OT1/lmtt/m/n --> TU/lmtt/m/n on input line 135.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
-(Font)                  OT1/lmtt/m/n --> TU/lmtt/bx/n on input line 158.
+(Font)                  OT1/lmtt/m/n --> TU/lmtt/bx/n on input line 135.
 
 Package fontspec Info: 
 (fontspec)             latinmodern-math scale = 0.9999964596882403.
@@ -612,7 +539,7 @@ Package fontspec Info:
 (fontspec)             <->s*[0.9999964596882403]"[latinmodern-math.otf]/OT:script=math;language=dflt;"
 
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(0)/m/n' will be
-(Font)              scaled to size 10.0pt on input line 158.
+(Font)              scaled to size 10.0pt on input line 135.
 
 Package fontspec Info: 
 (fontspec)             latinmodern-math scale = 0.9999964596882403.
@@ -648,15 +575,15 @@ Package fontspec Info:
 (fontspec)             <->s*[0.9999964596882403]"[latinmodern-math.otf]/OT:script=math;language=dflt;"
 
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 10.0pt on input line 158.
+(Font)              scaled to size 10.0pt on input line 135.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `normal' on input line 158.
+(Font)              `operators' in the math version `normal' on input line 135.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
-(Font)                  OT1/lmr/m/n --> TU/latinmodern-math.otf(1)/m/n on input line 158.
+(Font)                  OT1/lmr/m/n --> TU/latinmodern-math.otf(1)/m/n on input line 135.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `bold' on input line 158.
+(Font)              `operators' in the math version `bold' on input line 135.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
-(Font)                  OT1/lmr/bx/n --> TU/latinmodern-math.otf(1)/b/n on input line 158.
+(Font)                  OT1/lmr/bx/n --> TU/latinmodern-math.otf(1)/b/n on input line 135.
 
 Package fontspec Info: 
 (fontspec)             latinmodern-math scale = 0.9999964596882403.
@@ -722,13 +649,13 @@ Package fontspec Info:
 (fontspec)             <->s*[1.000096459334209]"[latinmodern-math.otf]/OT:script=math;language=dflt;"
 
 LaTeX Font Info:    Encoding `OMS' has changed to `TU' for symbol font
-(Font)              `symbols' in the math version `normal' on input line 158.
+(Font)              `symbols' in the math version `normal' on input line 135.
 LaTeX Font Info:    Overwriting symbol font `symbols' in version `normal'
-(Font)                  OMS/lmsy/m/n --> TU/latinmodern-math.otf(2)/m/n on input line 158.
+(Font)                  OMS/lmsy/m/n --> TU/latinmodern-math.otf(2)/m/n on input line 135.
 LaTeX Font Info:    Encoding `OMS' has changed to `TU' for symbol font
-(Font)              `symbols' in the math version `bold' on input line 158.
+(Font)              `symbols' in the math version `bold' on input line 135.
 LaTeX Font Info:    Overwriting symbol font `symbols' in version `bold'
-(Font)                  OMS/lmsy/b/n --> TU/latinmodern-math.otf(2)/b/n on input line 158.
+(Font)                  OMS/lmsy/b/n --> TU/latinmodern-math.otf(2)/b/n on input line 135.
 
 Package fontspec Info: 
 (fontspec)             latinmodern-math scale = 0.9999964596882403.
@@ -788,13 +715,13 @@ Package fontspec Info:
 (fontspec)             <->s*[0.9998964600422715]"[latinmodern-math.otf]/OT:script=math;language=dflt;"
 
 LaTeX Font Info:    Encoding `OMX' has changed to `TU' for symbol font
-(Font)              `largesymbols' in the math version `normal' on input line 158.
+(Font)              `largesymbols' in the math version `normal' on input line 135.
 LaTeX Font Info:    Overwriting symbol font `largesymbols' in version `normal'
-(Font)                  OMX/lmex/m/n --> TU/latinmodern-math.otf(3)/m/n on input line 158.
+(Font)                  OMX/lmex/m/n --> TU/latinmodern-math.otf(3)/m/n on input line 135.
 LaTeX Font Info:    Encoding `OMX' has changed to `TU' for symbol font
-(Font)              `largesymbols' in the math version `bold' on input line 158.
+(Font)              `largesymbols' in the math version `bold' on input line 135.
 LaTeX Font Info:    Overwriting symbol font `largesymbols' in version `bold'
-(Font)                  OMX/lmex/m/n --> TU/latinmodern-math.otf(3)/b/n on input line 158.
+(Font)                  OMX/lmex/m/n --> TU/latinmodern-math.otf(3)/b/n on input line 135.
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
 *geometry* verbose mode - [ preamble ] result:
@@ -829,395 +756,123 @@ LaTeX Font Info:    Overwriting symbol font `largesymbols' in version `bold'
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-Package hyperref Info: Link coloring ON on input line 158.
+Package hyperref Info: Link coloring ON on input line 135.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 12.0pt on input line 160.
+(Font)              scaled to size 12.0pt on input line 137.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 8.0pt on input line 160.
+(Font)              scaled to size 8.0pt on input line 137.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 6.0pt on input line 160.
-LaTeX Font Info:    Trying to load font information for OML+lmm on input line 160.
+(Font)              scaled to size 6.0pt on input line 137.
+LaTeX Font Info:    Trying to load font information for OML+lmm on input line 137.
 (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/lm/omllmm.fd
 File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 12.0011pt on input line 160.
+(Font)              scaled to size 12.0011pt on input line 137.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 8.00073pt on input line 160.
+(Font)              scaled to size 8.00073pt on input line 137.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 6.00055pt on input line 160.
+(Font)              scaled to size 6.00055pt on input line 137.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 11.99872pt on input line 160.
+(Font)              scaled to size 11.99872pt on input line 137.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 7.99915pt on input line 160.
+(Font)              scaled to size 7.99915pt on input line 137.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 5.99936pt on input line 160.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 160.
+(Font)              scaled to size 5.99936pt on input line 137.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 137.
 (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 160.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 137.
 (/Users/jhpantel/Library/TinyTeX/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 5.0pt on input line 160.
+(Font)              scaled to size 5.0pt on input line 137.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 5.00046pt on input line 160.
+(Font)              scaled to size 5.00046pt on input line 137.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 4.99947pt on input line 160.
+(Font)              scaled to size 4.99947pt on input line 137.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 7.0pt on input line 164.
+(Font)              scaled to size 7.0pt on input line 141.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 10.00092pt on input line 164.
+(Font)              scaled to size 10.00092pt on input line 141.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 7.00064pt on input line 164.
+(Font)              scaled to size 7.00064pt on input line 141.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 9.99893pt on input line 164.
+(Font)              scaled to size 9.99893pt on input line 141.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 6.99925pt on input line 164.
+(Font)              scaled to size 6.99925pt on input line 141.
+
+Underfull \hbox (badness 1448) in paragraph at lines 144--144
+[]\TU/lmr/bx/n/14.4 Model for population growth, competition, environmental
+ []
+
 LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <10> not available
-(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 180.
+(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 154.
 
 
 [1
 
 ]
-File: Appendix_S1_v02_files/figure-latex/figs1-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs1-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/figs2-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs2-1.pdf>
+File: Appendix_S2_v02_files/figure-latex/figs1-1.pdf Graphic file (type pdf)
+<use Appendix_S2_v02_files/figure-latex/figs1-1.pdf>
+File: Appendix_S2_v02_files/figure-latex/figs2-1.pdf Graphic file (type pdf)
+<use Appendix_S2_v02_files/figure-latex/figs2-1.pdf>
 
 
 [2]
-File: Appendix_S1_v02_files/figure-latex/figs3-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs3-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/figs4-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs4-1.pdf>
+File: Appendix_S2_v02_files/figure-latex/figs3-1.pdf Graphic file (type pdf)
+<use Appendix_S2_v02_files/figure-latex/figs3-1.pdf>
 
 
 [3]
+File: Appendix_S2_v02_files/figure-latex/figs4-1.pdf Graphic file (type pdf)
+<use Appendix_S2_v02_files/figure-latex/figs4-1.pdf>
+File: Appendix_S2_v02_files/figure-latex/figs5-1.pdf Graphic file (type pdf)
+<use Appendix_S2_v02_files/figure-latex/figs5-1.pdf>
+
 
 [4]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-6-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-6-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/figs5-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs5-1.pdf>
+File: Appendix_S2_v02_files/figure-latex/figs6-1.pdf Graphic file (type pdf)
+<use Appendix_S2_v02_files/figure-latex/figs6-1.pdf>
 
 
 [5]
-File: Appendix_S1_v02_files/figure-latex/figs6-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs6-1.pdf>
-
 
 [6]
-File: Appendix_S1_v02_files/figure-latex/figs7-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs7-1.pdf>
+File: Appendix_S2_v02_files/figure-latex/unnamed-chunk-9-1.pdf Graphic file (type pdf)
+<use Appendix_S2_v02_files/figure-latex/unnamed-chunk-9-1.pdf>
+File: Appendix_S2_v02_files/figure-latex/unnamed-chunk-9-2.pdf Graphic file (type pdf)
+<use Appendix_S2_v02_files/figure-latex/unnamed-chunk-9-2.pdf>
 
 
 [7]
-File: Appendix_S1_v02_files/figure-latex/figs8-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs8-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/figs9-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs9-1.pdf>
+File: Appendix_S2_v02_files/figure-latex/unnamed-chunk-11-1.pdf Graphic file (type pdf)
+<use Appendix_S2_v02_files/figure-latex/unnamed-chunk-11-1.pdf>
+File: Appendix_S2_v02_files/figure-latex/unnamed-chunk-12-1.pdf Graphic file (type pdf)
+<use Appendix_S2_v02_files/figure-latex/unnamed-chunk-12-1.pdf>
 
 
 [8]
-File: Appendix_S1_v02_files/figure-latex/figs10-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs10-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/figs10-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs10-2.pdf>
-
-Overfull \hbox (2.21883pt too wide) in paragraph at lines 426--426
-[][] [] 
- []
-
+File: Appendix_S2_v02_files/figure-latex/unnamed-chunk-12-2.pdf Graphic file (type pdf)
+<use Appendix_S2_v02_files/figure-latex/unnamed-chunk-12-2.pdf>
+File: Appendix_S2_v02_files/figure-latex/unnamed-chunk-12-3.pdf Graphic file (type pdf)
+<use Appendix_S2_v02_files/figure-latex/unnamed-chunk-12-3.pdf>
 
 
 [9]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-12-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-12-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-12-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-12-2.pdf>
+File: Appendix_S2_v02_files/figure-latex/unnamed-chunk-13-1.pdf Graphic file (type pdf)
+<use Appendix_S2_v02_files/figure-latex/unnamed-chunk-13-1.pdf>
+File: Appendix_S2_v02_files/figure-latex/unnamed-chunk-13-2.pdf Graphic file (type pdf)
+<use Appendix_S2_v02_files/figure-latex/unnamed-chunk-13-2.pdf>
+File: Appendix_S2_v02_files/figure-latex/unnamed-chunk-14-1.pdf Graphic file (type pdf)
+<use Appendix_S2_v02_files/figure-latex/unnamed-chunk-14-1.pdf>
 
 
 [10]
-File: Appendix_S1_v02_files/figure-latex/figs11-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs11-1.pdf>
 
-
-[11]
-File: Appendix_S1_v02_files/figure-latex/figs12-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs12-1.pdf>
-
-
-[12]
-File: Appendix_S1_v02_files/figure-latex/figs13-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs13-1.pdf>
-
-LaTeX Font Warning: Font shape `TU/lmtt/bx/it' in size <10> not available
-(Font)              Font shape `TU/lmtt/b/sl' tried instead on input line 597.
-
-
-
-[13]
-File: Appendix_S1_v02_files/figure-latex/figs14-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs14-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/figs15-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs15-1.pdf>
-
-
-[14]
-File: Appendix_S1_v02_files/figure-latex/figs16-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs16-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/figs17-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs17-1.pdf>
-
-
-[15]
-
-[16]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-18-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-18-1.pdf>
-
-
-[17]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-18-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-18-2.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-19-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-19-1.pdf>
-
-
-[18]
-File: Appendix_S1_v02_files/figure-latex/figs18-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs18-1.pdf>
-
-
-[19]
-File: Appendix_S1_v02_files/figure-latex/figs19-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs19-1.pdf>
-
-
-[20]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-23-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-23-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-23-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-23-2.pdf>
-
-
-[21]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-23-3.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-23-3.pdf>
-File: Appendix_S1_v02_files/figure-latex/figs20-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs20-1.pdf>
-
-
-[22]
-
-[23]
-File: Appendix_S1_v02_files/figure-latex/figs21-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs21-1.pdf>
-
-
-[24]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-27-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-27-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-27-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-27-2.pdf>
-
-
-[25]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-29-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-29-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-30-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-30-1.pdf>
-
-
-[26]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-30-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-30-2.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-30-3.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-30-3.pdf>
-
-
-[27]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-31-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-31-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/figs22-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs22-1.pdf>
-
-
-[28]
-
-[29]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-34-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-34-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-35-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-35-1.pdf>
-
-
-[30]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-35-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-35-2.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-35-3.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-35-3.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-36-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-36-1.pdf>
-
-
-[31]
-File: Appendix_S1_v02_files/figure-latex/figs23-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs23-1.pdf>
-
-
-[32]
-
-[33]
-File: Appendix_S1_v02_files/figure-latex/figs24-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs24-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/figs25-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs25-1.pdf>
-
-
-[34]
-
-[35]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-39-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-39-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-39-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-39-2.pdf>
-
-
-[36]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-41-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-41-1.pdf>
-
-
-[37]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-42-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-42-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-42-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-42-2.pdf>
-
-
-[38]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-42-3.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-42-3.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-43-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-43-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-44-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-44-1.pdf>
-
-
-[39]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-44-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-44-2.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-44-3.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-44-3.pdf>
-
-
-[40]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-45-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-45-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-45-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-45-2.pdf>
-File: Appendix_S1_v02_files/figure-latex/figs26-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs26-1.pdf>
-
-
-[41]
-
-[42]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-47-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-47-1.pdf>
-
-
-[43]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-47-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-47-2.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-48-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-48-1.pdf>
-
-
-[44]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-48-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-48-2.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-48-3.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-48-3.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-49-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-49-1.pdf>
-
-
-[45]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-49-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-49-2.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-50-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-50-1.pdf>
-
-
-[46]
-
-[47]
-File: Appendix_S1_v02_files/figure-latex/figs27-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs27-1.pdf>
-
-
-[48]
-
-[49]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-53-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-53-1.pdf>
-
-
-[50]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-53-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-53-2.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-54-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-54-1.pdf>
-
-
-[51]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-55-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-55-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-55-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-55-2.pdf>
-
-
-[52]
-Underfull \vbox (badness 2197) detected at line 2098
- []
-
-
-
-[53]
-File: Appendix_S1_v02_files/figure-latex/figs28-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/figs28-1.pdf>
-
-
-[54]
-
-[55]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-58-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-58-1.pdf>
-
-
-[56]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-58-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-58-2.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-59-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-59-1.pdf>
-
-
-[57]
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-60-1.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-60-1.pdf>
-File: Appendix_S1_v02_files/figure-latex/unnamed-chunk-60-2.pdf Graphic file (type pdf)
-<use Appendix_S1_v02_files/figure-latex/unnamed-chunk-60-2.pdf>
-
-
-[58]
-
-[59] (./Appendix_S1_v02.aux)
+[11] (./Appendix_S2_v02.aux)
  ***********
 LaTeX2e <2024-11-01>
 L3 programming layer <2024-11-02>
@@ -1227,12 +882,12 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 19523 strings out of 475994
- 388081 string characters out of 5777916
- 922041 words of memory out of 5000000
- 41987 multiletter control sequences out of 15000+600000
- 564544 words of font info for 92 fonts, out of 8000000 for 9000
+ 18743 strings out of 475994
+ 346675 string characters out of 5777916
+ 913596 words of memory out of 5000000
+ 41274 multiletter control sequences out of 15000+600000
+ 564536 words of font info for 91 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 90i,11n,123p,1057b,526s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,11n,123p,677b,526s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on Appendix_S1_v02.pdf (59 pages).
+Output written on Appendix_S2_v02.pdf (11 pages).

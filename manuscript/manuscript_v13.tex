@@ -1,0 +1,455 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{setspace}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newlength{\cslentryspacingunit} % times entry-spacing
+\setlength{\cslentryspacingunit}{\parskip}
+\newenvironment{CSLReferences}[2] % #1 hanging-ident, #2 entry spacing
+ {% don't indent paragraphs
+  \setlength{\parindent}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1
+  \let\oldpar\par
+  \def\par{\hangindent=\cslhangindent\oldpar}
+  \fi
+  % set entry spacing
+  \setlength{\parskip}{#2\cslentryspacingunit}
+ }%
+ {}
+\usepackage{calc}
+\newcommand{\CSLBlock}[1]{#1\hfill\break}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{#1}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{#1}\break}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead[L]{Author Pantel and Hermann}
+\fancyhead[R]{Detection of ecoevo dynamics}
+\usepackage{lineno}
+\linenumbers
+\usepackage{float}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Detection of eco-evolutionary dynamics in metacommunities using Joint Species Distribution Models},
+  pdfauthor={Jelena H. Pantel; Ruben J. Hermann},
+  colorlinks=true,
+  linkcolor={blue},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={Blue},
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Detection of eco-evolutionary dynamics in metacommunities using Joint Species Distribution Models}
+\author{Jelena H. Pantel\footnote{Laboratoire Chrono-environnement,UMR 6249 CNRS-UFC, 16 Route de Gray, 25030 Besançon cedex, France, \href{mailto:jelena.pantel@univ-fcomte.fr}{\nolinkurl{jelena.pantel@univ-fcomte.fr}}} \and Ruben J. Hermann\footnote{University of Duisburg-Essen, Universitätsstraße 5, 45141 Essen, Germany, \href{mailto:ruben.hermann@uni-due.de}{\nolinkurl{ruben.hermann@uni-due.de}}}}
+\date{30 November, 2024}
+
+\begin{document}
+\maketitle
+
+\setstretch{2}
+\newpage
+
+\hypertarget{title}{%
+\section{Title}\label{title}}
+
+Detection of eco-evolutionary dynamics in metacommunities using Joint Species Distribution Models
+
+\hypertarget{abstract}{%
+\section{Abstract}\label{abstract}}
+
+Biodiversity at the metacommunity scale is typically influenced by a number of environmental, spatial, biotic, and stochastic factors. At the same time, these factors impact the evolution of individual species, as sites present different local selection pressures and connectivity can impact gene flow and genetic drift. Identifying the relative impacts of environmental, spatial, biotic, and other drivers on community composition across spatial and temporal scales has been greatly facilitated by joint species distribution models, but these models have yet to consider the impact of microevolution on community composition. We used Heirarchical Models of Species Communities (HMSC) to analyze simulated data of an populations and communities, including in a large evolving metacommunity model, to establish whether HMSC can sufficiently quantify the contribution of phenotypic evolution for metacommunity composition. The models successfully partitioned variance contributed by environmental, spatial, and evolving phenotypic drivers, and also estimated site- and year-specific covariance. We also applied the HMSC with trait evolution model to an existing dataset studying trait change and community dynamics in experimental aquatic plant system. The study of eco-evolutionary dynamics may require data that reflects numerous complex, interacting processes and it is necessary to have flexible, generalized statistical models to analyze this data. JSDM models such as HMSC present one promising path for analysis of eco-evolutionary dynamics in multi-species communities.
+
+\hypertarget{introduction}{%
+\section{Introduction}\label{introduction}}
+
+Analysis of biodiversity at large spatial scales can be complex, because numerous environmental properties, spatial structure and connectivity, interactions between species, as well as stochastic processes such as drift and priority effects operate and determine observed patterns. Statistical models in ecology have made substantial progress in reflecting these numerous ecological processes at multiple scales. There are now a diversity of joint species distribution models {[}JSDMs; Pollock et al. (\protect\hyperlink{ref-Pollock2014}{2014}){]} (\protect\hyperlink{ref-Pichler2021}{Pichler and Hartig 2021}) and multi-species occupancy models (\protect\hyperlink{ref-Devarajan2020}{Devarajan et al. 2020}) (\protect\hyperlink{ref-Poggiato2021}{Poggiato et al. 2021}), which can incorporate these diverse components that structure variance in biological data. Many of these models have implementations in R packages (e.g.~spOccupancy, (\protect\hyperlink{ref-Doser2022}{Doser et al. 2022})), and are used to measure the relative importance of different ecological drivers in e.g.~communities of fungi, birds, mammals, phytoplankton, fish, and other taxa, from local to continental scales (e.g. (\protect\hyperlink{ref-Abrego2020}{Abrego et al. 2020}) (\protect\hyperlink{ref-Antao2022}{Antão et al. 2022}) (\protect\hyperlink{ref-Keppeler2022}{Keppeler et al. 2022})).
+
+Despite the variety of components implemented in these models, there are some additional drivers of community composition which are not currently reflected. The dynamics of populations and communities, and resulting biodiversity patterns, are also influenced by the genotypic and phenotypic properties of organisms. Although traits can be considered in some JSDMs, they typically require fixed values for species' traits (e.g. (\protect\hyperlink{ref-Ovaskainen2017HMSC}{Ovaskainen et al. 2017}) (\protect\hyperlink{ref-Tikhonov2020}{Tikhonov et al. 2020}); but see Abrego et al. (\protect\hyperlink{ref-Abrego2024}{2024})). However, ecological dynamics can impact selection on genes and phenotypes, potentially resulting in interactions or feedback loops between ecological and evolutionary processes (\protect\hyperlink{ref-Lion2018}{Lion 2018}) (\protect\hyperlink{ref-Barbour2022}{Barbour et al. 2022}). Although an increasing number of theoretical and empirical studies have evaluated the impact of evolutionary dynamics for community assembly and metacommunity dynamics (\protect\hyperlink{ref-Loeuille2008}{Loeuille and Leibold 2008}) (\protect\hyperlink{ref-Osmond2013}{Osmond and Mazancourt 2013}) (\protect\hyperlink{ref-Pantel2015}{Pantel et al. 2015}) (\protect\hyperlink{ref-Toju2017}{Toju et al. 2017}), analytical methods to consider this additional complexity lag behind the scope of data collected in eco-evolutionary studies. Some methods exist that ultimately apply ANOVA to partition variance in traits or growth rates across contributions of ecological and evolutionary components ((\protect\hyperlink{ref-Hairston2005}{Hairston Jr et al. 2005}) (\protect\hyperlink{ref-Govaert2016}{Govaert et al. 2016}); methods for discrete and continuous analyses are described in Ellner et al. (\protect\hyperlink{ref-Ellner2011}{2011})). These methods are more frequently cited for their potential rather than for their actual application to empirical data (but see (\protect\hyperlink{ref-terHorst2014}{terHorst et al. 2014}) (\protect\hyperlink{ref-Hiltunen2014}{Hiltunen and Becks 2014})), because this approach is ultimately limited by the same requirements that can limit application of ANOVA - data should follow a normal distribution, the processes that structure the target response variable must be linear and additive, and complicated structuring mechanisms must be reduced into one or a few target categories labeled as `ecology' or `evolution'. Flexible models, which can better reflect the mechanisms and structure of the diverse kinds of data that most studies of eco-evolutionary dynamics will collect, are needed for rigorous inference about eco-evolutionary processes (\protect\hyperlink{ref-Pantel2023}{Pantel and Becks 2023}).
+
+Two existing statistical models are potentially well suited for analysis of eco-evolutionary data at the microevolutionary and metacommunity scale but also have some considerations before their application to complex community data. Lasky et al.~(2020) (\protect\hyperlink{ref-Lasky2020}{Lasky et al. 2020}) developed an integrated reaction norm model, linking genetic, phenotypic, and demographic processes, and Benito Garzón et al.~(2019) (\protect\hyperlink{ref-Garzon2019}{Benito Garzón et al. 2019}) presented a species distribution model with local adaptation and phenotypic plasticity (\(\Delta\) SDMs). The model of Lasky et al.~is an excellent candidate for spatially complex population dynamics, and awaits an extension to the multispecies level. The \(\Delta\) SDM models described by Benito Garzón et al.~truly disentangle the role that plastic and evolutionary trait divergence can play in species distributions, but they also require common garden experimental data across sites to estimate these effects. Observational data collected in metacommunity surveys may only have survey data across sites or time points, as large-scale experimental measures of reaction norms required by the \(\Delta\) SDM model may be difficult to obtain.
+
+One particular metacommunity statistical model, the Hierarchical Modelling of Species Communities (HMSC) framework (\protect\hyperlink{ref-Ovaskainen2017HMSC}{Ovaskainen et al. 2017}) (\protect\hyperlink{ref-Tikhonov2020}{Tikhonov et al. 2020}), explicitly considers a multitude of ecological processes that can structure community composition across time and space (\protect\hyperlink{ref-Leibold2022}{Leibold et al. 2022}) and is potentially well suited to consider analysis of metacommunity eco-evolutionary processes. This model infers the role of environmental filtering via variation and covariation in how species respond to their environment, considers the impacts of (fixed) trait values and phylogenetic relationships, and uses latent variables to account for the numerous unobserved environmental and spatial features that are difficult to exhaustively measure in community surveys. Previous studies have demonstrated that this statistical model can reflect the diverse array of community assembly and metacommunity processes that structure species abundances (i.e.~species sorting, environmental filtering, priority effects; (\protect\hyperlink{ref-Little2018}{Little and Altermatt 2018}) (\protect\hyperlink{ref-Ovaskainen2020}{Ovaskainen and Abrego 2020}) (\protect\hyperlink{ref-Leibold2022}{Leibold et al. 2022})). The associated R package has been applied to study environmental and abiotic drivers of diverse assemblages of organisms (e.g. (\protect\hyperlink{ref-Sandal2022}{Sandal et al. 2022}) (\protect\hyperlink{ref-Weigel2023}{Weigel et al. 2023})). HMSC is potentially useful for studying eco-evolutionary drivers of community structure, but the model has not previously been applied to include heritable changes in trait values over time.
+
+In this study, we use simulations of population dynamics, environmental drivers, species interactions, and trait evolution in populations, communities, at the local and metacommunity scale, to study eco-evolutionary dynamics. After generating simulated time series of population sizes and mean trait values, we then use HMSC to analyze the resulting data, to determine whether HMSC can successfully estimate the impacts of trait evolution for community composition, and to generate relative contributions of fixed environmental and trait evolution drivers as well as random effects of spatial and temporal covariance among species. We asked three main questions: (i) can linear statistical models (like HMSC) accurately capture the impact of non-linear population, community, and evolutionary dynamic processes?, (ii) can HMSC be used to evaluate hypothesized drivers of the relative importance of evolution for community composition at the metacommunity scale?, and (iii) can we better understand the role of evolution for community dynamics in experimental systems using HMSC?
+
+\hypertarget{methods}{%
+\section{Methods}\label{methods}}
+
+\hypertarget{linear-statistical-models-for-one--and-two-species-models-of-growth-competition-and-trait-evolution}{%
+\subsection{Linear statistical models for one- and two-species models of growth, competition, and trait evolution}\label{linear-statistical-models-for-one--and-two-species-models-of-growth-competition-and-trait-evolution}}
+
+We evaluated whether linear regression models can appropriately capture the dynamics that drive species abundances in relatively simple populations and communities. We fit data generated from simulation models with increasing complexity (Table \ref{tab:tab1}). to Bayesian linear regression models. These simulation models were (A) a single-species model of discrete-time logistic population growth, (B) expanded to include a randomly fluctuating environmental property \(E\) that impacts the species' population growth rate, (C) a two-species model of logistic growth and competition that was then (D) expanded to consider a randomly fluctuating environmental property, (E) and further expanded to consider evolution in a trait \(x\) that is selected by the environmental property, and finally (F) the model of two-species growth, competition, environmental change, and evolution in a spatially structured (10-patch) habitat.
+
+\begin{table}
+
+\caption{\label{tab:tab1}Models for population growth}
+\centering
+\begin{tabular}[t]{lll}
+\toprule
+  & model & formula\\
+\midrule
+A & 1 species, logistic & $N_{i,t+1} = \frac{r_i N_{i,t}}{1+\alpha_{ii} N_{i,t}}$\\
+B & 1 species, logistic, env & A, $r_i = \hat{W}e^{-(E_t - x_{i,t})^2}$\\
+C & 2 species, logistic, competition & $N_{i,t+1} = \frac{r_i N_{i,t}}{1+\alpha_{ii} N_{i,t} + \alpha_{ij} N_{j,t}}$\\
+D & 2 species, logistic, competition, env & C, $r_i = \hat{W}e^{-(E_t - x_{i,t})^2}$\\
+E & 2 species, logistic, competition, env, trait evolution & C, $r_i = \hat{W}e^\frac{-[(\frac{w+(1-h^2)P}{P+w})(E_t - x_{i,t})]^2}{2 (P+w)}$\\
+\addlinespace
+F & 2 species, logistic, competition, env, trait evolution, spatial structure & E, $N_{i,k,t+1} = N_{i,k,t} + \sigma_k + \sigma_{kl}$\\
+\bottomrule
+\multicolumn{3}{l}{\rule{0pt}{1em}\textit{Note: } $i,j=$ species, $t=$ time, $k,l=$ site}\\
+\multicolumn{3}{l}{\rule{0pt}{1em}\textsuperscript{1} See Appendix S1 for parameter values used in simulation}\\
+\end{tabular}
+\end{table}
+
+To fit linear regression models to the simulated population size data, we began with models using population size (model \emph{A}) and environment (including the second-order term, to better reflect species optimum values; model \emph{B}) as fixed effects (\(N_t \sim N_{t+1} + E_t + E_t^2\)), and progressed to a mixed model using environment and trait evolution as fixed effects (\(N_t \sim E_t + E_t^2 + |\Delta x|\); for simulation model \emph{E}) and time (models \emph{C}, \emph{D}, \emph{E}, and \emph{F}) and spatial distance (model \emph{F}) as random effects. For consistency, all linear regression models were implemented as hierarchical Bayesian models using HMSC (Hierarchical Modelling of Species Communities (\protect\hyperlink{ref-Ovaskainen2017HMSC}{Ovaskainen et al. 2017}) (\protect\hyperlink{ref-Tikhonov2020}{Tikhonov et al. 2020})). HMSC uses a latent variable approach as an alternative to directly modelling species interaction coefficients, estimating a reduced number of linear combinations of species abundances that best predict future population size values. For linear models fit to data generated in simulations \emph{C}, \emph{D}, \emph{E}, and \emph{F} above, the time random effect was implemented to capture species interactions (as part of the temporal species association matrix estimated by the model), and the spatial random effect was implemented in model \emph{F} to capture spatial covariance in abundances as a function of distance between sites. Full methodological details are given in Appendix S1. All simulations were run in R (R Core Team (\protect\hyperlink{ref-R2024}{2024})) and HMSC models were implemented using the \texttt{Hmsc} package (Tikhonov et al. (\protect\hyperlink{ref-Hmsc2022}{2022})).
+
+\hypertarget{evolution-in-metacommunities-and-hmsc}{%
+\subsection{Evolution in metacommunities and HMSC}\label{evolution-in-metacommunities-and-hmsc}}
+
+\hypertarget{simulation-model}{%
+\subsubsection{Simulation model}\label{simulation-model}}
+
+We also simulated growth and competition dynamics for a multi-species assemblage in a patchy landscape, with site variation in one environmental property, and with evolution in a trait that is selected on by the environment. Population growth for species in the metacommunity simulation followed a Leslie-Gower model (a discrete-time version of a Lotka-Volterra model (\protect\hyperlink{ref-Beverton1957}{Beverton and Holt 1957}) (\protect\hyperlink{ref-Leslie1958}{Leslie and Gower 1958})). We considered the impact of trait evolution for growth using a discrete time quantitative genetic model of evolutionary rescue (\protect\hyperlink{ref-Gomulkiewicz1995}{Gomulkiewicz and Holt 1995}). The model for population size was:
+
+\[ N_{i,t+1} =\frac{\hat{W}e^ \frac{-[(\frac{w+(1-h^2)P} {P+w})(E-x_{i,t})]^2}{2(P+w)}N_{i,t}} {1 + \alpha_{ii}N_{i,t} + \sum_{j \neq i}^{S} \alpha_{ij}N_{j,t}} \] where \(N_i,t\) is the population size of species \emph{i} at time \emph{t}, \(\hat{W}\) is calculated as \(\hat{W}=W_{max}\sqrt(\frac{w}{P+w})\), \(W_{max}\) is the species' maximum per-capita growth rate, \emph{w} is the width of the Gaussian fitness function (which determines the strength of selection), \emph{P} is the width of the distribution of the phenotype \emph{x}, \(h^2\) is the heritability of the trait \emph{x}, \emph{E} is the local environmental optimum trait value (\(x_{opt}\)), \(x_{i,t}\) is the trait value of species \emph{i} at time \emph{t}, \(\alpha_{ii}\) is the intraspecific competition coefficient (the per capita impact of species \emph{i} on itself) and \(\alpha_{ij}\) is the interspecific competition coefficient. Populations have a critical density \(N_c\), below which the population is subject to extinction due to demographic stochasticity at a probability of \emph{p} (\protect\hyperlink{ref-Gomulkiewicz1995}{Gomulkiewicz and Holt 1995}).
+
+This model was used in Pantel \& Becks (\protect\hyperlink{ref-Pantel2023}{Pantel and Becks 2023}) to evaluate the consequences of adaptive evolution for coexistence in a three-species system. To expand this model to a metacommunity, we consider the evolution of multiple species (\emph{S} = 15) in a landscape of patches (\emph{k} = 50). The patches have values of an environmental property \(E \sim U(0,1)\) that determines the local optimum phenotype \emph{E} = \(x_{opt}\), i.e.~where species experience their maximum absolute fitness \(W_{max}\), and patches also have spatial locations \emph{X} and \emph{Y} (both drawn from \(U(0, 1)\)). The patches thus have a connectivity matrix \textbf{D} (here given by their Euclidean distance), as well as a connectivity matrix \textbf{C} that is a Gaussian function of \textbf{D} and species dispersal rate \(d_i\).
+
+We used the evolving metacommunity model to test whether landscape connectivity (the overall dispersal rate \(d\)) and the speed of evolution (varying \(h^2\)) influenced the relative importance of trait evolution (\(|\Delta x|\)) for metacommunity composition \(N_{i,t,k}\) (evaluated as \(V_{|\Delta x|}\), the proportion of variation in species abundances explained by \(|\Delta x|\) as estimated by the HMSC model fit to the simulated data across \(d\) and \(h^2\) levels). We hypothesized that the overall importance of trait evolution (\(V_{|\Delta x|}\)) would decrease with increasing dispersal rate - at low dispersal rates, locally mal-adapted species are less likely to emigrate to more optimal patches and will experience strong local selection, leading to a large amount of trait evolution. Population sizes for initial, mal-adapted populations will also likely be lower, leading to reduced relative importance of density-dependent intra- and interspecific competition. We also hypothesized that heritability (\(h^2\)) would mediate the relative importance of dispersal rate - at higher \(h^2\), species will evolve quickly and we expected the importance of trait evolution \(V_{|\Delta x|}\) to depend on the amount of time that mal-adapted populations persist. Therefore, simulations with higher \(h^2\) would have decreased importance of evolution \(V_{|\Delta x|}\) for community composition. For the same reason, we hypothesized generally that, for a given dispersal rate \(d\), the importance of evolution \(V_{|\Delta x|}\) would decrease with increasing \(h^2\).
+
+All simulations used the same parameter values (\(W_{max}\) = 2, \emph{P} = 1, \emph{w} = 2, \(N_c\) = 100, \emph{p} = 0.001), species interaction matrix (\(\alpha_{ii} = 0.00125\); \(\alpha_{ij} \sim U(0,0.0015)\)), and initial conditions (initial richness \(s_{0k} \sim Pois(0.75)\); initial population size \(N_{0i} \sim Pois(10)\); initial degree of maladaptation \(\beta_{i0} \sim Gamma(0.75,1)\), initial distance to the local patch's optimum phenotype \(d_{i0}=\sqrt{B_{i0}(w+P)}\), initial trait value \(x_{i0} = E_k - d_{i0}\); Appendix S4). Simulations were run across a range of dispersal values (identical for all species; \emph{d} = 0, \(10^{-9},10^{-8},10^{-7},10^{-6},10^{-5},10^{-4},10^{-3},10^{-2}\), 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1) and heritability values (identical for all species: \(h^2\) = 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1) for 200 time steps, producing records of \(N_{ikt}\) and \(x_{ikt}\).
+
+\hypertarget{statistical-model}{%
+\subsubsection{Statistical model}\label{statistical-model}}
+
+To determine the relative influence of environmental and spatial properties, intra- and interspecific population dynamics, and evolutionary dynamics for community structure, we applied hierarchical modelling of species communities (HMSC, (\protect\hyperlink{ref-Ovaskainen2017HMSC}{Ovaskainen et al. 2017}) (\protect\hyperlink{ref-Tikhonov2020}{Tikhonov et al. 2020})) to model the log-abundance at each site and year for each species. The log-abundance values were modeled as \(ln(N_{ikt}) \sim N(L_{ikt},\sigma_2)\), where the linear predictors \textbf{L} are the sum of fixed and random effects \textbf{L\textsuperscript{F}} + \textbf{L\textsuperscript{R}} (\protect\hyperlink{ref-Tikhonov2020}{Tikhonov et al. 2020}). The fixed effects were \(E_k\), \(E_k^2\), and the absolute value of the change in each species' trait value from the previous time step to the next \(|\Delta x_{ik,t-1 \to t}|\). Random effects included time (the day of the sample) and space. The spatial latent variables represent a spatial model, where species respond to some latent spatial predictor associated with the \emph{xy} coordinates of the sites (\protect\hyperlink{ref-Tikhonov2020}{Tikhonov et al. 2020}). When there was no dispersal in the system (\(d=0\)), spatial random effects were not included in the model.
+
+\hypertarget{applying-hmsc-on-empirical-data}{%
+\subsubsection{Applying HMSC on empirical data}\label{applying-hmsc-on-empirical-data}}
+
+To test the applicability of HMSC on ecological and evolutionary effects in empirical data, we applied HMSC on the experimental data of Jewel \& Bell (2023) (\protect\hyperlink{ref-Jewell2023}{Jewell and Bell 2023}). The authors conducted a community selection experiments in which they grew four floating and short-lived aquatic plants (the angiosperms \emph{Lemna minor} here designated as Lm, \emph{Spirodela polyrhiza} designated as Sp and \emph{Wolffia columbiana} designated as Wc, and the liverwort \emph{Ricciocarpos natans} designated as Rn) under different environmental conditions for twelve weeks. The environmental conditions were defined by three different shade cover levels for the experimental pools, 3\%, 12\% and 50\%, and different nutrient concentrations, with low (dissolved nitrogen (DN) = 200 \(\mu g L^{-1}\), dissolved phosphorous (DP) = 10 \(\mu g L^{-1}\), medium (DN = 800 \(\mu g L^{-1}\), DP = 40 \(\mu g L^{-1}\)), and high (DN = 3200 \(\mu g L^{-1}\), DP = 160 \(\mu g L^{-1}\)) concentrations of nutrients. They combined each shade and nutrient level, resulting in nine different environmental conditions. For the eleven weeks of the experiment, the frond size of ten individuals from each species, as well as population density were measured. To use the data with our HMSC analysis, we calculated the average trait change as \(\Delta x = x_{ijt} - x_{ijt-1}\), where \(x_{ij}\) described the mean trait of species \(i\) in environment \(j\) and week \(t\).
+
+To determine the relative importance of evolution for community composition, we fitted two HMSC models to the data: An `evolution model' in which \(|\Delta x|\) of each species and environmental conditions were used as explanatory variables, and a `no-evolution model', in which only the environmental conditions were included. Species density was log-transformed species before applying it to the model, therefore we could use normal distribution in the model. We also included replicates (\emph{n} = 2) and time as random effects. For each model we ran four MCMC chains to generate 1000 samples of the posterior distribution for all model parameters. To evaluate the model-estimated role of evolution for predicted population size, we used the posterior distributions of the estimated effect size of \(|\Delta x|\) multiplied by the observed \(\Delta x\) of each species, added to the model-estimated intercept.
+
+\hypertarget{results}{%
+\section{Results}\label{results}}
+
+\hypertarget{linear-statistical-models-for-one--and-two-species-models-of-growth-competition-and-trait-evolution-1}{%
+\subsection{Linear statistical models for one- and two-species models of growth, competition, and trait evolution}\label{linear-statistical-models-for-one--and-two-species-models-of-growth-competition-and-trait-evolution-1}}
+
+Researchers often use linear regression models to study non-linear population and community dynamics. We evaluated the performance of linear models in simple (1-2 species, 1-few sites) cases, to validate that effect size estimates and predicted densities accurately reflected mechanisms before moving onto more complex models in the next sections of our analysis. When only one species was present (models \emph{A} and \emph{B}), the regression coefficients (model \emph{A}: \(N_{t+1} \sim \beta_0 + \beta_1 N_t + \epsilon\); \emph{B} \(N_{t+1} \sim \beta_0 + \beta_1 N_t + \beta_2 E_t + \beta_3 E_t^2 + \epsilon\)) reflected the direction and magnitude of the mechanistic drivers of population size (i.e.~\(\beta_1\) correctly captured the positive relationship between \(N_t\) and \(N_{t+1}\) under our simulation conditions, and \(\beta_2\) and \(\beta_3\) correctly captured the quadratic unimodal relationship between \(E_t\) and \(N_t+1\); Appendix S1.1, S1.2).
+
+When a second species was added (models \emph{C} and \emph{D}), the regression coefficients performed well for predicting density values at all time points, but the direction and magnitude of the regression coefficients did not reflect the intra- and interspecific competition strengths included in the mechanistic model (Appendix S1.3). We instead used a latent variable modelling approach (implemented in HMSC) to consider these species interactions as part of the temporal random effects included in the model. This approached produced effect size estimates that both predicted the population dynamics well (Figure \ref{fig:fig1} a) and captured the conditional effects of environment for species densities (Figure \ref{fig:fig1} b). The variation partition also successfully captured the relative importance of the environmental predictor and the temporal random effects for model \emph{D} (which in this simple case were driven by intra- and interspecific species interactions; Figure \ref{fig:fig1} c; Appendix S1.3, S1.4).
+
+Trait evolution was included as a predictor when it was introduced in model \emph{E}. The resulting linear regression coefficients could predict species dynamics (Figure \ref{fig:fig1} d) and reflected the impact and magnitude of environmental and trait evolution predictors (Figure \ref{fig:fig1} e). The variation partition also showed that trait evolution in species 1 (\(|\Delta x_1|\)) was a strong driver of variation in abundance (blue portion, Figure \ref{fig:fig1} f), primarily for species 1 but also for species 2 as well (Appendix S1.5; Appendix S2).
+
+After adding spatial complexity to the 2-species simulation, we included a spatial random effect to capture species covariances as a function of distance between sites (model \emph{F}). By properly considering species interactions as a temporal random effect and including spatial random effects, the HMSC model could estimate regression coefficients for the impacts of the environment \(E_t\) and trait evolution \(|\Delta x_1|\) and \(|\Delta x_2|\) for both species that fit well to the simulated data points (Figure @ref(fig:fig1 g); Appendix S1.6) and capture conditional effects of environment and trait evolution for both species (Figure \ref{fig:fig1} h). Spatial random effects explained a large proportion of variance in abundance for both species, but trait evolution remained a strong driver for species 1.
+
+\begin{figure}
+
+{\centering \includegraphics[width=1.1\linewidth]{../output/fig1_mod} 
+
+}
+
+\caption{Simulation models for 2-species ecological and eco-evolutionary dynamics. Panels a, d, and g show log-population size (y-axis) over time (x-axis) for species $1$ and $2$ when they grow and compete for resources with random environmental fluctuations over time. Species either have fixed (panel a) or evolving trait values (panels d, g) and are present in either 1 (panels a, d; simulation models D and E) or multiple sites (panel g; model F). Graphs in panels b, e, and h show predicted log-population size ($ln(N)$) for species 1 and 2 across gradients of the environment ($E + E^2$) and the change in trait values of species 1 ($|\Delta x_1|$). Graphs in panels c, f, and i show the results of a variation partition after fitting data to the HMSC statistical model. The variation partition plot shows the proportion of variation explained by environment, trait evolution ($|\Delta x_1|$ and $|\Delta x_2|$), and temporal and spatial random effects for $ln(N)$ for species 1 and 2. Error bars and shading in panels a, d, and g represent the 95\% highest probability density interval for posterior predictions.}\label{fig:fig1}
+\end{figure}
+
+\hypertarget{evolution-in-metacommunities-and-hmsc-1}{%
+\subsection{Evolution in metacommunities and HMSC}\label{evolution-in-metacommunities-and-hmsc-1}}
+
+The simulation model followed population size and trait value dynamics for species in the landscape across 200 time steps (Figure \ref{fig:fig2} a). Resulting biodiversity dynamics depended on the dispersal level and heritability values (Figure \ref{fig:fig2} b). For dispersal, results mirrored some expectations from existing metacommunity models, i.e.~that regional \(\gamma\) diversity decreases with increasing dispersal level \(d\) ((\protect\hyperlink{ref-Mouquet2003}{Mouquet and Loreau 2003}); Figure \ref{fig:fig2} b). The inclusion of trait heritability had a strong effect on community diversity, reflecting that local adaptation can rescue species and contribute to richness at the local and metacommunity scale. Regional species diversity (\(\gamma\)) increased with increasing \(h^2\) levels (Figure \ref{fig:fig2} b).
+
+Analysis using the HMSC model for community time series across \(d\) and \(h^2\) levels indicated that the importance of evolution for community composition (\(V_{|\Delta x|}\)) decreased with increasing dispersal and with increasing heritability (Figure \ref{fig:fig2} c). The importance of spatial random effects increased with dispersal rate, and overall the importance of evolution decreased with increasing \(h^2\). These effects can be better understood by our supplemental analyses of 1-species, 1-site simulation models of evolutionary rescue (Appendix S3).
+
+\begin{figure}
+
+{\centering \includegraphics[width=1.1\linewidth]{../output/fig2_mod} 
+
+}
+
+\caption{Importance of trait evolution for change in community composition in metacommunities. (a) We developed a simulation model for population growth, competition, and trait evolution in 15 species that inhabit a patchy landscape. The landscape has 50 sites (colored points in the XY space), with distinct local environments that select for diverse patterns of species diversity (size of points) and average trait values (color of points; results are shown at time $t=0, 10, 200$ for a simulation with $d=10^-3$ and $h^2 = 0.1$). (b) Regional metacommunity $\Gamma$ diversity varied across levels of dispersal and heritability ($h^2$). (c) Variation partition plots after fitting metacommunity time series of species abundances $ln(N_{ikt})$ to HMSC models with environment, trait evolution, and random effects (space and time) as predictors. The top panel is for $h^2 = 0.1$, the middle panel is for $h^2 = 0.3$, and the bottom panel is for $h^2 = 0.9$.}\label{fig:fig2}
+\end{figure}
+
+\hypertarget{empirical-data}{%
+\subsubsection{Empirical data}\label{empirical-data}}
+
+The results for the HMSC analysis of the empirical data (community dynamics and frond size of four aquatic plant species under different environmental conditions) estimated an effect of trait change for species density. We used the HMSC models to calculate the mean proportion of variance explained (variance partitioning, VP) over all species, to estimate the relative importance of evolutionary (change in the frond size trait) and ecological (light and nutrient treatments) effects on species densities.Almost one fifth (18.6\%) of the variance in species density could be explained by the variance in \(|\Delta x|\) (\ref{fig:fig3}a). Including trait evolution in the statistical model accurately led to reductions for the estimated importance of ecological effects by a total of 14.4\% (from 37\% to 26.6\% for the amount of shading and from 31\% to 27.1\% for the nutrient concentrations) and the reduction of 4.2\% of the random effects (from 18.7\% to 15\% for time and from 13.3\% to 12.8\% for replicates) (\ref{fig:fig3}). While \(|\Delta x|\) of the species Lm, Sp and Wc showed a similarly low impact (3.7\%, 3.4\%, and 3.7\% respectively), \(|\Delta x|\) of species Rn showed a higher impact on species density, 7.8\%, which can be explained by its high \(|\Delta x|\) changes over time (see Appendix S4 data). The 95\% HPDI for main effect sizes showed a negative effect of light shading for species density, while nutrient concentration had a positive estimated effect for density (\ref{fig:fig3}c). Changes in \(|\Delta x|\) impacted densities in distinct ways for intra- and interspecific comparisons. The frond size of species Rn had a negative impact on Rn density, while change in Wc frond size had a positive estimated effect on species Sp and Lm (\ref{fig:fig3}c). We show the estimated effect of trait evolution for species counts in \ref{fig:fig3}d, which reflects potentially strong impacts in particular species, density, and light treatments and weak effects with high uncertainty for many cases.
+
+\begin{figure}
+
+{\centering \includegraphics[width=1.1\linewidth]{../output/fig3} 
+
+}
+
+\caption{The estimated effects of species trait changes and environmental treatments for densities of experimental aquatic plants (species Lm, Rn, Sp, and Wc). The variation partition for the HMSC model with (a) and without (b) trait change $|\Delta x|$ is shown, as well as (c) the posterior estimated direction of effect (negative or positive; effect sizes with 95\% HPDI that included 0 are colored white). The results indicated negative impacts of light, positive impacts of nutrients, negative intraspecific effects of $|\Delta x_{Rn}|$ for $log(N_{Rn})$, negative interspecific effects of $|\Delta x_{Lm}|$ for $log(N_{Sp})$, and positive interspecific effects of $|\Delta x_{Wc}|$ for $log(N_{Sp})$ and $log(N_{Lm})$. (d) The posterior effect size estimates were used to estimate model-predicted densities at each time step of the experiment as a function only of $|\Delta x|$ (for each of the four species, averaged across all of the other treatment effects). This captures the expected change in density due to trait evolution in all species.}\label{fig:fig3}
+\end{figure}
+
+\hypertarget{discussion}{%
+\section{Discussion}\label{discussion}}
+
+The analysis of community composition often requires statistical models that can consider the combined influences of environmental drivers and spatial connectivity. A more difficult, yet critical, element to incorporate is species interactions. Although the causal role of species interactions is difficult to interpret from statistical models (but see (\protect\hyperlink{ref-Dubart2022}{Dubart et al. 2022}) (\protect\hyperlink{ref-Luo2022}{Luo et al. 2022})) in systems with few species), joint species distribution models (JSDMs) have implemented spatial and temporal random effects that can effectively capture these species interactions using a latent variable approach (but note the resulting species covariance matrices will also reflect other processes besides species interactions; (\protect\hyperlink{ref-Poggiato2021}{Poggiato et al. 2021})). Finally, one element that has not been fully implemented into joint species distribution models is dynamic trait evolution (see (\protect\hyperlink{ref-Garzon2019}{Benito Garzón et al. 2019}) for a model that does consider reaction norms from in-situ reciprocal transplant experiments). We used an existing JSDM, and developed simulation models of evolving populations in increasing complex scenarios to determine whether the signal of trait evolution could be estimated from data and compared to other drivers of community structure. We also applied this statistical model (HMSC; (\protect\hyperlink{ref-Ovaskainen2017HMSC}{Ovaskainen et al. 2017}) (\protect\hyperlink{ref-Tikhonov2020}{Tikhonov et al. 2020})) to an existing empirical dataset (from the experimental study of community eco-evolutionary dynamics in aquatic plants of (\protect\hyperlink{ref-Jewell2023}{Jewell and Bell 2023})) to show how HMSC can be used to model the changes in species composition over time as a function of environmental drivers, trait change, and temporal random effects. Overall, there is no barrier to including dynamic trait change as a fixed effect in a JSDM model, and the resulting effect size coefficient estimates can be used to (i) estimate the relative importance of trait evolution for community composition and (ii) predict the impacts of future trait change in the system.
+
+At the same time, fixed effects for the impacts of trait evolution on population size should be interpreted with a great deal of caution. For example, our simulations reveal instances where trait evolution may occur at the same time as large changes in population size, and this co-occurrence isn't always causal (e.g.~when selection is weak but trait heritability is high, and species are introduced at low initial population size). In this instance, the regression coefficient from the model may be negative and strong. By using simulations of trait evolution and population growth in simple systems (1- and 2-species systems, at single and simplified multi-patch scales; Figure \ref{fig:fig1}; Appendix S1), we can better interpret effect size estimates. However, these precautions are not unique to including trait evolution as a predictor of community composition. For example, previous research has shown that the effect size coefficients from linear and AR models using \(N_{i,t-1}\) to predict \(N_{i,t}\) or \(N_{j,t}\) are not equivalent to the intra- and interspecific interaction coefficients that determine species density dependence and should not automatically be used to interpret the direction and magnitude of species interactions ((\protect\hyperlink{ref-Kloppers2013}{Kloppers and Greeff 2013}) (\protect\hyperlink{ref-Certain2018}{Certain et al. 2018}) (\protect\hyperlink{ref-Muhlbauer2020}{Mühlbauer et al. 2020}) (\protect\hyperlink{ref-Olivenca2021}{Olivença et al. 2021})). Our findings for using HMSC to estimate the impact of trait evolution (\(|\Delta x_i|\)) for species abundances are similar - (i) the relative importance of trait evolution estimated by a variation partition accurately reflects the relative strength of simulated species interactions vs.~magnitude of trait change and (ii) the coefficients greatly increase the predictive ability of the statistical model for simulated data (Appendix S1). HMSC is therefore a useful tool for understanding the role that evolution can play in community dynamics.
+
+This was also observed when using HMSC to evaluate the importance of evolution for metacommunity structure, using simulated data from a model of population growth, competition, dispersal, and trait evolution in a spatially structured habitat (Figure \ref{fig:fig1} a). First of all, the simulations themselves revealed an intriguing role of adaptive evolution for rescuing individual species from extinction (i.e. (\protect\hyperlink{ref-Gomulkiewicz1995}{Gomulkiewicz and Holt 1995})) and as a consequence greatly increasing biodiversity at the local and the landscape scale (i.e.~community rescue, (\protect\hyperlink{ref-Low2015}{Low-Décarie et al. 2015}) (\protect\hyperlink{ref-Bell2019}{Bell et al. 2019}); Figure \ref{fig:fig2} b). The recovery of species via local adaptation had consequent effects for coexistence, as species that were initially mal-adapted could recover in population size and exert strong competitive effects on other species. Because HMSC can accurately estimate the relative importance of trait evolution for community composition (Appendix S3), we were thus able to test hypotheses about the drivers of increased or decreased impacts of trait evolution for community structure. Our simulation models fit to HMSC confirmed our hypotheses that the importance of evolution would decrease with increasing landscape connectivity (modeled as species dispersal rate \(d\)) and the overall speed of adaptive evolution (modeled as heritability \(h^2\)). Previous theoretical models have been shown that these two properties can have a strong influence on resulting community composition ((\protect\hyperlink{ref-Urban2008}{Urban et al. 2008}) (\protect\hyperlink{ref-Loeuille2008}{Loeuille and Leibold 2008}) (\protect\hyperlink{ref-Urban2009}{Urban and De Meester 2009}) (\protect\hyperlink{ref-DeMeester2016}{De Meester et al. 2016})), but our demonstration that the HMSC statistical model can accurately estimate \(R^2\) values for the relative importance of trait evolution can allow hypotheses from theoretical models to be tested using empirical data and compared across different study systems.
+
+The HMSC model was successfully applied to experimental aquatic plants, to estimate the importance of trait change (frond size), light levels, and nutrient composition for abundances of four species (Lm, Rn, Sp and Wc) over 11 weeks. This model currently does not take full advantage of the reciprocal transplant data (as implemented in the method of Jewell and Bell (\protect\hyperlink{ref-Jewell2023}{2023})) and thus doesn't separate the plastic elements of trait change (we also use species densities as our response, not the community average trait value). However, the HMSC model doesn't require derivation of new categories for effect sizes (this is the case for Pantel et al. (\protect\hyperlink{ref-Pantel2015}{2015}), Hattich et al. (\protect\hyperlink{ref-Hattich2022}{2022}), and Jewell and Bell (\protect\hyperlink{ref-Jewell2023}{2023})), nor must data be modelled as normal. As we show in Appendix S2 (also in Ovaskainen and Abrego (\protect\hyperlink{ref-Ovaskainen2020}{2020})), changes in population growth rate can also be fit as response variables, which may be more useful for mechanistic inference in some analyses. We also show the additional advantage of HMSC, which is the ability to predict species responses to environmental gradients and trait change. It should therefore be possible to use models such as HMSC to study how trait change impacts species densities under changing environmental conditions, or how the impact of trait change might depend on specific environmental conditions. These interactions are possible to consider in the Bayesian HMSC model.
+
+As observed in the simulation results, correctly interpreting the estimated posterior effect sizes of evolution requires a thorough understanding of the experimental system. For example we often observed a negative effect of trait change for species density in model simulations, and this was also observed in the effect of trait change for intraspecific abundances in species. However these results derived from different mechanisms. In the simulations, trait change was greater when a species trait was further away from the optimal trait value (\(E_k - x_{ikt}\)), where they also had lower growth rates (the measure of fitness in our models) and thus lower population size. Species with lower trait distance (\(E_k - x_{ikt}\)) and thus higher population size had smaller trait changes. For this reason, HMSC estimates a negative effect of trait change \(|\Delta x|\) for population size (\(N_{ikt}\)). Such effects should also be observed in studies of evolutionary rescue, where a species adapts to an initially lethal environment and avoids extinction via a gradually increasing growth rate ((\protect\hyperlink{ref-Gomulkiewicz1995}{Gomulkiewicz and Holt 1995}); demonstrated in Appendix S3). In the empirical data this negative effect size estimate resulted as the species Rn invested early in the experiment in a larger frond size (see Appendix S4). This may have been a tradeoff with a lower investment into reproduction, while still maintaining a similar total frond area on the water surface to capture the reduced light.
+
+There has been a strong general interest in estimating effect sizes of evolution for ecological processes (\protect\hyperlink{ref-Hairston2005}{Hairston Jr et al. 2005}); (\protect\hyperlink{ref-Ellner2011}{Ellner et al. 2011}); (\protect\hyperlink{ref-Pantel2015}{Pantel et al. 2015}); (\protect\hyperlink{ref-Barbour2022}{Barbour et al. 2022})), but in many empirical studies these estimates focus on one or a few species where the impacts of their evolution is strong enough to play a clear and detectable role in the corresponding ecological response variable of interest (e.g.~population growth rate, community diversity, likelihood of food web collapse). There is no general knowledge for overall distributions of effect sizes for the impact of evolution for species composition in communities, nor are there studies that evaluate drivers of shifts in these distributions of effect sizes in complex communities (see (\protect\hyperlink{ref-Hermann2024}{Hermann et al. 2024}) for estimates in a predator-prey system). We present here distributions of effect sizes of evolution for species abundances (i.e.~Figure \ref{fig:fig1} c,f,i; Figure \ref{fig:fig2} c; Figure \ref{fig:fig3} a,b) in simulated and experimental aquatic plant communities, and expect that these effect size coefficients can be useful for better understanding the relative importance of evolution as a driver of community composition.
+
+An increasing number of studies collect and analyze high-resolution time series of populations and trait values for single (\protect\hyperlink{ref-Rudman2022}{Rudman et al. 2022}) and multiple (\protect\hyperlink{ref-Thomas2018}{Thomas et al. 2018}) (\protect\hyperlink{ref-Gibert2023}{Gibert et al. 2023}) (\protect\hyperlink{ref-Han2023}{Han et al. 2023}) (\protect\hyperlink{ref-Shen2023}{Shen et al. 2023}) species. With increasing access to ecological and evolutionary data comes an increase in the number of interacting processes that should be considered to identify causal mechanisms that structure this data (\protect\hyperlink{ref-Pantel2023}{Pantel and Becks 2023}). HMSC, and joint species distribution models generally, can be expanded to further include dynamic trait change that occurs during the course of community ecological studies. Two critically important additions that will increase the application to field or experimental observation data will be (1) bidirectional causality and eco-evolutionary feedbacks and (2) the relative contribution of plasticity and genotypic evolution for trait change (i.e. (\protect\hyperlink{ref-Gibert2022}{Gibert et al. 2022})). It will also be necessary to improve knowledge of the distributions of eco-evolutionary effects and how these are influenced by causal processes that change the speed of evolution or the strength of species interactions ((\protect\hyperlink{ref-Fronhofer2023}{Fronhofer et al. 2023})). Although these interacting eco-evolutionary dynamic processes represent an increased degree of complexity for data analysis and interpretation, these mechanistic processes can be translated into simpler statistical models to estimate ecological and evolutionary drivers of community composition.
+
+\hypertarget{references}{%
+\section{References}\label{references}}
+
+\hypertarget{refs}{}
+\begin{CSLReferences}{0}{0}
+\leavevmode\vadjust pre{\hypertarget{ref-Abrego2020}{}}%
+Abrego, N., B. Crosier, P. Somervuo, N. Ivanova, A. Abrahamyan, A. Abdi, K. Hämäläinen, et al. 2020. \href{https://doi.org/10.1038/s41396-020-0732-1}{{Fungal communities decline with urbanization---more in air than in soil}}. The ISME Journal 14:2806--2815.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Abrego2024}{}}%
+Abrego, N., P. Niittynen, J. Kemppinen, and O. Ovaskainen. 2024. Disentangling the role of intraspecific trait variation in community assembly with joint species-trait distribution modelling. Authorea Preprints.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Antao2022}{}}%
+Antão, L. H., B. Weigel, G. Strona, M. Hällfors, E. Kaarlejärvi, T. Dallas, Ø. H. Opedal, et al. 2022. \href{https://doi.org/10.1038/s41558-022-01381-x}{Climate change reshuffles northern species within their niches}. Nature Climate Change 12:587--592.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Barbour2022}{}}%
+Barbour, M. A., D. J. Kliebenstein, and J. Bascompte. 2022. \href{https://doi.org/10.1126/science.abf2232}{A keystone gene underlies the persistence of an experimental food web}. Science 376:70--73.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Bell2019}{}}%
+Bell, G., V. Fugère, R. Barrett, B. Beisner, M. Cristescu, G. Fussmann, J. Shapiro, et al. 2019. \href{https://doi.org/10.1098/rspb.2019.0856}{Trophic structure modulates community rescue following acidification}. Proceedings of the Royal Society B: Biological Sciences 286:20190856.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Garzon2019}{}}%
+Benito Garzón, M., T. M. Robson, and A. Hampe. 2019. \href{https://doi.org/10.1111/nph.15716}{\(\Delta\)TraitSDMs: Species distribution models that account for local adaptation and phenotypic plasticity}. New Phytologist 222:1757--1765.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Beverton1957}{}}%
+Beverton, R. J., and S. J. Holt. 1957. On the dynamics of exploited fish populations (Vol. 11). Springer Science \& Business Media.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Certain2018}{}}%
+Certain, G., F. Barraquand, and A. Gårdmark. 2018. \href{https://doi.org/10.1111/2041-210X.13021}{How do MAR(1) models cope with hidden nonlinearities in ecological dynamics?} Methods in Ecology and Evolution 9:1975--1995.
+
+\leavevmode\vadjust pre{\hypertarget{ref-DeMeester2016}{}}%
+De Meester, L., J. Vanoverbeke, L. J. Kilsdonk, and M. C. Urban. 2016. Evolving perspectives on monopolization and priority effects. Trends in Ecology \& Evolution 31:136--146.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Devarajan2020}{}}%
+Devarajan, K., T. L. Morelli, and S. Tenan. 2020. \href{https://doi.org/10.1111/ecog.04957}{Multi-species occupancy models: Review, roadmap, and recommendations}. Ecography 43:1612--1624.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Doser2022}{}}%
+Doser, J. W., A. O. Finley, M. Kéry, and E. F. Zipkin. 2022. \href{https://doi.org/10.1111/2041-210X.13897}{spOccupancy: An r package for single-species, multi-species, and integrated spatial occupancy models}. Methods in Ecology and Evolution 13:1670--1678.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Dubart2022}{}}%
+Dubart, M., J.-P. Pointier, P. Jarne, and P. David. 2022. \href{https://doi.org/10.1111/oik.09157}{Niche filtering, competition and species turnover in a metacommunity of freshwater molluscs}. Oikos 2022:e09157.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Ellner2011}{}}%
+Ellner, S. P., M. A. Geber, and N. G. Hairston Jr. 2011. \href{https://doi.org/10.1111/j.1461-0248.2011.01616.x}{Does rapid evolution matter? Measuring the rate of contemporary evolution and its impacts on ecological dynamics}. Ecology Letters 14:603--614.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Fronhofer2023}{}}%
+Fronhofer, E. A., D. Corenblit, J. N. Deshpande, L. Govaert, P. Huneman, F. Viard, P. Jarne, et al. 2023. \href{https://doi.org/10.1111/ele.14222}{Eco-evolution from deep time to contemporary dynamics: The role of timescales and rate modulators}. Ecology Letters 26:S91--S108.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Gibert2022}{}}%
+Gibert, J. P., Z.-Y. Han, D. J. Wieczynski, S. Votzke, and A. Yammine. 2022. \href{https://doi.org/10.1111/1365-2435.14070}{Feedbacks between size and density determine rapid eco-phenotypic dynamics}. Functional Ecology 36:1668--1680.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Gibert2023}{}}%
+Gibert, J. P., D. J. Wieczynski, Z.-Y. Han, and A. Yammine. 2023. \href{https://doi.org/10.1002/ece3.9685}{Rapid eco-phenotypic feedback and the temperature response of biomass dynamics}. Ecology and Evolution 13:e9685.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Gomulkiewicz1995}{}}%
+Gomulkiewicz, R., and R. D. Holt. 1995. \href{http://www.jstor.org/stable/2410305}{When does evolution by natural selection prevent extinction?} Evolution 49:201--207.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Govaert2016}{}}%
+Govaert, L., J. H. Pantel, and L. De Meester. 2016. \href{https://doi.org/10.1111/ele.12632}{Eco-evolutionary partitioning metrics: Assessing the importance of ecological and evolutionary contributions to population and community change}. Ecology Letters 19:839--853.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Hairston2005}{}}%
+Hairston Jr, N. G., S. P. Ellner, M. A. Geber, T. Yoshida, and J. A. Fox. 2005. \href{https://doi.org/10.1111/j.1461-0248.2005.00812.x}{Rapid evolution and the convergence of ecological and evolutionary time}. Ecology Letters 8:1114--1127.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Han2023}{}}%
+Han, Z.-Y., D. J. Wieczynski, A. Yammine, and J. P. Gibert. 2023. \href{https://doi.org/10.1098/rspb.2022.2263}{Temperature and nutrients drive eco-phenotypic dynamics in a microbial food web}. Proceedings of the Royal Society B: Biological Sciences 290:20222263.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Hattich2022}{}}%
+Hattich, G. S. I., L. Listmann, L. Govaert, C. Pansch, T. B. H. Reusch, and B. Matthiessen. 2022. \href{https://doi.org/10.1111/1365-2435.13923}{Experimentally decomposing phytoplankton community change into ecological and evolutionary contributions}. Functional Ecology 36:120--132.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Hermann2024}{}}%
+Hermann, R. J., J. H. Pantel, T. Réveillon, and L. Becks. 2024. \href{https://doi.org/10.1093/jeb/voae062}{{Range of trait variation in prey determines evolutionary contributions to predator growth rates}}. Journal of Evolutionary Biology 37:693--703.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Hiltunen2014}{}}%
+Hiltunen, T., and L. Becks. 2014. Consumer co-evolution as an important component of the eco-evolutionary feedback. Nature communications 5:5226.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Jewell2023}{}}%
+Jewell, M. D., and G. Bell. 2023. \href{https://doi.org/10.1002/ecy.4117}{Eco-evolutionary contributions to community trait change in floating aquatic plants}. Ecology 104:e4117.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Keppeler2022}{}}%
+Keppeler, F. W., M. C. Andrade, P. A. A. Trindade, L. M. Sousa, C. C. Arantes, K. O. Winemiller, O. P. Jensen, et al. 2022. \href{https://doi.org/10.1016/j.scitotenv.2022.155951}{Early impacts of the largest amazonian hydropower project on fish communities}. Science of The Total Environment 838:155951.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Kloppers2013}{}}%
+Kloppers, P. H., and J. C. Greeff. 2013. \href{https://doi.org/10.1016/j.amc.2013.08.093}{Lotka--volterra model parameter estimation using experiential data}. Applied Mathematics and Computation 224:817--825.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Lasky2020}{}}%
+Lasky, J. R., M. B. Hooten, and P. B. Adler. 2020. \href{https://doi.org/10.1098/rspb.2020.2219}{What processes must we understand to forecast regional-scale population dynamics?} Proceedings of the Royal Society B: Biological Sciences 287:20202219.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Leibold2022}{}}%
+Leibold, M. A., F. J. Rudolph, F. G. Blanchet, L. De Meester, D. Gravel, F. Hartig, P. Peres-Neto, et al. 2022. \href{https://doi.org/10.1111/oik.08618}{The internal structure of metacommunities}. Oikos 2022.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Leslie1958}{}}%
+Leslie, P. H., and J. C. Gower. 1958. \href{http://www.jstor.org/stable/2333181}{The properties of a stochastic model for two competing species}. Biometrika 45:316--330.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Lion2018}{}}%
+Lion, S. 2018. \href{https://doi.org/10.1086/694865}{Theoretical approaches in evolutionary ecology: Environmental feedback as a unifying perspective}. The American Naturalist 191:21--44.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Little2018}{}}%
+Little, C. J., and F. Altermatt. 2018. \href{https://doi.org/10.1098/rspb.2018.0205}{Do priority effects outweigh environmental filtering in a guild of dominant freshwater macroinvertebrates?} Proceedings of the Royal Society B: Biological Sciences 285:20180205.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Loeuille2008}{}}%
+Loeuille, N., and M. A. Leibold. 2008. \href{https://doi.org/10.1086/587745}{Evolution in metacommunities: On the relative importance of species sorting and monopolization in structuring communities.} The American Naturalist 171:788--799.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Low2015}{}}%
+Low-Décarie, E., M. Kolber, P. Homme, A. Lofano, A. Dumbrell, A. Gonzalez, and G. Bell. 2015. \href{https://doi.org/10.1073/pnas.1513125112}{Community rescue in experimental metacommunities}. Proceedings of the National Academy of Sciences 112:14307--14312.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Luo2022}{}}%
+Luo, M., S. Wang, S. Saavedra, D. Ebert, and F. Altermatt. 2022. \href{https://doi.org/10.1073/pnas.2201503119}{Multispecies coexistence in fragmented landscapes}. Proceedings of the National Academy of Sciences 119:e2201503119.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Mouquet2003}{}}%
+Mouquet, N., and M. Loreau. 2003. \href{https://doi.org/10.1086/378857}{Community patterns in source‐sink metacommunities.} The American Naturalist 162:544--557.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Muhlbauer2020}{}}%
+Mühlbauer, L. K., M. Schulze, W. S. Harpole, and A. T. Clark. 2020. \href{https://doi.org/10.1002/ece3.6926}{gauseR: Simple methods for fitting lotka-volterra models describing gause's {``struggle for existence''}}. Ecology and Evolution 10:13275--13283.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Olivenca2021}{}}%
+Olivença, D. V., J. D. Davis, and E. O. Voit. 2021. \href{https://doi.org/10.1101/2021.10.07.463461}{Comparison between lotka-volterra and multivariate autoregressive models of ecological interaction systems}. bioRxiv.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Osmond2013}{}}%
+Osmond, M. M., and C. de Mazancourt. 2013. \href{https://doi.org/10.1098/rstb.2012.0085}{How competition affects evolutionary rescue}. Philosophical Transactions of the Royal Society B: Biological Sciences 368:20120085.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Ovaskainen2020}{}}%
+Ovaskainen, O., and N. Abrego. 2020. Joint species distribution modelling: With applications in r. Cambridge University Press.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Ovaskainen2017HMSC}{}}%
+Ovaskainen, O., G. Tikhonov, A. Norberg, F. Guillaume Blanchet, L. Duan, D. Dunson, T. Roslin, et al. 2017. \href{https://doi.org/10.1111/ele.12757}{How to make more out of community data? A conceptual framework and its implementation as models and software}. Ecology Letters 20:561--576.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Pantel2023}{}}%
+Pantel, J. H., and L. Becks. 2023. \href{https://doi.org/10.1016/j.tree.2023.03.011}{Statistical methods to identify mechanisms in studies of eco-evolutionary dynamics}. Trends in Ecology {\&} Evolution 38:760--772.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Pantel2015}{}}%
+Pantel, J. H., C. Duvivier, and L. D. Meester. 2015. \href{https://doi.org/10.1111/ele.12480}{Rapid local adaptation mediates zooplankton community assembly in experimental mesocosms}. Ecology Letters 18:992--1000.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Pichler2021}{}}%
+Pichler, M., and F. Hartig. 2021. \href{https://doi.org/10.1111/2041-210X.13687}{A new joint species distribution model for faster and more accurate inference of species associations from big community data}. Methods in Ecology and Evolution 12:2159--2173.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Poggiato2021}{}}%
+Poggiato, G., T. Münkemüller, D. Bystrova, J. Arbel, J. S. Clark, and W. Thuiller. 2021. On the interpretations of joint modeling in community ecology. Trends in Ecology \& Evolution 36:391--401.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Pollock2014}{}}%
+Pollock, L. J., R. Tingley, W. K. Morris, N. Golding, R. B. O'Hara, K. M. Parris, P. A. Vesk, et al. 2014. \href{https://doi.org/10.1111/2041-210X.12180}{Understanding co-occurrence by modelling species simultaneously with a joint species distribution model (JSDM)}. Methods in Ecology and Evolution 5:397--406.
+
+\leavevmode\vadjust pre{\hypertarget{ref-R2024}{}}%
+R Core Team. 2024. \href{https://www.R-project.org/}{R: A language and environment for statistical computing}. R Foundation for Statistical Computing, Vienna, Austria.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Rudman2022}{}}%
+Rudman, S. M., S. I. Greenblum, S. Rajpurohit, N. J. Betancourt, J. Hanna, S. Tilk, T. Yokoyama, et al. 2022. \href{https://doi.org/10.1126/science.abj7484}{Direct observation of adaptive tracking on ecological time scales in \textless i\textgreater drosophila\textless/i\textgreater{}}. Science 375:eabj7484.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Sandal2022}{}}%
+Sandal, L., V. Grøtan, B.-E. Sæther, R. P. Freckleton, D. G. Noble, and O. Ovaskainen. 2022. \href{https://doi.org/10.1002/ecy.3731}{Effects of density, species interactions, and environmental stochasticity on the dynamics of british bird communities}. Ecology 103:e3731.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Shen2023}{}}%
+Shen, C., K. Lemmen, J. Alexander, and F. Pennekamp. 2023. \href{https://doi.org/10.1002/ece3.10502}{Connecting higher-order interactions with ecological stability in experimental aquatic food webs}. Ecology and Evolution 13:e10502.
+
+\leavevmode\vadjust pre{\hypertarget{ref-terHorst2014}{}}%
+terHorst, C. P., J. T. Lennon, and J. A. Lau. 2014. \href{https://doi.org/10.1098/rspb.2014.0028}{The relative importance of rapid evolution for plant-microbe interactions depends on ecological context}. Proceedings of the Royal Society B: Biological Sciences 281:20140028.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Thomas2018}{}}%
+Thomas, M. K., S. Fontana, M. Reyes, M. Kehoe, and F. Pomati. 2018. \href{https://doi.org/10.1111/ele.12927}{The predictability of a lake phytoplankton community, over time-scales of hours to years}. Ecology Letters 21:619--628.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Tikhonov2020}{}}%
+Tikhonov, G., Ø. H. Opedal, N. Abrego, A. Lehikoinen, M. M. J. de Jonge, J. Oksanen, and O. Ovaskainen. 2020. \href{https://doi.org/10.1111/2041-210X.13345}{Joint species distribution modelling with the r-package hmsc}. Methods in Ecology and Evolution 11:442--447.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Hmsc2022}{}}%
+Tikhonov, G., O. Ovaskainen, J. Oksanen, M. de Jonge, O. Opedal, and T. Dallas. 2022. \href{https://CRAN.R-project.org/package=Hmsc}{Hmsc: Hierarchical model of species communities}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Toju2017}{}}%
+Toju, H., M. Yamamichi, P. R. Guimaraes Jr, J. M. Olesen, A. Mougi, T. Yoshida, and J. N. Thompson. 2017. Species-rich networks and eco-evolutionary synthesis at the metacommunity level. Nature Ecology \& Evolution 1:0024.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Urban2009}{}}%
+Urban, M. C., and L. De Meester. 2009. \href{https://doi.org/10.1098/rspb.2009.1382}{Community monopolization: Local adaptation enhances priority effects in an evolving metacommunity}. Proceedings of the Royal Society B: Biological Sciences 276:4129--4138.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Urban2008}{}}%
+Urban, M. C., M. A. Leibold, P. Amarasekare, L. De Meester, R. Gomulkiewicz, M. E. Hochberg, C. A. Klausmeier, et al. 2008. The evolutionary ecology of metacommunities. Trends in ecology \& evolution 23:311--317.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Weigel2023}{}}%
+Weigel, B., N. Kotamäki, O. Malve, K. Vuorio, and O. Ovaskainen. 2023. \href{https://doi.org/10.1111/geb.13626}{Macrosystem community change in lake phytoplankton and its implications for diversity and function}. Global Ecology and Biogeography 32:295--309.
+
+\end{CSLReferences}
+
+\end{document}
