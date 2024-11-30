@@ -193,10 +193,12 @@ b <- rowSums(xt[,,200]*N[,,200],na.rm=TRUE) / rowSums(N[,,200])
 b[is.finite(b)==FALSE] <- 0
 mc[101:150,5] <- b # community weighted mean trait value
 
-c0 <- ggplot(mc,aes(x,y)) + geom_point(aes(color=xt,size=div_a)) + facet_wrap(~t) + scale_color_gradient(low = "lightgrey", high = "forestgreen") + theme(axis.text.x=element_blank(),axis.text.y=element_blank())
+c0 <- ggplot(mc,aes(x,y)) + geom_point(aes(color=xt,size=div_a)) + facet_wrap(~t) + scale_color_gradient(low = "lightgrey", high = "forestgreen") + theme(axis.text.x=element_blank(),axis.text.y=element_blank(),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.line = element_line(colour = "black"),panel.background = element_blank(),panel.border = element_rect(colour = "black", fill=NA, size=1))
 
 d <- plot_grid(plot_grid(c0,p0,ncol=1,rel_heights = c(1,1)),plot_grid(p1,p2,p3,nrow=3),ncol=2,rel_widths=c(2,1.2),labels=c('a','c','b'))
 
-pdf("./output/fig2.pdf",width=11.69, height=8.27)
-d
-dev.off()
+ggsave(file="./output/fig2.svg",plot=d,width=297,height=210,units="mm")
+
+# pdf("./output/fig2.pdf",width=11.69, height=8.27)
+# d
+# dev.off()
