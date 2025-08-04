@@ -1,7 +1,7 @@
-# Title. results.R
-# Author. J.H. Pantel
-# Date 01-11-2024
-# Description. This script contains analyses for the HMSC_ecoevo project and associated manuscript Hermann & Pantel 202x.
+# Title. 5_results_hmsc.R
+# Author. J.H. Pantel &  R.J. Hermann
+# Date 29.07.2025
+# Description. This script contains analyses for the HMSC_ecoevo project and associated manuscript Pantel & Hermann 2025.
 
 #### Libraries ---------------------------------------------------------------
 library(bayesplot)
@@ -10,18 +10,25 @@ library(gridExtra)
 library(Hmsc)
 
 #### Step 0 Load the data --------------
-load("./data/h_01_d_minus3_hmsc_v01_short_E_var0.1.RData")
+d_lev <- c("d_zero","d_minus9","d_minus8","d_minus7","d_minus6","d_minus5","d_minus4","d_minus3","d_minus2","d_01","d_02","d_03","d_04","d_05","d_06","d_07","d_08","d_09","d_10")
+h_lev <- c("h_0_","h_01_","h_02_","h_03_","h_04_","h_05_","h_06_","h_07_","h_08_","h_09_","h_10_")
+
+# HMSC for single results condition
+z <- 4
+f <- 8
+
+print(paste(h_lev[z],d_lev[f],sep=""))
+result <- paste(h_lev[z],d_lev[f],sep="")
+load(paste("./data/mc/",result,"_hmsc.RData",sep=""))
 
 #### Step 1. Evaluate posteriors --------------
 m.post = Hmsc::convertToCodaObject(m.1)
 m.df <- do.call(rbind, m.post$Beta)
 
-#### Create Variance Paritioning plot
+#### Create Variance Partitioning plot
 s <- ncol(m.1$Y)
 VP <- computeVariancePartitioning(m.1, group = c(1,2,rep(3,s)), groupnames = c("Intercept","Env","deltaX"))
-#pdf("./output/vp2.pdf",width=8,height=4)
 plotVariancePartitioning(m.1, VP = VP, args.legend=list(cex=0.75,bg="transparent"))
-#dev.off()
 
 # All beta coefficients where HPDI doesn't include 0 ####
 a <- apply(m.df,2,function(x) quantile(x,probs=c(0.025,0.975)))

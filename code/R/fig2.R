@@ -1,204 +1,414 @@
-## Code for Figure 2
-## J.H. Pantel
-## 11-11-2024
+## Code for Figure 1
+# Author. J.H. Pantel &  R.J. Hermann
+# Date 29.07.2025
 
 ## libraries
-library(ggplot2)
-library(ggalluvial)
+library(ecoevor)
 library(Hmsc)
-library(vegan)
+library(ggplot2)
+library(patchwork)
+library(bayesplot)
+library(reshape2)
 library(cowplot)
-
-#### Figure 4a. Alpha diversity across d and h2 levels ####
+library(MASS)
+library(gridGraphics)
+library(svglite)
 ## functions
-CV <- function(x){
-  a <- mean(x,na.rm=T)	#Get the average of all values
-  b <- (x - a)^2					#Squared deviations from mean
-  c <- sqrt((sum(b,na.rm=T))/(length(x[is.na(x) == F])-1)) #sum squared deviations, divide by sample N-1, take square root
-  d <- c/a  #coefficient of variation
-  return(CV=d)
+source("./code/R/plot_grad_ylim.R")
+
+## set random seed
+set.seed(8)
+
+# 1. Sim: Two species, logistic growth + competition, environmental covariate ---------
+# Initial conditions
+N0 <- c(10,10)
+r <- c(1.7,1.7)
+alpha.11 <- 0.01
+alpha.22 <- 0.01
+alpha.12 <- 0.005
+alpha.21 <- 0.01
+alpha <- matrix(c(alpha.11,alpha.21,alpha.12,alpha.22),nrow=2,byrow=FALSE) # careful to make sure you have correct interaction matrix
+E.0 <- 0.8
+x <- c(0.6,0.8)
+# Simulation of model for t time steps
+t <- 40
+N <- array(NA,dim=c(t,length(N0)))
+N <- as.data.frame(N)
+colnames(N) <- paste0("N",1:length(N0))
+N[1,] <- N0
+E <- rep(NA, t)
+E[1] <- E.0
+for (i in 2:t) {
+  N[i,] <- disc_LV_E(r=r,N0=N[i-1,],alpha=alpha,E=E[i-1],x=x)
+  E[i] <- E[i-1] + rnorm(1,0,0.1)
 }
-standard_error <- function(x){
-  st_err <- sd(x) / sqrt(length(x))	
-  
-  return(st_err)
+
+### Plot of time series ###
+gdat <- N
+gdat$time <- 1:t
+dat <- melt(gdat, id.vars="time")
+pa1 <- ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + geom_hline(yintercept = ((r[1] - 1)/alpha.11),linetype = "dashed", color = "gray")
+### ###
+
+### Mod1: HMSC model fit 1 ###
+# prepare data in HMSC format
+dat <- as.data.frame(log(N))
+dat$time <- 1:t
+df <- data.frame(dat[(2:t),-3])
+Y <- as.matrix(df)
+XData <- data.frame(dat[1:(t-1),-3],E[1:(t-1)],E[1:(t-1)]^2)
+colnames(XData) <- c(paste0("n",1:length(r)),"E","Esq")
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+m.1.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# defining MCMC
+nChains <- 2
+thin <- 5
+samples <- 1000
+transient <- 500*thin
+verbose <- 500*thin
+# sample MCMC
+m.1.sample <- sampleMcmc(m.1.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+# prepare for plot
+pred <- predict(m.1.sample)
+hold1 <- list()
+hold2 <- list()
+for(i in 1:length(r)){
+  hold1[[i]] <- as.numeric(Y[,i])
+  data <- lapply(pred, function(x) x[, colnames(df)[i], drop = FALSE])
+  hold2[[i]] <- matrix(unlist(data), nrow=length(pred), byrow=TRUE)
 }
-## Read in and save relevant data
-div_200 <- array(NA,dim=c(19,11,3,3),dimnames=list(c("d_zero","d_minus9","d_minus8","d_minus7","d_minus6","d_minus5","d_minus4","d_minus3","d_minus2","d_01","d_02","d_03","d_04","d_05","d_06","d_07","d_08","d_09","d_10"),c("h_0_","h_01_","h_02_","h_03_","h_04_","h_05_","h_06_","h_07_","h_08_","h_09_","h_10_"),c("alpha","gamma","beta"),c("mean","CV","SDE")))
-d_lev <- c("d_zero","d_minus9","d_minus8","d_minus7","d_minus6","d_minus5","d_minus4","d_minus3","d_minus2","d_01","d_02","d_03","d_04","d_05","d_06","d_07","d_08","d_09","d_10")
-h_lev <- c("h_0_","h_01_","h_02_","h_03_","h_04_","h_05_","h_06_","h_07_","h_08_","h_09_","h_10_")
-## Inverse Simpson's diversity across additional heritability levels
-for(i in 1:length(d_lev)){
-  for(j in 1:length(h_lev)){
-    ## Read in population size values
-    result <- paste("./data/mc_v02/",h_lev[j],d_lev[i],"_res_v02.RData",sep="")
-    tmp.env <- new.env()
-    load(toString(result),envir=tmp.env)
-    r <- get("N",pos=tmp.env) # alpha
-    rm(tmp.env)
-    r <- r[,,200]
-    
-    div_200[i,j,1,1] <- mean(diversity(r[rowSums(r) != 0,],index="invsimpson")) # mean
-    div_200[i,j,1,2] <- CV(diversity(r[rowSums(r) != 0,],index="invsimpson")) # CV
-    div_200[i,j,1,3] <- standard_error(diversity(r[rowSums(r) != 0,],index="invsimpson")) # SE
-    
-    # gamma
-    div_200[i,j,2,1] <- if (is.null(dim(r[rowSums(r) != 0,])[1])) {NA} else if (dim(r[rowSums(r) != 0,])[1] < 2) {NA} else {diversity(colSums(r[rowSums(r) != 0,]),index="invsimpson")}
-    
-    # beta
-    div_200[i,j,3,1] <- if (is.null(dim(r[rowSums(r) != 0,])[1])) {NA} else if (dim(r[rowSums(r) != 0,])[1] < 2) {NA} else {mean(diversity(colSums(r[rowSums(r) != 0,]),index="invsimpson") / diversity(r[rowSums(r) != 0,],index="invsimpson"))}
-    
-    div_200[i,j,3,2] <- if (is.null(dim(r[rowSums(r) != 0,])[1])) {NA} else if (dim(r[rowSums(r) != 0,])[1] < 2) {NA} else {CV(diversity(colSums(r[rowSums(r) != 0,]),index="invsimpson") / diversity(r[rowSums(r) != 0,],index="invsimpson"))}
-    
-    div_200[i,j,3,3] <- if (is.null(dim(r[rowSums(r) != 0,])[1])) {NA} else if (dim(r[rowSums(r) != 0,])[1] < 2) {NA} else {standard_error(diversity(colSums(r[rowSums(r) != 0,]),index="invsimpson") / diversity(r[rowSums(r) != 0,],index="invsimpson"))}
+y <- unlist(hold1) # vector of each species' observed N across time points
+yrep <- as.matrix(data.frame(hold2))
+### Mod1 plot ###
+par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
+color_scheme_set("brightblue")
+gg_dat <- data.frame(y=y)
+gg_dat$species <- rep(c(1,2),each=39)
+gg_dat$species <- as.factor(gg_dat$species)
+gg_dat$time <- rep((1:(t-1)),times=2)
+gg_dat$ci_025 <- apply(yrep,2,quantile,probs=.025)
+gg_dat$ci_975 <- apply(yrep,2,quantile,probs=.975)
+p1 <- ggplot2::ggplot(gg_dat, aes(time, y, col=species)) + geom_point(size = 0.7) + scale_color_manual(values = c("1" = "skyblue", "2" = "darkgrey")) + geom_errorbar(aes(ymin=ci_025, ymax=ci_975), alpha=0.5) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm"),panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black")) +
+  theme(legend.position = "none",strip.text = element_text(size=6)) + ylab("log(N)")
+
+### Gradient plot ###
+Gradient <- constructGradient(m.1.sample,focalVariable="E",non.focalVariables=list(Esq=list(2)),ngrid=39)
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.1.sample,XData=Gradient$XDataNew,expected=TRUE)
+plot_grad_ylim(m.1.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="E_t",ylab="predicted N1_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,bty='n',auto=0,l1=0,h1=5)
+p2 <- recordPlot()
+plot_grad_ylim(m.1.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,bty='n',auto=0,l1=0,h1=5)
+p3 <- recordPlot()
+### variance partitioning ###
+par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0.5,0.5))
+VP <- computeVariancePartitioning(m.1.sample, group = c(1, 1, 1), groupnames = "Env")
+plotVariancePartitioning(m.1.sample, VP, args.legend = list(cex = 0.4, bg = "transparent",x=2),cex.axis=0.6,main="",cols=c("white","orange"))
+p4 <- recordPlot()
+### ### ### ### ### ### ###
+### all plots together ###
+### ### ### ### ### ### ###
+a <- plot_grid(p1,plot_grid(p2,p3,nrow=2),p4,nrow=1,rel_widths=c(2,1,1))
+
+# 2. Sim: Two species, logistic growth + competition, environmental covariate, evolution ---------
+# Initial conditions
+N0 <- c(10,10)
+alpha.11 <- 0.01
+alpha.22 <- 0.01
+alpha.12 <- 0.005
+alpha.21 <- 0.01
+alpha <- matrix(c(alpha.11,alpha.21,alpha.12,alpha.22),nrow=2,byrow=FALSE) # careful to make sure you have correct interaction matrix
+E.0 <- 0.8
+x.0 <- c(0.1,0.8)
+P <- 1
+w <- 2
+Wmax <- 2
+h2 <- 1
+k <- (w + (1 - h2) * P)/(P + w)
+# Simulation of model for t time steps
+t <- 40
+N <- array(NA,dim=c(t,length(N0)))
+N <- as.data.frame(N)
+colnames(N) <- paste0("N",1:length(N0))
+N[1,] <- N0
+E <- rep(NA, t)
+E[1] <- E.0
+x <- array(NA,dim=c(t,length(N0)))
+x <- as.data.frame(x)
+colnames(x) <- paste0("x",1:length(N0))
+x[1,] <- x.0
+r <- array(NA,dim=c(t,length(N0)))
+r <- as.data.frame(r)
+colnames(r) <- paste0("r",1:length(N0))
+What <- Wmax*sqrt(w/(P+w))
+r[1,] <- What*exp((-(((w+(1-h2)*P)/(P+w))*(E[1]-x[1,]))^2)/(2*(P+w)))
+for (i in 2:t) {
+  res <- disc_LV_evol(N0=N[i-1,],alpha=alpha,E=E[i-1],x=x[i-1,],P=P,w=w,Wmax=Wmax,h2=h2)
+  N[i,] <- res$Nt1
+  r[i,] <- res$r
+  # trait change
+  d <- E[i-1] - x[i-1,]
+  d1 <- k*d
+  x[i,] <- E[i-1] - d1
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0.05))
+}
+
+### Plot of time series ###
+gdat <- N
+gdat$time <- 1:t
+dat <- melt(gdat, id.vars="time")
+pa2 <- ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point()
+### ###
+
+### Mod2: HMSC model fit 2 ###
+# prepare data in HMSC format
+dat <- as.data.frame(cbind(log(N),x))
+dat$time <- 1:t
+df <- data.frame(dat[(2:t),-5])
+colnames(df) <- c("Nt1","Nt2","xt1","xt2")
+df$dx1 <- abs(dat$x1[2:t] - dat$x1[1:(t-1)])
+df$dx2 <- abs(dat$x2[2:t] - dat$x2[1:(t-1)])
+Y <- as.matrix(cbind(df$Nt1, df$Nt2))
+XData <- data.frame(cbind(E[1:(t-1)],E[1:(t-1)]^2,abs(dat$x1[2:t] - dat$x1[1:(t-1)]),abs(dat$x2[2:t] - dat$x2[1:(t-1)])))
+colnames(XData) <- c("E","Esq","dx1","dx2")
+studyDesign = data.frame(sample = as.factor(1:(t-1)))
+rL = HmscRandomLevel(units = studyDesign$sample)
+m.2.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list(sample = rL))
+# defining MCMC
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.2.sample <- sampleMcmc(m.2.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+# prepare for plot
+pred2 <- predict(m.2.sample)
+hold1 <- list()
+hold2 <- list()
+for(i in 1:length(r)){
+  hold1[[i]] <- as.numeric(Y[,i])
+  data <- lapply(pred2, function(x) x[, colnames(x)[i], drop = FALSE])
+  hold2[[i]] <- matrix(unlist(data), nrow=length(pred2), byrow=TRUE)
+}
+y <- unlist(hold1) # vector of each species' observed N across time points
+yrep <- as.matrix(data.frame(hold2))
+### Mod2 plot ###
+par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
+color_scheme_set("brightblue")
+gg_dat <- data.frame(y=y)
+gg_dat$species <- rep(c(1,2),each=39)
+gg_dat$species <- as.factor(gg_dat$species)
+gg_dat$time <- rep((1:(t-1)),times=2)
+gg_dat$ci_025 <- apply(yrep,2,quantile,probs=.025)
+gg_dat$ci_975 <- apply(yrep,2,quantile,probs=.975)
+p5 <- ggplot2::ggplot(gg_dat, aes(time, y, col=species)) + geom_point(size = 0.7) + scale_color_manual(values = c("1" = "skyblue", "2" = "darkgrey")) + geom_errorbar(aes(ymin=ci_025, ymax=ci_975), alpha=0.5) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm"),panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black")) +
+  theme(legend.position = "none",strip.text = element_text(size=6)) + ylab("log(N)")
+### Gradient plot ###
+Gradient <- constructGradient(m.2.sample,focalVariable="dx1",non.focalVariables=list(E=list(2),Esq=list(2),dx2=list(2)),,ngrid=39)
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.2.sample,XData=Gradient$XDataNew,expected=TRUE)
+plot_grad_ylim(m.2.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx_t",ylab="predicted N1_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,mar=c(1,1,0,0),bty='n',auto=0,l1=0,h1=5)
+p6 <- recordPlot()
+Gradient <- constructGradient(m.2.sample,focalVariable="E",non.focalVariables=list(Esq=list(2)),ngrid=39)
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.2.sample,XData=Gradient$XDataNew,expected=TRUE)
+plot_grad_ylim(m.2.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,mar=c(1,1,0,0),bty='n',auto=0,l1=0,h1=5)
+p7 <- recordPlot()
+### variance partitioning ###
+par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0.5,0.5))
+VP <- computeVariancePartitioning(m.2.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
+plotVariancePartitioning(m.2.sample,VP,cols=c("white","skyblue","darkgrey","orange"),args.legend=list(cex=0.4,bg="transparent",x=2),cex.axis=0.6,main="")
+p8 <- recordPlot()
+### ### ### ### ### ### ###
+### all plots together ###
+### ### ### ### ### ### ###
+b <- plot_grid(p5,plot_grid(p6,p7,nrow=2),p8,nrow=1,rel_widths=c(2,1,1))
+
+# 3. Sim: Two species, logistic growth + competition, environmental covariate in spatially structured environment ---------
+set.seed(12345)
+# Initial conditions
+# Simulation of model for t time steps, i sites
+N0 <- c(10,10)
+E.0 <- 0.8
+x.0 <- c(0.1,0.8)
+alpha.11 <- 0.01
+alpha.22 <- 0.01
+alpha.12 <- 0.005
+alpha.21 <- 0.01
+alpha <- matrix(c(alpha.11,alpha.21,alpha.12,alpha.22),nrow=2,byrow=FALSE) # careful to make sure you have correct interaction matrix
+P <- 1
+w <- 2
+Wmax <- 2
+h2 <- 1
+k <- (w + (1 - h2) * P)/(P + w)
+j <- 10
+# random site locations
+xycoords = matrix(runif(2*j), ncol = 2)
+rownames(xycoords) <- 1:j
+t <- 40
+N <- array(NA,dim=c(j*t,length(N0)))
+N <- as.data.frame(N)
+colnames(N) <- paste0("N",1:length(N0))
+x <- array(NA,dim=c(j*t,length(N0)))
+x <- as.data.frame(x)
+colnames(x) <- paste0("x",1:length(N0))
+r <- array(NA,dim=c(j*t,length(N0)))
+r <- as.data.frame(r)
+colnames(r) <- paste0("r",1:length(N0))
+N[1:j,] <- rep(N0,each=j)
+E <- rep(NA, t)
+E[1] <- E.0
+x[1:j,] <- rep(x.0,each=j)
+What <- Wmax*sqrt(w/(P+w))
+r0 <- as.numeric(What*exp((-(((w+(1-h2)*P)/(P+w))*(E[1]-x[1,]))^2)/(2*(P+w))))
+r[1:j,] <- rep(r0,each=j)
+# Keep track of site and time
+study <- array(NA,dim=c(j*t,3))
+study <- as.data.frame(study)
+colnames(study) <- c("obs","site","time")
+study$obs <- 1:dim(study)[1]
+study$site <- rep(1:j,times=t)
+study$time <- rep(1:t,each=j)
+
+for (i in 2:t) {
+  for(z in 1:j){
+    res <- disc_LV_evol(N0=N[study$site==z & study$time==i-1,],alpha=alpha,E=E[i-1],x=x[study$site==z & study$time==i-1,],P=P,w=w,Wmax=Wmax,h2=h2)
+    N[study$site==z & study$time==i,] <- res$Nt1
+    r[study$site==z & study$time==i,] <- res$r
+    # trait change
+    d <- E[i-1] - x[study$site==z & study$time==i-1,]
+    d1 <- k*d
+    x[study$site==z & study$time==i,] <- E[i-1] - d1
   }
+  # environmental change
+  E[i] <- E[i-1] + abs(rnorm(1, 0, 0.05))
 }
-## Plot
-# Reshape for ggplot
-mean.div_200 <- div_200[,,,1]
-mean_div.gg <- reshape2::melt(mean.div_200)
-se.div_200 <- div_200[,,,3]
-se.div_200 <- reshape2::melt(se.div_200)
-mean_div.gg$se <- se.div_200$value
-colnames(mean_div.gg)[1:4] <- c("d_lev","h_lev","level","mean")
-mean_div.gg$level <- as.factor(mean_div.gg$level)
-h2_vals = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
-mean_div.gg$h2 <- NA
-for(i in 1:length(h2_vals)){
-  mean_div.gg$h2[mean_div.gg$h_lev==unique(mean_div.gg$h_lev)[i]] <- h2_vals[i]
+# site-level random effect
+sigma <- 0
+sigma.spatial <- 10
+alpha.spatial <- 0.5
+Sigma = sigma.spatial^2*exp(-as.matrix(dist(xycoords))/alpha.spatial)
+# draw from covariance matrix
+a = mvrnorm(mu=rep(0,j), Sigma = Sigma)
+for(i in 1:t){
+  N$N1[study$time==i] <- N$N1[study$time==i] + a
 }
-
-sub <- mean_div.gg[mean_div.gg$level=="gamma",]
-sub2 <- sub[(sub$h2==0 | sub$h2==0.1 | sub$h2==0.3 | sub$h2==0.9),]
-  
-p0 <- ggplot(sub2,aes(x=d_lev,y=mean)) + geom_point(aes(colour=h2)) + scale_colour_gradient(low="lightgrey",high="forestgreen")+ geom_line(aes(group=interaction(level,h_lev)),col="black",linewidth=0.1) + coord_cartesian(ylim=c(0,15)) + theme_classic() + ylab(expression(gamma*" diversity")) + xlab("dispersal") + scale_x_discrete(labels=c(0,expression(10^-9),expression(10^-8),expression(10^-7),expression(10^-6),expression(10^-5),expression(10^-4),expression(10^-3),expression(10^-2),0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1))
-
-#### Figure 4b. Stacked bar chart of mean VarPart results across d and h2 levels tested ####
-## Enter VarPart data
-data_bar <- data.frame(d=rep(NA,9),h2=rep(NA,9),Percentage=NA,level=rep(c("Env","deltaX","R(site)","R(time)"),times=9),col_col=rep(c("white","skyblue","darkgrey","orange"),times=9))
-
-d_lev <- c("d_zero","d_minus9","d_minus8","d_minus7","d_minus6","d_minus5","d_minus4","d_minus3","d_minus2","d_01","d_02","d_03","d_04","d_05","d_06","d_07","d_08","d_09","d_10")
-h_lev <- c("h_0_","h_01_","h_02_","h_03_","h_04_","h_05_","h_06_","h_07_","h_08_","h_09_","h_10_")
-d_vals = c(0, 10^-9, 10^-8, 10^-7, 10^-6, 10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
-h2_vals = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
-## Get VarPart results across HMSC output
-begin <- seq(1,36,4)
-counter <- 1
-for(v.d in c(1)){ # dlev
-  for(v.h2 in c(2,4,10)){ # hlev
-    ## Read in population size values
-    result <- paste("./data/mc_v02/",h_lev[v.h2],d_lev[v.d],"_hmsc_v02_nospace.RData",sep="")
-    load(result)
-    s <- ncol(m.1$Y)
-    VP <- computeVariancePartitioning(m.1, group = c(1,1,rep(2,s)), groupnames = c("Env","deltaX"))
-    ng = dim(VP$vals)[1]
-    leg = VP$groupnames
-    for (r in 1:m.1$nr) {
-      leg = c(leg, paste("Random: ", m.1$rLNames[r], sep = ""))
-    }
-    means = round(100 * rowMeans(VP$vals), 1)
-    means = c(means[1],means[2],0,means[3])
-    data_bar[begin[counter]:(begin[counter]+3),3] <- means
-    data_bar[begin[counter]:(begin[counter]+3),1] <- d_vals[v.d]
-    data_bar[begin[counter]:(begin[counter]+3),2] <- h2_vals[v.h2]
-    counter <- counter + 1
-  }
-}
-for(v.d in c(4,8)){ # dlev
-  for(v.h2 in c(2,4,10)){ # hlev
-    ## Read in population size values
-    result <- paste("./data/mc_v02/",h_lev[v.h2],d_lev[v.d],"_hmsc_v02.RData",sep="")
-    load(result)
-    s <- ncol(m.1$Y)
-    VP <- computeVariancePartitioning(m.1, group = c(1,1,rep(2,s)), groupnames = c("Env","deltaX"))
-    ng = dim(VP$vals)[1]
-    leg = VP$groupnames
-    for (r in 1:m.1$nr) {
-      leg = c(leg, paste("Random: ", m.1$rLNames[r], sep = ""))
-    }
-    means = round(100 * rowMeans(VP$vals), 1)
-    data_bar[begin[counter]:(begin[counter]+3),3] <- means
-    data_bar[begin[counter]:(begin[counter]+3),1] <- d_vals[v.d]
-    data_bar[begin[counter]:(begin[counter]+3),2] <- h2_vals[v.h2]
-    counter <- counter + 1
-  }
+a = mvrnorm(mu=rep(0,j), Sigma = Sigma)
+for(i in 1:t){
+  N$N2[study$time==i] <- N$N2[study$time==i] + a
 }
 
-## h2=0.1
-sub1 <- data_bar[data_bar$h2==0.1,]
-sub1$d <- as.factor(sub1$d)
-p1 <- ggplot(sub1,aes(y = Percentage, x = d, fill = as.character(level))) +
-  geom_flow(aes(alluvium = level), alpha= .5, color = "white",
-            curve_type = "xspline", 
-            width = .5) +
-  geom_col(width = .5,colour="black",linewidth=0.25) +
-  scale_fill_manual(values = c("skyblue","white","darkgrey","orange")) +
-  scale_y_continuous(NULL, expand = c(0,0)) +
-  cowplot::theme_minimal_hgrid() +
-  theme(panel.grid.major = element_blank(), 
-        axis.text.y = element_blank(), 
-        axis.ticks.y = element_blank(),legend.position="none")
-sub2 <- data_bar[data_bar$h2==0.3,]
-sub2$d <- as.factor(sub2$d)
-p2 <- ggplot(sub2,aes(y = Percentage, x = d, fill = as.character(level))) +
-  geom_flow(aes(alluvium = level), alpha= .5, color = "white",
-            curve_type = "xspline", 
-            width = .5) +
-  geom_col(width = .5,colour="black",linewidth=0.25) +
-  scale_fill_manual(values = c("skyblue","white","darkgrey","orange")) +
-  scale_y_continuous(NULL, expand = c(0,0)) +
-  cowplot::theme_minimal_hgrid() +
-  theme(panel.grid.major = element_blank(), 
-        axis.text.y = element_blank(), 
-        axis.ticks.y = element_blank(),legend.position="none")
-sub3 <- data_bar[data_bar$h2==0.9,]
-sub3$d <- as.factor(sub3$d)
-p3 <- ggplot(sub3,aes(y = Percentage, x = d, fill = as.character(level))) +
-  geom_flow(aes(alluvium = level), alpha= .5, color = "white",
-            curve_type = "xspline", 
-            width = .5) +
-  geom_col(width = .5,colour="black",linewidth=0.25) +
-  scale_fill_manual(values = c("skyblue","white","darkgrey","orange")) +
-  scale_y_continuous(NULL, expand = c(0,0)) +
-  cowplot::theme_minimal_hgrid() +
-  theme(panel.grid.major = element_blank(), 
-        axis.text.y = element_blank(), 
-        axis.ticks.y = element_blank(),legend.position=c(0.8,0.5),legend.text = element_text(size=7),legend.title = element_blank())
+### Plot of time series ###
+gdat <- N
+gdat$site <- study$site
+gdat$time <- study$time
+dat <- melt(gdat, id.vars=c("site","time"))
+pa3 <- ggplot2::ggplot(dat, aes(time, value, col=variable)) + geom_point() + facet_wrap(~site,nrow=2)
+### ###
 
-#### Figure 4a. Conceptual MC figure ####
-load(paste("./data/mc_v02/",h_lev[2],d_lev[8],"_res_v02.RData",sep=""))
-mc <- data.frame(x=rep(NA,50*3),y=rep(NA,50*3),t=rep(c(0,10,200),each=50),div_a=rep(NA,50*3),xt=rep(NA,50*3))
-# t0
-mc[1:50,c(1,2)] <- xy
-a  <- diversity(N[,,1],index="invsimpson")
-a[is.finite(a)==FALSE] <- 0
-mc[1:50,4] <- a # alpha diversity
-b <- rowSums(xt[,,1]*N[,,1],na.rm=TRUE) / rowSums(N[,,1])
-b[is.finite(b)==FALSE] <- 0
-mc[1:50,5] <- b # community weighted mean trait value
-# t10
-mc[51:100,c(1,2)] <- xy
-a  <- diversity(N[,,10],index="invsimpson")
-a[is.finite(a)==FALSE] <- 0
-mc[51:100,4] <- a # alpha diversity
-b <- rowSums(xt[,,10]*N[,,10],na.rm=TRUE) / rowSums(N[,,10])
-b[is.finite(b)==FALSE] <- 0
-mc[51:100,5] <- b # community weighted mean trait value
-# t200
-mc[101:150,c(1,2)] <- xy
-a  <- diversity(N[,,200],index="invsimpson")
-a[is.finite(a)==FALSE] <- 0
-mc[101:150,4] <- a # alpha diversity
-b <- rowSums(xt[,,200]*N[,,200],na.rm=TRUE) / rowSums(N[,,200])
-b[is.finite(b)==FALSE] <- 0
-mc[101:150,5] <- b # community weighted mean trait value
+### Mod3: HMSC model fit 3 ###
+# prepare data in HMSC format
+#N[N <0] <- 0.01
+# prepare data in HMSC format
+dat <- as.data.frame(cbind(log(N),x))
+dat$time <- study$time
+df <- data.frame(cbind(dat$N1[dat$time !=1], dat$N2[dat$time !=1], dat$x1[dat$time !=1], dat$x2[dat$time !=1]))
+colnames(df) <- c("Nt1", "Nt2", "xt1", "xt2")
+Y <- as.matrix(cbind(df$Nt1, df$Nt2))
+XData <- data.frame(E=rep(E[1:(t-1)],each=j))
+XData$Esq <- XData$E^2
+XData$dx1 <- abs(dat$x1[dat$time != 1] - dat$x1[dat$time != t])
+XData$dx2 <- abs(dat$x2[dat$time != 1] - dat$x2[dat$time != t])
+# Update study design to include spatial random effects
+samp1 <- 1:(j*t)
+samp1 <- as.data.frame(samp1)
+samp1 <- subset(samp1,samp1>10)
+rownames(XData) <- row.names(samp1)
+studyDesign = data.frame(sample=1:(j*(t-1)),site=study$site[study$time > 1])
+studyDesign$sample <- as.factor(studyDesign$sample)
+studyDesign$site <- as.factor(studyDesign$site)
+rL.spatial = HmscRandomLevel(sData = xycoords)  
+rL.sample = HmscRandomLevel(units = studyDesign$sample)
+# Fit HMSC model
+m.3.hmsc = Hmsc(Y = Y, XData = XData, XFormula = ~E+Esq+dx1+dx2, studyDesign = studyDesign, ranLevels = list("sample"=rL.sample,"site"=rL.spatial))
+# defining MCMC
+nChains <- 2
+thin <- 5
+samples <- 2000
+transient <- 1000*thin
+verbose <- 500*thin
+# sample MCMC
+m.3.sample <- sampleMcmc(m.3.hmsc,thin=thin,sample=samples,transient=transient,nChains=nChains,verbose=verbose)
+### Gradient plot ###
+par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
+### Gradient plot ###
+Gradient <- constructGradient(m.3.sample,focalVariable="dx1",non.focalVariables=list(E=list(2),Esq=list(2),dx2=list(2)),ngrid=390)
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.3.sample,XData=Gradient$XDataNew,expected=TRUE,ranLevels=Gradient$rLNew)
+plot_grad_ylim(m.3.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx_t",ylab="predicted N1_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,mar=c(1,1,0,0),bty='n',auto=0,l1=0,h1=5)
+p9 <- recordPlot()
+Gradient <- constructGradient(m.3.sample,focalVariable="E",non.focalVariables=list(Esq=list(2)),ngrid=390)
+Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
+predY <- predict(m.3.sample,XData=Gradient$XDataNew,expected=TRUE,,ranLevels=Gradient$rLNew)
+plot_grad_ylim(m.3.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,mar=c(1,1,0,0),bty='n',auto=0,l1=0,h1=5)
+p10 <- recordPlot()
+### variance partitioning ###
+par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0.5,0.5))
+VP <- computeVariancePartitioning(m.3.sample,group=c(1,1,1,2,3),groupnames=c("Env","Sp1","Sp2"))
+plotVariancePartitioning(m.3.sample,VP,cols=c("white","skyblue","darkgrey","orange","pink"),args.legend=list(cex=0.4,bg="transparent",x=2),main="",cex.axis=0.6)
+p11 <- recordPlot()
+# prepare for plot
+pred3 <- predict(m.3.sample)
+hold1 <- list()
+hold2 <- list()
+for(i in 1:length(r)){
+  hold1[[i]] <- as.numeric(Y[,i])
+  data <- lapply(pred3, function(x) x[, colnames(x)[i], drop = FALSE])
+  hold2[[i]] <- matrix(unlist(data), nrow=length(pred3), byrow=TRUE)
+}
+y <- unlist(hold1) # vector of each species' observed N across time points
+yrep <- as.matrix(data.frame(hold2))
+### Mod3 plot ###
+gg_dat <- data.frame(y=c(Y[,1],Y[,2]))
+gg_dat$species <- rep(c(1,2),each=390)
+gg_dat$site <- rep(study$site[study$time !=1],times=2)
+gg_dat$time <- rep(study$time[study$time !=1],times=2)
+gg_dat$ci_025 <- apply(yrep,2,quantile,probs=.025)
+gg_dat$ci_975 <- apply(yrep,2,quantile,probs=.975)
+p12 <- ggplot2::ggplot(gg_dat, aes(time, y, col=species)) + geom_point(size = 0.5) + facet_wrap(~site,nrow=2) + geom_errorbar(aes(ymin=ci_025, ymax=ci_975), alpha=0.5) +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm"),panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black")) +
+  theme(legend.position = "none",strip.text = element_text(size=6))
 
-c0 <- ggplot(mc,aes(x,y)) + geom_point(aes(color=xt,size=div_a)) + facet_wrap(~t) + scale_color_gradient(low = "lightgrey", high = "forestgreen") + theme(axis.text.x=element_blank(),axis.text.y=element_blank(),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.line = element_line(colour = "black"),panel.background = element_blank(),panel.border = element_rect(colour = "black", fill=NA, size=1))
+### ### ### ### ### ### ###
+### all plots together ###
+### ### ### ### ### ### ###
+c <- plot_grid(p12,plot_grid(p9,p10,nrow=2),p11,nrow=1,rel_widths=c(3,1,1,1),rel_heights=c(2,1,1,1))
 
-d <- plot_grid(plot_grid(c0,p0,ncol=1,rel_heights = c(1,1)),plot_grid(p1,p2,p3,nrow=3),ncol=2,rel_widths=c(2,1.2),labels=c('a','c','b'))
+
+### ### ### ### ### ### ###
+### all plots together ###
+### ### ### ### ### ### ###
+p2.g <- ggdraw(p2)
+p3.g <- ggdraw(p3)
+p4.g <- ggdraw(p4)
+p6.g <- ggdraw(p6)
+p7.g <- ggdraw(p7)
+p8.g <- ggdraw(p8)
+p9.g <- ggdraw(p9)
+p10.g <- ggdraw(p10)
+p11.g <- ggdraw(p11)
+
+d <- plot_grid(p1,plot_grid(p2.g,p3.g,nrow=2,align="v"),p4.g,p5,plot_grid(p6.g,p7.g,nrow=2,align="v"),p8.g,p12,plot_grid(p9.g,p10.g,nrow=2,align="v"),p11.g,nrow=3,ncol=3,rel_widths=c(5,1.5,2,5,1.5,2,5,1.5,2),align="h",axis="b",labels = c('a','b','c','d','e','f','g','h','i'),label_size = 9,hjust=c(0,2,2))
 
 ggsave(file="./output/fig2.svg",plot=d,width=297,height=210,units="mm")
 
-# pdf("./output/fig2.pdf",width=11.69, height=8.27)
+# pdf("./output/fig1JP.pdf",width=11.69, height=8.27)
 # d
 # dev.off()

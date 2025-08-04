@@ -1,17 +1,25 @@
-# Title. sim_results.R
+# Title. 2_results_sim.R
 # Author. J.H. Pantel &  R.J. Hermann
-# Date 02-07-2024
-# Description. This script contains different figures to check the simulation results for any interesting outcomes.
+# Date 29.07.2025
+# Description. This script contains different figures to check the simulation results for any interesting outcomes. Associated manuscript Pantel & Hermann 2025.
 
 #### Libraries ---------------------------------------------------------------
-#library(R.matlab)
 library(vegan)
 library(tidyverse)
 library(patchwork)
 
 ##
 ####  Step 1. Read in the data and get it into shape --------------
-load("././data/h_01_d_minus3_res_short_E_var0.1.RData") # Scenario 1
+d_lev <- c("d_zero","d_minus9","d_minus8","d_minus7","d_minus6","d_minus5","d_minus4","d_minus3","d_minus2","d_01","d_02","d_03","d_04","d_05","d_06","d_07","d_08","d_09","d_10")
+h_lev <- c("h_0_","h_01_","h_02_","h_03_","h_04_","h_05_","h_06_","h_07_","h_08_","h_09_","h_10_")
+
+# HMSC for single results condition
+z <- 4
+f <- 1
+
+print(paste(h_lev[z],d_lev[f],sep=""))
+result <- paste(h_lev[z],d_lev[f],sep="")
+load(paste("./data/mc/",result,"_res.RData",sep=""))# Scenario 1
 ##
 ################### Extinction checks from JP ###################
 # Address extinct species

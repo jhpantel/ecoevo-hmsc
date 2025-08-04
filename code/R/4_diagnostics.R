@@ -1,10 +1,7 @@
-# Title. diagnostics.R
-# Author. R. Hermann
-# Date 25-08-2023
-# Description. This script contains analyses for the HMSC_ecoevo project and associated manuscript Hermann & Pantel 202x.
-
-#setwd("./output")
-#load("h_01_d_minus3_hmsc_UPDATE.RData")
+# Title. 4_diagnostics.R
+# Author. J.H. Pantel &  R.J. Hermann
+# Date 29.07.2025
+# Description. This script contains the diagnostics of the analyses for the HMSC_ecoevo project and associated manuscript Pantel & Hermann 2025.
 
 #### Libraries ---------------------------------------------------------------
 library(Hmsc)
@@ -13,11 +10,20 @@ library(bayesplot)
 
 #### Checking the MCMC chains --------------
 #### Step 0 Load the data --------------
-load("./data/h_01_d_minus3_hmsc_v01_short_E_var0.1.RData")
+d_lev <- c("d_zero","d_minus9","d_minus8","d_minus7","d_minus6","d_minus5","d_minus4","d_minus3","d_minus2","d_01","d_02","d_03","d_04","d_05","d_06","d_07","d_08","d_09","d_10")
+h_lev <- c("h_0_","h_01_","h_02_","h_03_","h_04_","h_05_","h_06_","h_07_","h_08_","h_09_","h_10_")
+
+# HMSC for single results condition
+z <- 4
+f <- 8
+
+print(paste(h_lev[z],d_lev[f],sep=""))
+result <- paste(h_lev[z],d_lev[f],sep="")
+load(paste("./data/mc/",result,"_hmsc.RData",sep=""))
 
 #### Step 1 Create the necessary data.frame --------------
 
-#To determine the convergence of the chains we need to check two things, first off how we will check how each chain converges on itself (hence for example no autocorrelation) and second how well they converge both chains converge with each other. This can be done with the effective sample size and potential scale reduction factors.
+#To determine the convergence of the chains we need to check two things, first off how we will check how each chain converges on itself (e.g.: no autocorrelation) and second how well all chains converge in relation to each other. This can be done with the effective sample size and potential scale reduction factors.
 m.post <- convertToCodaObject(m.1)
 m.df <- as.data.frame(rbind(m.post$Beta[[1]],m.post$Beta[[2]]))
 ess.beta<- effectiveSize(m.post$Beta)
@@ -27,28 +33,17 @@ s <- ncol(m.1$Y)
 npred <- ncol(m.1$XData)+1
 sp<-colnames(m.1$Y)
 sp_n<-as.numeric(sub("y","",colnames(m.1$Y)))
-VP <- computeVariancePartitioning(m.1, group = c(1,2,rep(3,s)), groupnames = c("Intercept","Env","deltaX"))
-#pdf("./output/vp2.pdf",width=8,height=4)
-plotVariancePartitioning(m.1, VP = VP, args.legend=list(cex=0.75,bg="transparent"))
-#dev.off()
 
-#### Step 2 Creatin simpple histograms --------------
+#### Step 2 Creatin simple histograms --------------
 #Creating a histogram of the effective sample size (ess) of all Beta parameters
 #ess shows how many data points of the MCMC chain were independently and randomly drawn and as such can be effectively used
-hist(ess.beta,xlab="Effective sample site",main="")
+hist(ess.beta,xlab="Effective sample size",main="")
 
 #Plotting the potential scale reduction factors (psrf) of all beta parameters
 #psrf from the Gelman-Rubin diagnostic is based a comparison of within-chain and between-chain variances, and is similar to a classical analysis of variance
-hist(psrf.beta,xlab="Potential scale reduction factos",main="")
+hist(psrf.beta,xlab="Potential scale reduction factors",main="")
 
 #### Step 3 Beta separation by fixed effects --------------
-
-#Per Species we have 47 fixed effects, which are split up accordingly:
-#1 = intercept
-#2-16 = impact of $N_{j,t-1}$
-#17 = impact of environment
-#18-32 = impact of $x_{j,t-1}$
-#33-47 = impact of $x_{j,t-1} * N_{j,t-1}$
 
 #For ess
 ess_effects <- data.frame(ess=0,effect="0")
@@ -66,7 +61,7 @@ for (i in 1:s) {
 
 ggplot( ess_effects,aes(x=effect,y=ess))+
   geom_boxplot(aes(fill=effect))+
-  ylab("Effective sanple size")+xlab("Fixed effects")
+  ylab("Effective sample size")+xlab("Fixed effects")
 
 #For psrf
 psrf_effects <- data.frame(psrf=0,effect="0")
@@ -87,7 +82,7 @@ ggplot(psrf_effects,aes(x=effect,y=psrf))+
 
 #### Step 4 Beta separation by species --------------
 
-#We have 15 species with each 47 different effects, so in order to plot the Beta diagnostics we use the following code.
+#We have 15 species with each numerous different effects, so in order to plot the Beta diagnostics we use the following code.
 
 #For ess
 ess_species <- data.frame(ess=0,species="0")
@@ -175,9 +170,3 @@ plot(m.post$Beta[,seq(2,(s*npred),by=npred)])
 plot(m.post$Beta[,seq(1,(s*npred),by=npred)])
 #Plotting xt-1 from species 15 on all other species
 plot(m.post$Beta[,seq((s+2),(s*npred),by=npred)])
-
-
-#To plot the Nt-1 Betas for a specific species
-#B.sp1 <- B.N[,(seq(1,dim(B.N)[2],by=s))]
-#bayesplot::mcmc_areas(B.sp1)
-
