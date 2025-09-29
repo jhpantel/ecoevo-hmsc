@@ -1,0 +1,229 @@
+---
+title: "Appendix S4. Applying HMSC on empirical data"
+author:
+- "Jelena H. Pantel^[Laboratoire Chrono-environnement,UMR 6249 CNRS-UFC, 16 Route
+  de Gray, 25030 Besançon cedex, France, jelena.pantel@univ-fcomte.fr]"
+- Ruben J. Hermann^[University of Konstanz, Universitätsstraße 10, 78464 Konstanz,
+  Germany, ruben.hermann@posteo.de]
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::pdf_document2:
+    toc: false
+    fig_caption: true
+    latex_engine: xelatex
+    extra_dependencies: float
+  bookdown::html_document2: default
+  pdf_document:
+    toc: false
+  word_document:
+    reference_docx: docx_template.docx
+header-includes:
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead[L]{Author Pantel and Hermann}
+- \fancyhead[R]{Detection of ecoevo dynamics}
+- \usepackage{lineno}
+- \linenumbers
+link-citations: true
+linkcolor: blue
+csl: "the-american-naturalist.csl"
+bibliography: refs.bib
+---
+  
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+```{r setup,echo=FALSE,message=FALSE}
+#library(ecoevor)
+library(tidyverse)
+library(reshape2)
+library(Hmsc)
+library(bayesplot)
+bayesplot_theme_set(new = theme_default())
+library(here)
+knitr::opts_knit$set(root.dir = here())
+```
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+# Wrap long lines
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE,out.width="50%")
+```
+
+# General
+
+Applying HMSC to empirical data can be broken down to a series of steps, which are generally described in much more detail in e.g. [@Ovaskainen2017HMSC], [@Tikhonov2020],[@Ovaskainen2020]. It is critical to keep in mind that HMSC is ultimately a linear model, and therefore uses a correlative approach (this is discussed in [@Ovaskainen2020]). We take a less quantitative, and more verbal and visual description of the steps required to apply HMSC with trait change to empirical data. We use the example that appears in the main manuscript from the experiment of [@Jewell2023], with code to implement the steps located in [github::jhpantel/ecoevo-hmsc/code/6_emp_hmsc.R](https://github.com/jhpantel/ecoevo-hmsc/blob/fe517557e5aff81aa3090521348a58c89d67bebe/code/R/6_emp_hmsc.R). We don’t repeat that script in its entirety here, but instead present elements for a step-by-step guide to fitting an HMSC model with changing trait values as fixed effects.
+
+## Step 1: Arrange study data
+
+The first step as in any statistical model is to define your fixed effects (covariates: $X$), which influence the measured variable ($Y$), as well as random effects. Each of these data subsets requires a separate matrix to be included into the HMSC model, where each row represents one data sample. The columns define the different categories for the samples (e.g. what is measured or spatial/temporal information).
+
+In typical HMSC applications, trait values are included as a separate $species \times trait$ matrix containing a single constant value for each species, to evaluate their impact on the response of species to environmental predictors. In our application, we calculated trait changes over time and estimated the impact of these trait changes for species densities. In our HMSC model, we implemented the absolute value of trait change as a fixed effect, as this shows how trait change in general (irrespective of the direction of change) can impact species density.
+
+It is important to note that HMSC does not check whether the samples are ordered in the same way between the different matrices (i.e. that each row corresponds to the same temporal, spatial, treatment etc), so the user must check that carefully before implementing them into the model. Constructing the data, predictor, and study design matrices properly is a key step before model evaluation, and we suggest to create reduced versions of these matrices to better understand their structure.
+
+## Step 2: Formulate study data as matrices
+
+HMSC requires a specific format for the various model elements. Fixed effect predictors must be defined as a data frame, then their relationship to the response variable $Y$ is specified in the `XFormula`. All effects must use the column names of $X$, and interaction effects can be included as well (`HMSC` uses R's `formula`, i.e. the same specification as for e.g. `lm` and `glm`).
+
+In the empirical analysis presented in the main text, the $X$ matrix and `XFormula` are:
+
+```{r echo=FALSE}
+load("./data/emp/hmsc_emp.RData")
+head(XData)
+m.1_evo$XFormula
+```
+
+The study design matrix is HMSC's formulation for fixed and random effects, which can include elements such as experimental blocks or sampling plot hierarchical structure. The study design should be formatted as a dataframe, with columns as factors.
+
+```{r echo=FALSE}
+head(studyDesign[,1:2])
+```
+
+The random effects are then defined with the HMSC function `HmscRandomLevel`, applied on each random effect separately. In our empirical example, this is done as:
+
+```{r eval=FALSE}
+rL.time <- HmscRandomLevel(units = unique(data_abun$Week))
+rL.rep <- HmscRandomLevel(units = unique(data_abun$C.Rep))
+```
+
+(where `data_abun` is the original dataframe with the study data that is used to construct model matrices). We scale fixed effects, implemented in Hmsc as `XScale = T` when the model is run in Step 3. HMSC allows specification for all model parameter priors, and the response variable can be modelled as normal, probit, Poisson, or lognormal Poisson (specified in the `distr=` argument when the model is run in Step 3).
+
+## Step 3: Model running and diagnostic checks
+
+To evaluate the statistical model, parameters for the Monte-Carlo Markov-Chain (MCMC), which draws samples from posterior distributions, must be defined. Choosing the right parameters to reach converged chains can take some time, and it is recommended to first develop the analysis pipeline with a subset of study data to reduce run time. It is also possible to use a high thinning value to reduce computation time. For example, we used the following values for MCMC and to begin sampling using Hmsc:
+
+```{r eval=FALSE}
+thin = 5000
+samples = 250
+transient = 125*thin
+verbose = 5000
+chains = 4
+nParallel = 4
+
+m <- Hmsc::Hmsc(Y=Y_log,XData=XData,studyDesign=studyDesign,XFormula=XFormula,ranLevels=list("Week"=rL.time,"C.Rep"=rL.rep),distr="normal",XScale=TRUE)
+
+m.1_evo <- Hmsc::sampleMcmc(m,samples=samples,transient=transient,nChains=chains,verbose=verbose,thin=thin,updater = list(GammaEta = FALSE),nParallel=nParallel)
+```
+
+After the model samples have been generated, diagnostics for the Markov chains can be applied from the `coda` package if the HMSC output is converted to a `coda` object. We give here some diagnostics from our empirical application, and we also provide code for diagnostics in the R script [github::jhpantel/ecoevo-hmsc/code/4_diagnostics.R](https://github.com/jhpantel/ecoevo-hmsc/blob/fe517557e5aff81aa3090521348a58c89d67bebe/code/R/4_diagnostics.R).
+
+```{r}
+#Converting into a coda object
+m.post <- convertToCodaObject(m.1_evo)
+#Calculating the effective sample size (ESS) - which shows how many data points of the MCMC chain were independently and randomly drawn and as such can be effectively used
+ess.beta<- effectiveSize(m.post$Beta)
+
+#Calculating the potential scale reduction factor (PSRF) - which is from the Gelman-Rubin diagnostic is based a comparison of within-chain and between-chain variances, and is similar to a classical analysis of variance
+psrf.beta <- gelman.diag(m.post$Beta, multivariate=FALSE)$psrf
+```
+
+A histogram can be used to plot ESS and PSRF, though more detailed plots should be used to detect possible sources of errors. Higher ESS (closer to the MCMC sample size) and PSRF closer to 1 PSRF is better (ideally exactly 1).
+
+```{r echo=FALSE}
+#Plotting simple histograms
+hist(ess.beta,xlab="Effective sample site",main="")
+hist(psrf.beta,xlab="Potential scale reduction factor",main="")
+```
+
+#### Step 3.1 Autocorrelation plot 
+
+Autocorrelation shows how much a sample point of MCMC is correlated to its previous sampling point, thus 0 would be the optimal value. Here the autocorrelation of all chains for species Lm are shown.
+
+```{r, echo=FALSE}
+bayesplot::mcmc_acf(m.post$Beta[,c(1,2,3,4,5,6,7)])
+```
+
+#### Step 3.2 Predictive vs explanatory power 
+
+The explanatory and predictive power of each model can also be calculated, though we note that the calculation of predictive power requires long computation time in more complex models given the use of cross validation.
+
+```{r, echol=FALSE,eval=FALSE}
+#To calculate the explanatory power
+preds = computePredictedValues(m.1_evo)
+MF = evaluateModelFit(hM=m.1_evo, predY=preds)
+
+#To calculate the predictive power we need to do a cross-validation, will take some time
+partition = createPartition(m.1_evo, nfolds = 2)
+preds.cross = computePredictedValues(m.1, partition=partition, nParallel =2)
+MF.cross = evaluateModelFit(hM=m.1, predY=preds.cross)
+```
+
+```{r, echol=FALSE,eval=FALSE}
+#Plotting explanatory and predictive power for R^2 and residual mean squared error (RMSE)
+R2_dat <-data.frame(y=c(unname(MF$R2),unname(MF.cross$R2)),x=c(rep("explanatory",length(MF$R2)),rep("predictive",length(MF.cross$R2))))
+RMSE_dat <-data.frame(y=c(unname(MF$RMSE),unname(MF.cross$RMSE)),x=c(rep("explanatory",length(MF$R2)),rep("predictive",length(MF.cross$R2))))
+
+p1<-ggplot(R2_dat,aes(y=y,x=x,fill=x))+
+  geom_boxplot()+
+  ylab("R2")+xlab("")+theme(legend.position="none")
+p2<-ggplot(RMSE_dat,aes(y=y,x=x,fill=x))+
+  geom_boxplot()  +
+  ylab("RMSE")+xlab("")+theme(legend.position="none")
+
+p1+p2 
+```
+
+Posterior distributions should be visually evaluated for problematic elements. Papers for beginners to Bayesian analysis can give more guidance, i.e. [@Giminez2025]. If all checks are satisfactory, then continue to the next step to interpret model results.
+
+
+
+## Step 4: Model results and interpretation
+
+It is useful to again recall that in the correlative HMSC model, different mechanisms may produce observed effect size estimates (main text, Box 1). In multi-species communities, there may also be a very large number of posterior distributions for model parameters for all species. Posterior model interpretation may be a large computational exercise for this reason. We provide an example for how to arrange HMSC posterior objects of the empirical data to summarize posterior distributions  though we note that these are specific to our metacommunity simulation results structure. Nevertheless, it provides one example of how to visualize large numbers of parameter posterior distributions.
+
+```{r }
+#### Step 0 Load the data --------------
+load("./data/emp/hmsc_emp.RData")
+
+#### Step 1. Evaluate posteriors --------------
+m.post = Hmsc::convertToCodaObject(m.1_evo)
+m.df <- do.call(rbind, m.post$Beta)
+
+s <- ncol(m.1_evo$Y)
+npred <- 1 + length(colnames(m.1_evo$XData))
+
+# All beta coefficients where HDI doesn't include 0 ####
+a <- apply(m.df,2,function(x) quantile(x,probs=c(0.025,0.975)))
+b <- apply(a,2,function(x) prod(x[1],x[2]) < 0)
+B.not0 <- m.df[,b==FALSE]
+not0 <- colnames(B.not0)
+
+# Separate coefficient estimate posteriors into groups
+s <- ncol(m.1_evo$Y)
+npred <- 1 + length(colnames(m.1_evo$XData))
+
+# N ~ dLm ##########
+B.dLm <- m.df[,seq(6,length(colnames(m.df)),npred)]
+# All values, colored by overlap of HPDI with 0
+xc<-NULL
+for(i in 1:ncol(B.dLm)) xc[i]<-as.numeric(sum(colnames(B.dLm)[i]==not0))+1
+theme_set(theme_grey())
+#Renaming it to dLm and the according species
+colnames(B.dLm) <- c("dLm_Lm","dLm_Rn","dLm_Sp","dLm_Wc")
+bayesplot::mcmc_areas(B.dLm,rhat=xc) + legend_none() +  theme(text = element_text(size = 20))
+```
+
+### Example interpretation of estimated effect of trait evolution in one species
+
+We provide more detail here for interpreting results from the empirical example with frond area and population density for four aquatic plant species. To interpret effect size results, begin by inspecting raw data (e.g. Figure \@ref(fig:fig1)).
+
+```{r fig1, out.width="90%", include=TRUE, fig.align="center", fig.cap=c("Raw data from the experiments of Jewell and Bell 2024. (a) Population dynamics for each species shown in log(count), as it was implemented as such into the model. (b) The natural logarithm of trait change of all species over time, to visualize more clearly the changes over time. (c) Total change in trait value for all species over time. (d) The raw trait values of all species over time. Colors and linetype denote the different environmenal treamtents."), echo=FALSE}
+knitr::include_graphics("../output/fig_S4_1.pdf",error=FALSE)
+```
+
+We observe that frond size for species Rn is rapidly increasing over the course of the experiment, with a peak in trait change during week 5 and 7, while it is only slowly increasing in population density (with only slightly lower density during week 5, Figure \@ref(fig:fig2)). The data consequently would have a high value of $|\Delta x|$ corresponding to a lower value of log(density) for species Rn, and the model estimates a negative effect size. Similarly species Lm has slight changes in its decrease of frond size (recall that all effects are scaled before being implemented into the model), which occur in the opposite direction of the density changes of Sp and Wc in the respective treatments. Therefore the model estimates also negative effect sizes in these cases (Figure \@ref(fig:fig3)).
+
+```{r fig2, out.width="90%", include=TRUE, fig.align="center", fig.cap=c("We plot here four example where the posterior estimated direction of effect sizes with 95% HDI of trait change on species density were either positive or negative. (a) dRn against counts of species Rn (negative effect size). (b) dWc against counts of species Lm (positive effect size). (c) dLm against counts of species Sp (negative effect size). (d) dSp against counts of species Sp (positive effect size)."), echo=FALSE}
+knitr::include_graphics("../output/fig_S4_2.pdf",error=FALSE)
+```
+
+```{r fig3, out.width="90%", include=TRUE, fig.align="center", fig.cap=c("Posterior distributions of the effect sizes from the four examples of Figure 3. (a) Posterior distribution of dRn on counts of Rn. (b) Posterior distribution of dWc on counts of Lm. (c) Posterior distribution of dLm on counts of Sp. (d) Posterior distribution of dSp on counts of Sp. The blue vertical line denotes the median and the shaded area the inner 50% of the probability mass from the posterior distribution."), echo=FALSE}
+knitr::include_graphics("../output/fig_S4_3.pdf",error=FALSE)
+```
+
+It should also be noted that species Rn was the only to strongly increase in frond size in this experiment, which may result from its decrease in population size. Species Sp decreased in frond size, thus occupying less space on the water surface and potentially freeing space to occupy. This might for example, be the mechanistic explanation of the negative effect of dRn for density of Rn and positive effect of dSp for density of Sp (but see Box 1 and [@Jewell2023] for information about interpreting such effects).
+
+
+# References

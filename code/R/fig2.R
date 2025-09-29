@@ -1,4 +1,4 @@
-## Code for Figure 1
+## Code for Figure 2
 # Author. J.H. Pantel &  R.J. Hermann
 # Date 29.07.2025
 
@@ -15,6 +15,7 @@ library(gridGraphics)
 library(svglite)
 ## functions
 source("./code/R/plot_grad_ylim.R")
+source("./code/R/two_h_cust.R")
 
 ## set random seed
 set.seed(8)
@@ -351,12 +352,12 @@ par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0,0))
 Gradient <- constructGradient(m.3.sample,focalVariable="dx1",non.focalVariables=list(E=list(2),Esq=list(2),dx2=list(2)),ngrid=390)
 Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
 predY <- predict(m.3.sample,XData=Gradient$XDataNew,expected=TRUE,ranLevels=Gradient$rLNew)
-plot_grad_ylim(m.3.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx_t",ylab="predicted N1_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,mar=c(1,1,0,0),bty='n',auto=0,l1=0,h1=5)
+two_h_cust(m.3.sample,Gradient,pred=predY,showData=T,measure="Y",index=1,main="",xlab="dx_t",ylab="predicted N1_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,mar=c(1,1,0,0),bty='n',auto=0,l1=0,h1=5)
 p9 <- recordPlot()
 Gradient <- constructGradient(m.3.sample,focalVariable="E",non.focalVariables=list(Esq=list(2)),ngrid=390)
 Gradient$XDataNew$Esq <- Gradient$XDataNew$E^2
 predY <- predict(m.3.sample,XData=Gradient$XDataNew,expected=TRUE,,ranLevels=Gradient$rLNew)
-plot_grad_ylim(m.3.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,mar=c(1,1,0,0),bty='n',auto=0,l1=0,h1=5)
+two_h_cust(m.3.sample,Gradient,pred=predY,showData=T,measure="Y",index=2,main="",xlab="E_t",ylab="predicted N2_t+1",showPosteriorSupport=FALSE,cex.axis=0.75,mar=c(1,1,0,0),bty='n',auto=0,l1=0,h1=5)
 p10 <- recordPlot()
 ### variance partitioning ###
 par(mgp=c(2,0.45,0), tcl=-0.4, mar=c(1.3,1.2,0.5,0.5))
@@ -408,7 +409,4 @@ p11.g <- ggdraw(p11)
 d <- plot_grid(p1,plot_grid(p2.g,p3.g,nrow=2,align="v"),p4.g,p5,plot_grid(p6.g,p7.g,nrow=2,align="v"),p8.g,p12,plot_grid(p9.g,p10.g,nrow=2,align="v"),p11.g,nrow=3,ncol=3,rel_widths=c(5,1.5,2,5,1.5,2,5,1.5,2),align="h",axis="b",labels = c('a','b','c','d','e','f','g','h','i'),label_size = 9,hjust=c(0,2,2))
 
 ggsave(file="./output/fig2.svg",plot=d,width=297,height=210,units="mm")
-
-# pdf("./output/fig1JP.pdf",width=11.69, height=8.27)
-# d
-# dev.off()
+ggsave(file="./output/fig2.pdf",plot=d,width=297,height=210,units="mm")

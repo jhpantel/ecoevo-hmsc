@@ -1,7 +1,7 @@
 #Title. 1_metacom_sim.R
 # Author. J.H. Pantel &  R.J. Hermann
 # Date 29.07.2025
-# Description. This script contains the simulation, which is analysed with HMSC. Associated manuscript Pantel & Hermann 2025.
+# Description. This script contains the metacommunity simulation, which is analysed with HMSC. Associated manuscript Pantel & Hermann 2025.
   
 library(vegan)
 library(ggplot2)
@@ -59,12 +59,6 @@ xt = array(9999,c(patch,spec,time))     # Record of phenotype value over time, p
 Et = array(numeric(),c(patch,time))   # Record of environmental value over time, patch x spec x time
 
 var = 0 #Adding variation to the environmental value for no variation set to 0 (var is the sd of the normal distribution with a mean of 0)
-## Heritability
-# Scenario 1: No evolution
-#h2 = array(0,c(1,spec))
-
-# Scenario 2: Evolution, same heritatibility, high
-#h2 = array(0.9,c(1,spec))
 
 extprob = 0.001    # Probability that species goes extinct when under critical density
 repnum = 1000     # Total number of replicates of simulations
@@ -79,7 +73,7 @@ K = array(1000,c(patch,spec)) # Carrying capacity of each species in each patch
 # Spatial connectivity and dispersal
 ##Random spatial location
 xy = array(runif(patch*2),c(patch,2))
-## Unifrom spatial locations
+## Uniform spatial locations
 #x.1 = seq(0.1,1,0.1)
 #x = array(x.1,c(length(x.1)*5,1))
 #y.1 = seq(0.1,1,0.2)

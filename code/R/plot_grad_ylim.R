@@ -2,7 +2,7 @@
 ## 08-11-2024
 ## plotGradient from HMSC, with control for y-limit
 library(abind)
-plot_grad_ylim <- function (hM, Gradient, predY, measure, xlabel = NULL, ylabel = NULL, index = 1, q = c(0.025, 0.5, 0.975), cicol = rgb(0, 0, 1, alpha = 0.5), pointcol = "lightgrey", pointsize = 1, showData = FALSE, jigger = 0, yshow = NA, showPosteriorSupport = TRUE, auto=1,l1=1,h1=1,main,...) 
+plot_grad_ylim <- function (hM, Gradient, predY, measure, xlabel = NULL, ylabel = NULL, index = 1, q = c(0.025, 0.5, 0.975), cicol = rgb(0, 0, 1, alpha = 0.5), pointcol = "lightgrey", pointsize = 0.5, showData = FALSE, jigger = 0, yshow = NA, showPosteriorSupport = TRUE, auto=1,l1=1,h1=1,main,...) 
 {
   Pr = NA
   if (is.null(xlabel)) {

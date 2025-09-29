@@ -114,7 +114,7 @@ for(i in 1:dim(N)[3]){
 mycols <- c("maroon4","coral3","peachpuff3","gray47","hotpink2","darkorange","cyan3","khaki1","firebrick1","cadetblue4","mediumslateblue","mediumspringgreen","darkorchid4","midnightblue","rosybrown1")
 mycols2<-mycols[1:ncol(N)]
 
-#The number of plots per page needs to be adjusted manually, the rest should work automatically independed of the number of patches, species (up to 15) or running time
+#The number of plots per page needs to be adjusted manually, the rest should work automatically independent of the number of patches, species (up to 15) or running time
 ## Plot of metacommunity population dynamics over time
 par(mfrow=(c(10,5)))
 par(mai=c(0.1,0.1,0.1,0.1),oma=c(2,2,2,1))

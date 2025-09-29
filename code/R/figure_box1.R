@@ -13,13 +13,13 @@ load("data/mc/h_01_d_minus3_hmsc.RData")
 m.post = Hmsc::convertToCodaObject(m.1)
 m.df <- as.data.frame(do.call(rbind, m.post$Beta))
 
-mycols <- c("maroon4","coral3","peachpuff3","gray47","hotpink2","darkorange","cyan3","khaki1","firebrick1","khaki1","mediumslateblue","mediumspringgreen","darkorchid4","khaki1","rosybrown1")
+mycols <- c("maroon4","coral3","peachpuff3","gray47","hotpink2","darkorange","cyan3","azure2","firebrick1","azure2","mediumslateblue","mediumspringgreen","darkorchid4","azure2","rosybrown1")
 ############################################################
 #Checking the beta effect of species 15 on 12
 #With pre-checking we could find that both species only co-occur in patches patch 4,7,41, 46
 par(mai=c(0,0,0,0),oma=c(2,2,0.5,0.5),mar=c(0,0,0,0))
 #For beta of |deltax| species 15 on species 12
-p1<-bayesplot::mcmc_areas(as.data.frame(m.df$`B[x15 (C14), y12 (S9)]`)) + labs(x="Posterior distribution",y="Density")+
+p1<-bayesplot::mcmc_areas(as.data.frame(m.df$`B[x15 (C14), y12 (S9)]`)) + labs(x="Posterior distribution",y="Density")+theme_classic()+
   theme(axis.ticks.y=element_blank(),axis.text.y=element_blank())+ggtitle(expression("|"~Delta~"x12,15|"))
 
 for(j in c(4)){
@@ -32,6 +32,9 @@ for(j in c(4)){
     points(N[j,i,],col=mycols[i])
     text(x=(dim(N)[3]),y=(max(N,na.rm=T)/5),labels=j,pos=2,col="black")
   }
+  for(i in c(12,15)){
+    points(N[j,i,],col=mycols[i])
+  }
 }
 p2 <- recordPlot()
 for(j in c(7)){
@@ -43,6 +46,9 @@ for(j in c(7)){
   for(i in 1:ncol(N)){
     points(N[j,i,],col=mycols[i])
     text(x=(dim(N)[3]),y=(max(N,na.rm=T)/5),labels=j,pos=2,col="black")
+  }
+  for(i in c(12,15)){
+    points(N[j,i,],col=mycols[i])
   }
 }
 p3 <- recordPlot()
@@ -76,7 +82,7 @@ p5 <- recordPlot()
 
 
 ######################################################################
-mycols <- c("maroon4","coral3","peachpuff3","gray47","hotpink2","darkorange","cyan3","khaki1","khaki1","khaki1","mediumslateblue","mediumspringgreen","darkorchid4","midnightblue","khaki1")
+mycols <- c("maroon4","coral3","peachpuff3","gray47","hotpink2","darkorange","cyan3","azure2","azure2","azure2","mediumslateblue","mediumspringgreen","darkorchid4","midnightblue","azure2")
 #Checking the beta effect of species 3 on 4
 #With pre-chcking we could find that both species co-occur in patches 2, 26, 31, 32, 33,30, 43, 48 from which patches 2 & 30 are shown
 #For beta of |deltax| species 3 on species 4
@@ -85,7 +91,7 @@ m.post = Hmsc::convertToCodaObject(m.1)
 m.df <- as.data.frame(do.call(rbind, m.post$Beta))
 
 
-p6<-bayesplot::mcmc_areas(as.data.frame(m.df$`B[x3 (C4), y4 (S3)]`)) + labs(x="Posterior distribution",y="Density")+
+p6<-bayesplot::mcmc_areas(as.data.frame(m.df$`B[x3 (C4), y4 (S3)]`)) + labs(x="Posterior distribution",y="Density")+theme_classic()+
   theme(axis.ticks.y=element_blank(),axis.text.y=element_blank())+ggtitle(expression("|"~Delta~"x4,3|"))
 
 
@@ -100,6 +106,9 @@ for(j in c(2)){
     points(N[j,i,],col=mycols[i])
     text(x=(dim(N)[3]),y=(max(N,na.rm=T)/2),labels=j,pos=2,col="black")
   }
+  for(i in 3:4){
+    points(N[j,i,],col=mycols[i])
+  }
 }
 p7 <- recordPlot()
 
@@ -112,6 +121,9 @@ for(j in c(26)){
   for(i in 1:ncol(N)){
     points(N[j,i,],col=mycols[i])
     text(x=(dim(N)[3]),y=(max(N,na.rm=T)/2),labels=j,pos=2,col="black")
+  }
+  for(i in 3:4){
+    points(N[j,i,],col=mycols[i])
   }
 }
 p8 <- recordPlot()

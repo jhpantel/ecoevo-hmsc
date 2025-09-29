@@ -1,0 +1,138 @@
+---
+title: "Appendix S5. Heritability and HMSC"
+author:
+- "Jelena H. Pantel^[Laboratoire Chrono-environnement,UMR 6249 CNRS-UFC, 16 Route
+  de Gray, 25030 Besançon cedex, France, jelena.pantel@univ-fcomte.fr]"
+- "Ruben J. Hermann^[University of Konstanz, Universitätsstraße 10, 78464 Konstanz,
+  Germany, ruben.hermann@posteo.de]"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::pdf_document2:
+    toc: no
+    fig_caption: yes
+    latex_engine: xelatex
+    extra_dependencies: ["float"]
+  bookdown::html_document2: default
+  word_document:
+    reference_docx: docx_template.docx
+header-includes:
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead[L]{Author Pantel and Hermann}
+- \fancyhead[R]{Detection of ecoevo dynamics}
+- \usepackage{lineno}
+- \linenumbers
+link-citations: yes
+linkcolor: blue
+csl: the-american-naturalist.csl
+bibliography: refs.bib
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+```{r setup,echo=FALSE,message=FALSE,warning=FALSE}
+library(tinyplot)
+library(ggplot2)
+library(statgenSTA)
+library(statgenGxE)
+library(here)
+library(tinyplot)
+knitr::opts_knit$set(root.dir = here())
+```
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+# Wrap long lines
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE,out.width="50%")
+```
+
+# Broad-sense heritability estimates
+
+The work of [@Jewell2023] includes a reciprocal transplant experiment, which can be used to separate genetic phenotypic variance from other sources (i.e. environmental plasticity). With that, we can include genetic (and in principal environmental and residual plastic) components of trait variation as predictors in the HMSC models.
+
+The quantitative trait of frond area has the following distributions by species:
+
+```{r figs1, fig.pos = "H", fig.show="hold", fig.cap = "\\label{fig:figs1} Distribution of frond area ($mm^2$) measured for four aquatic plant species (Lemna minor (Lm), Spirodela polyrhiza (Sp), Wolffia columbiana (Wc), and Ricciocarpos natans (Rn)) in a reciprocal transplant experiment."}
+## Load in reciprocal transplant data
+dat_rt <- read.csv("./data/emp/ReciprocalTransplant.csv")
+## Community and Environment as factors
+dat_rt$C.Env <- as.factor(dat_rt$C.Env)
+dat_rt$E.Env <- as.factor(dat_rt$E.Env)
+## Quantitative trait distributions
+tinytheme("ipsum")
+plt(~FrondArea, type="density", data=dat_rt, facet=~Species)
+```
+We can construct a reaction norm for each species, by considering the mean phenotype for each of nine populations (given in the raw data file as `C.Env`, the environment that the plants were exposed to over 12 weeks) measured in each of the nine environments (given in the raw data file as `E.Env`). The authors of [@Jewell2023] consider two populations, Derived and Ancestral, and two environments, Modified and Original.
+
+```{r figs2, fig.pos = "H", warning=FALSE,fig.show="hold", fig.cap = "\\label{fig:figs1} Reaction norm for frond area ($mm^2$) of two populations (Ancestral ad Derived) measured in two environments (Modified and Original), for four aquatic plant species."}
+ggplot(dat_rt,aes(x=E.Type,y=FrondArea,color=C.Type)) +
+  geom_point(aes(group = C.Type),position=position_jitterdodge(0.1, dodge.width = .2),alpha=0.3,size=0.2) +
+  stat_summary(aes(group = C.Type),position=position_jitterdodge(0.1, dodge.width = .2), fun.y = mean, geom = "path") +
+  stat_summary(aes(color = C.Type),position=position_jitterdodge(0.1, dodge.width = .2), fun.y = mean, geom = "point", size = 2) +
+  facet_wrap(~Species,scales="free") +
+  theme_light()
+```
+We instead used the nine populations and environments, with awareness the experiment was not designed to be balanced across these levels. For example, plants that evolved in environment 9 (low light, high nutrients) are considered as population 9. Individuals from this population were placed in reciprocal transplant experiments only in environment 5 (medium light, medium nutrients; considered to be a match to the ancestral environment in the lake where all experimental plants are sourced) and environment 9. Because the environmental treatments vary across three light levels (Low = 3%, Medium = 12%, High = 50%) and three nutrient treatments (dissolved nitrogen and phosphorus, DN, and DP; Low: DN = 200 $\mu g L^{-1}$, DP = 10 $\mu g L^{-1}$; Medium: DN = 800 $\mu g L^{-1}$, DP = 40 $\mu g L^{-1}$; High: 3200 $\mu g L^{-1}$, DP = 160 $\mu g L^{-1}$), we create a single environmental value as the mean phenotype value of all individuals measured in each of the nine environments [@Falconer1989] [@Stearns1992].
+
+```{r figs3, fig.pos = "H", fig.show="hold", fig.cap = "\\label{fig:figs1} Reaction norm of frond area ($mm^2$) for nine populations (Nutrients: low, medium, high; Light: low, medium, high) measured in nine environments (Nutrients: low, medium, high; Light: low, medium, high), for four aquatic plant species.", warning=FALSE}
+# Calculate environmental value (page 136, Falconer 1989; cited in Stearns 1992, page 62)
+# Following Jewell & Bell 2023, we define environment 1-9
+# We calculate the mean across all individuals in each of these environments - this becomes the 'environmental value'
+# Create environmental value
+dat_rt$Env.Val <- NA
+Env.Val <- by(dat_rt,factor(dat_rt$E.Env),function(x){mean(x$FrondArea)})
+for(i in 1:length(levels(factor(dat_rt$E.Env)))){
+  dat_rt$Env.Val[dat_rt$E.Env==levels(factor(dat_rt$E.Env))[i]] <- as.numeric(Env.Val[i])
+}
+# Reaction norm plot
+ggplot(dat_rt,aes(x=Env.Val,y=FrondArea,color=C.Env)) +
+  geom_point(aes(group = C.Env),position=position_jitterdodge(0.1, dodge.width = .2),alpha=0.3,size=0.2) +
+  stat_summary(aes(group = C.Env),position=position_jitterdodge(0.1, dodge.width = .2), fun.y = mean, geom = "path") +
+  stat_summary(aes(color = C.Env),position=position_jitterdodge(0.1, dodge.width = .2), fun.y = mean, geom = "point", size = 2) +
+  facet_wrap(~Species,scales="free") +
+  theme_light()
+```
+We consider the following linear model and corresponding variance components and heritability estimate ($h^2$ after [@Piepho2007]):
+
+$$ y = \beta_0 + \beta_1 G + \beta_2 E + \beta_3 G \times E + \epsilon $$
+
+$$ h^2 = \frac{\sigma^2_G}{\sigma^2_G + \frac{\sigma^2_{GE}}{m} + \frac{\sigma^2}{mr}} $$
+Where $G$ is the effect of the genetic component (population in this case), $E$ is the effect of environmental value, $G \times E$ is their interaction, $m$ is the number of environmental levels, and $r$ is the number of replicates. We implemented a mixed model, with $E$ as a fixed effect, and $G$ and $G \times E$ as random effects. The mixed model and estimation of variance terms were carried out using R package `statgenGxE` [@vanRossum2025] (note that the model places the environment term with the residual term).
+
+```{r message=FALSE}
+## Calculate phenotypic variance components in a linear mixed model
+dat_rt$Env.Val <- as.factor(dat_rt$Env.Val)
+dat_rt$Env.Val <- as.ordered(dat_rt$Env.Val)
+Wc <- subset(dat_rt,grepl("Wc", Species))
+Sp <- subset(dat_rt,grepl("Sp", Species))
+Lm <- subset(dat_rt,grepl("Lm", Species))
+Rn <- subset(dat_rt,grepl("Rn", Species))
+
+## Broad-sense heritability estimates by species
+#Wc
+Wc.TD <- statgenSTA::createTD(data = Wc, genotype = "C.Env", trial = "Env.Val")
+drops.Wc <- gxeVarComp(TD = Wc.TD, trait = "FrondArea")
+var.Wc <- vc(drops.Wc)
+h2.Wc <- var.Wc$Component[1] / (var.Wc$Component[1] + (var.Wc$Component[2] / 9) + (var.Wc$Component[3]/(9*2)))
+#Sp
+Sp.TD <- statgenSTA::createTD(data = Sp, genotype = "C.Env", trial = "Env.Val")
+drops.Sp <- gxeVarComp(TD = Sp.TD, trait = "FrondArea")
+var.Sp <- vc(drops.Sp)
+h2.Sp <- var.Sp$Component[1] / (var.Sp$Component[1] + (var.Sp$Component[2] / 9) + (var.Sp$Component[3]/(9*2)))
+#Lm
+Lm.TD <- statgenSTA::createTD(data = Lm, genotype = "C.Env", trial = "Env.Val")
+drops.Lm <- gxeVarComp(TD = Lm.TD, trait = "FrondArea")
+var.Lm <- vc(drops.Lm)
+h2.Lm <- var.Lm$Component[1] / (var.Lm$Component[1] + (var.Lm$Component[2] / 9) + (var.Lm$Component[3]/(9*2)))
+#Rn
+Rn.TD <- statgenSTA::createTD(data = Rn, genotype = "C.Env", trial = "Env.Val")
+drops.Rn <- gxeVarComp(TD = Rn.TD, trait = "FrondArea")
+var.Rn <- vc(drops.Rn)
+h2.Rn <- var.Rn$Component[1] / (var.Rn$Component[1] + (var.Rn$Component[2] / 9) + (var.Rn$Component[3]/(9*2)))
+```
+
+We can now implement these values into the HMSC, to estimate the impact of trait evolution (as well as other predictors) for species abundances.
+
+# References

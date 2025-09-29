@@ -1,0 +1,81 @@
+---
+title: "Box 1: Interpreting the impacts of trait evolution"
+author:
+- "Jelena H. Pantel^[Laboratoire Chrono-environnement,UMR 6249 CNRS-UFC, 16 Route
+  de Gray, 25030 Besançon cedex, France, jelena.pantel@univ-fcomte.fr]"
+- "Ruben J. Hermann^[University of Konstanz, Universitätsstraße 10, 78464 Konstanz,
+  Germany, ruben.hermann@posteo.de]"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::pdf_document2:
+    toc: no
+    fig_caption: yes
+    latex_engine: xelatex
+    extra_dependencies: float
+    number_sections: yes
+    keep_tex: true
+  bookdown::html_document2: default
+  pdf_document:
+    toc: no
+  word_document:
+    reference_docx: docx_template.docx
+  html_document:
+    toc: no
+    df_print: paged
+header-includes:
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead[L]{Author Pantel and Hermann}
+- \fancyhead[R]{Detection of ecoevo dynamics}
+- \usepackage{lineno}
+- \linenumbers
+linestretch: 2
+link-citations: yes
+linkcolor: blue
+csl: "the-american-naturalist.csl"
+bibliography: refs.bib
+---
+
+```{r setup,echo=FALSE,message=FALSE}
+#library(ecoevor)
+library(tidyverse)
+library(Hmsc)
+library(here)
+library(knitr)
+library(kableExtra)
+library(formatR)
+library(rmarkdown)
+knitr::opts_knit$set(root.dir = here())
+```
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+# Wrap long lines
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE,out.width="50%")
+#Loading HMSC result of the simulation 
+```
+
+```{r,echo=FALSE}
+load("./data/mc/h_01_d_minus3_hmsc.RData")
+m.post = Hmsc::convertToCodaObject(m.1)
+m.df <- as.data.frame(do.call(rbind, m.post$Beta))
+b1512 <- median(m.df$`B[x15 (C14), y12 (S9)]`)
+
+load("./data/mc/h_09_d_minus3_hmsc.RData")
+m.post2 = Hmsc::convertToCodaObject(m.1)
+m.df2 <- as.data.frame(do.call(rbind, m.post2$Beta))
+b43 <- median(m.df2$`B[x3 (C4), y4 (S3)]`)
+```
+
+The HMSC statistical model can estimate the impact of multiple (fixed and random) effects on the measured response variable. Interpretation of these effects, as in any statistical model, requires understanding the potential mechanisms that combine to produce the observations and estimated effect coefficients. In this study, we evaluated the effects of the absolute value in trait change from one time step to the next, $|\Delta x|$, for species densities ($log(N)$). This produces a linear regression coefficient $\beta_{|\Delta x_{ij}|}$, the effect of trait change in species $j$ for density in species $i$. In our metacommunity simulation models, we often observed a strong impact of $\beta_{|\Delta x_{ii}|}$, and in some instances also strong  $\beta_{|\Delta x_{ij}|}$.
+
+We highlight two examples of the metacommunity simulations to consider how to interpret effects of trait evolution: (1) $\beta_{|\Delta x_{12,15}|}$ = `r round(b1512,digits=3)` (influence of $|\Delta x_{15}|$ on $N_{12}$, posterior median) under the simulation conditions $h^2= 0.1$ and dispersal $d = 10^{-3}$ and (2) $\beta_{|\Delta x_{4,3}|}$ = `r round(b43,digits=3)` under $h^2= 0.9$ and dispersal $d = 10^{-3}$. To interpret these effects, we first note that in the mechanistic model we used to simulate growth in a metacommunity, $|\Delta x_j|$ does not directly impact $N_i$. It instead impacts the growth rate and resulting density of species $j$, and this can have an impact for species $i$ through the strength of interspecific competition $\alpha_{ij}$. We also note that in our simulation, the greater the degree of local maladaptation (the distance between trait $x_i$ and the local optimum $x_{opt}$), the greater the corresponding selection pressure and thus the greater the value of $|\Delta x|$ will be. Our simulation uses an initially maladapted assemblage of species and therefore the highest $|\Delta x|$ values occur at the beginning of the simulation. We also initiated the simulation with low densities for all species. For this reason, the high $|\Delta x|$ observed in early time steps occurs frequently with the initially low $N$ values.
+
+```{r figI, out.width="110%", include=TRUE, fig.align="center", fig.cap=c("Two effect size estimates of trait evolution for species density in a metacommunity ($\\beta_{|\\Delta x|}$) resulting from an HMSC analysis, with corresponding population and $|\\Delta x|$ dynamics. (a) $\\beta_{|\\Delta x_{12,15}|}$ shows a positive effect of $|\\Delta x_{15}|$ on $N_{12}$. In (d) $\\beta_{|\\Delta x_{4,3}|}$ shows a negative effect of $|\\Delta x_3|$ on $N_4$. To explain the mechanism for these effect sizes, we evaluate population dynamics (b,e) and $|\\Delta x|$ (c,f) in representative patches where the pairs of species co-occur. In (a) and (d), the blue vertical lines denote the median and the shaded area the inner 50% of the probability mass from the posterior distribution. The colored points denote different species: 12 (green), 15 (pink), 3 (light brown), and 4 (dark gray), with all other co-occurring species shown as light blue."), echo=FALSE}
+knitr::include_graphics("../output/box1_fig_mod.pdf",error=FALSE)
+```
+
+This background can help when interpreting the posterior effect size estimates for $\beta_{|\Delta x_{12,15}|}$ and $\beta_{|\Delta x_{4,3}|}$ (Figure \@ref(fig:figI)a,d). Species 15 (pink points, Figure \@ref(fig:figI)b), repeatedly invades patches where Species 12 (green points) was a resident (e.g. patches 4, 7). The invading Species 15 is initially at a low density, resulting once in stochastic extinction. However, compared to the resident Species 12, it is able to establish as a result of its strong interspecific competitive effect, $\alpha_{12,15}$ = `r sprintf("%.7f",alpha[12,15])`. This competitive effect is not symmetric, as competition in the other direction is weaker ($\alpha_{15,12}$ = `r sprintf("%.7f",alpha[15,12])`). Thus as species 15 adapts ($\Delta x$ changes in the direction of the local environmental optimum; Figure \@ref(fig:figI)c), species 12 is simultaneously declining. This mechanism explains the positive effect of $\beta_{|\Delta x_{12,15}|}$ = `r round(b1512,digits=3)`.
+
+In a different example, species 3 (light brown points, Figure \@ref(fig:figI)e) and 4 (dark gray points) can coexist in multiple patches (i.e. patch 2 and 26). Both species have low strength of interspecific competition ($\alpha_{4,3}$ = `r sprintf("%.7f",alpha[4,3])`, $\alpha_{3,4}$ = `r sprintf("%.7f",alpha[3,4])`). Due to landscape connectivity patterns, these coexisting species often invade patches at similar time points, and thus their adaptive trait change (high values of $|\Delta x|$, decreasing as they adapt; Figure \@ref(fig:figI)f) is often occurring at the same time periods. Species 4 is thus frequently increasing in density as $|\Delta x_3|$ decreases, resulting in the negative effect $\beta_{|\Delta x_{4,3}|}$ = `r round(b43,digits=3)`.
+
+The examples here are a reminder that effect sizes of trait evolution for population density (or potentially for other ecological responses) should thus be interpreted carefully. Positive effects of $|\Delta x_j|$ for $N_i$ in one instance resulted from competitive suppression, while in another instance a negative effect resulted simply from independent evolutionary and ecological dynamics occurring at the same time.
