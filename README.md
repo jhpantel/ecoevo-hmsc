@@ -1,4 +1,4 @@
-[![Contributors][contributors-shield]][https://github.com/jhpantel; https://github.com/RubenHermann]
+[![Contributors][contributors-shield]][https://github.com/jhpantel] [https://github.com/RubenHermann]
 
 
 # ecoevo-hmsc
