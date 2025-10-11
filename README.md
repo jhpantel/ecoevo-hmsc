@@ -55,6 +55,8 @@ An in-depth paragraph about your project and overview of use.
 
 ### Contents of repository
 
+The four main folders in this repository are code, data, manuscript, and output. The folder code contains all of the R code needed to reproduce results found in the manuscript Pantel & Hermann 2025. The files contained in this folder are listed here, and described below.
+
 - |code
 - | |R
 - | | |-1_metacom_sim.R
@@ -70,6 +72,10 @@ An in-depth paragraph about your project and overview of use.
 - | | |-figure_box1.R
 - | | |-plot_grad_ylim.R
 - | | |-two_h_cust.R
+
+* 1_metacom_sim.R - Runs the metacommunity simulation with 50 site, 15 species, and varying heritability and dispersal levels. Results are saved in data/init.RData and data/mc.
+* 2_results_sim.R - Metacommunity diversity summary statistics are calculated, and plots of the main dynamics over time for all 50 patches (abundances, trait values, population growth rates, etc). This is a general script that can be used with any set of metacommunity results that are saved in data/mc.
+* 3_main.R - 
 
 
 - | |-DataS1
