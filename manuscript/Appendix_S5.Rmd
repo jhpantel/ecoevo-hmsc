@@ -40,7 +40,6 @@ library(ggplot2)
 library(statgenSTA)
 library(statgenGxE)
 library(here)
-library(tinyplot)
 knitr::opts_knit$set(root.dir = here())
 ```
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
