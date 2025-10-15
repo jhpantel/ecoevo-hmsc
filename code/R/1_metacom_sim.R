@@ -1,6 +1,6 @@
-#Title. 1_metacom_sim.R
+# Title. 1_metacom_sim.R
 # Author. J.H. Pantel &  R.J. Hermann
-# Date 29.07.2025
+# Date. 29.07.2025
 # Description. This script contains the metacommunity simulation, which is analysed with HMSC. Associated manuscript Pantel & Hermann 2025.
   
 library(vegan)
