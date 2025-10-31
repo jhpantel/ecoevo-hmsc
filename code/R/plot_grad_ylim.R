@@ -1,6 +1,9 @@
-## J.H. Pantel
-## 08-11-2024
-## plotGradient from HMSC, with control for y-limit
+# Title. plot_grad_ylim.R
+# Source. https://github.com/hmsc-r/HMSC/blob/8d23efa6c4bd8c6cb937f55c4f77568b3594b199/R/plotGradient.R
+# Modified by. J.H. Pantel
+# Date. 08-11-2024
+# Description. plotGradient from HMSC, with control for y-limit
+
 library(abind)
 plot_grad_ylim <- function (hM, Gradient, predY, measure, xlabel = NULL, ylabel = NULL, index = 1, q = c(0.025, 0.5, 0.975), cicol = rgb(0, 0, 1, alpha = 0.5), pointcol = "lightgrey", pointsize = 0.5, showData = FALSE, jigger = 0, yshow = NA, showPosteriorSupport = TRUE, auto=1,l1=1,h1=1,main,...) 
 {

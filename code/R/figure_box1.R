@@ -1,6 +1,7 @@
-# Code for Box1 Figure
+# Title. figure_box1.R
 # Author. J.H. Pantel &  R.J. Hermann
-# Date 29.07.2025
+# Date. 29.07.2025
+# Description. Code for Box1 Figure, Pantel & Hermann 2025
 
 #### Libraries ---------------------------------------------------------------
 library(bayesplot)

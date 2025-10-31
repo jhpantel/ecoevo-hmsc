@@ -1,7 +1,7 @@
 # Title. 3_main.R
 # Author. J.H. Pantel &  R.J. Hermann
 # Date 29.07.2025
-# Description. This script contains analyses for the HMSC_ecoevo project and associated manuscript Pantel & Hermann 2025.
+# Description. This script contains analyses for the ecoevo-HMSC project and associated manuscript Pantel & Hermann 2025.
 
 #### Libraries ---------------------------------------------------------------
 library(Hmsc)

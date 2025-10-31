@@ -1,6 +1,7 @@
-## Code for Figure 4
+# Title. fig4.R
 # Author. J.H. Pantel &  R.J. Hermann
-# Date 29.07.2025
+# Date. 29.07.2025
+# Description. Code for Figure 4, Pantel & Hermann 2025.
 
 ## libraries
 library(tidyverse)

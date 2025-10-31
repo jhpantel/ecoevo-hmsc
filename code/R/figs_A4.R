@@ -1,6 +1,8 @@
-## Code for Figures of Appendix4
+# Title. figs_A4.R
 # Author. J.H. Pantel &  R.J. Hermann
-# Date 29.07.2025
+# Date. 29.07.2025
+# Description. Code for Figures of Appendix S4, Pantel & Hermann 2025.
+
 ## libraries
 library(Hmsc)
 library(tidyverse)

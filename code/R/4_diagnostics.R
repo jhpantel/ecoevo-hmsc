@@ -1,7 +1,7 @@
 # Title. 4_diagnostics.R
 # Author. J.H. Pantel &  R.J. Hermann
 # Date 29.07.2025
-# Description. This script contains the diagnostics of the analyses for the HMSC_ecoevo project and associated manuscript Pantel & Hermann 2025.
+# Description. This script contains the diagnostics of the analyses for the ecoevo-hmsc project and associated manuscript Pantel & Hermann 2025.
 
 #### Libraries ---------------------------------------------------------------
 library(Hmsc)

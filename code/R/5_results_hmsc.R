@@ -1,7 +1,7 @@
 # Title. 5_results_hmsc.R
 # Author. J.H. Pantel &  R.J. Hermann
 # Date 29.07.2025
-# Description. This script contains analyses for the HMSC_ecoevo project and associated manuscript Pantel & Hermann 2025.
+# Description. This script contains analyses for the ecoevo-hmsc project and associated manuscript Pantel & Hermann 2025.
 
 #### Libraries ---------------------------------------------------------------
 library(bayesplot)

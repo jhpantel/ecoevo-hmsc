@@ -1,6 +1,9 @@
-## J.H. Pantel
-## 25-09-2025
-## Gradient plot from HMSC, with control for y-limit, modified for 10-site case
+# Title. two_h_cust.R
+# Source. https://github.com/hmsc-r/HMSC/blob/8d23efa6c4bd8c6cb937f55c4f77568b3594b199/R/plotGradient.R
+# Modified by. J.H. Pantel
+# Date. 25-09-2025
+# Description. Gradient plot from HMSC, with control for y-limit, modified for 10-site case
+
 library(abind)
 two_h_cust <- function (hM, Gradient, predY, measure, xlabel = NULL, ylabel = NULL, index = 1, q = c(0.025, 0.5, 0.975), cicol = rgb(0, 0, 1, alpha = 0.5), pointcol = "lightgrey", pointsize = 1, showData = FALSE, jigger = 0, yshow = NA, showPosteriorSupport = TRUE, auto=1,l1=1,h1=1,main,...) 
 {

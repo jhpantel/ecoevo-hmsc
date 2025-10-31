@@ -1,7 +1,7 @@
 # Title. 6_emp_hmsc.R
 # Author. J.H. Pantel &  R.J. Hermann
 # Date 29.07.2025
-# Description. This script contains analyses for empircial data of the HMSC_ecoevo project and associated manuscript Pantel & Hermann 2025.
+# Description. This script contains analyses for empircial data of the ecoevo-hmsc project and associated manuscript Pantel & Hermann 2025.
 
 #### Libraries ---------------------------------------------------------------
 library(tidyverse)
