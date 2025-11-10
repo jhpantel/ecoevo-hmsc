@@ -74,7 +74,7 @@ devtools::install_github("jhpantel/ecoevoR",build_vignettes=TRUE)
 
 ### Contents of repository
 
-The four main folders in this repository are code, data, manuscript, and output. The files contained in the folders are listed here, and described below. The code folder code contains all of the R code needed to reproduce results found in the manuscript Pantel & Hermann 2025. 
+The four main folders in this repository are code, data, manuscript, and output. The files contained in the folders are listed here, and described below. The `code` folder contains all of the R code needed to reproduce results found in the manuscript Pantel & Hermann 2025.
 
 ```
 - |code
@@ -104,7 +104,7 @@ The four main folders in this repository are code, data, manuscript, and output.
 * plot_grad_ylim.R & two_h_cust.R - Modified plot code from the HMSC package, to adjust the plot for figure 2.
 
 
-The data folder contains all data generated and used in our code (from the code/R folder), as well as the empirical data from Jewell & Bell 2023
+The `data` folder contains all data generated and used in our code (from the code/R folder), as well as the empirical data from Jewell & Bell 2023.
 
 ```
 - |data
@@ -112,7 +112,7 @@ The data folder contains all data generated and used in our code (from the code/
 - | | |-hmsc_emp.RData.R
 - | | |-Phase1_anundances.csv
 - | | |-Phase1_phenotypes.csv
-- | | |-RecipricalTransplant.csv
+- | | |-ReciprocalTransplant.csv
 - | |init.RData
 - | |mc
 ```
@@ -122,7 +122,7 @@ The data folder contains all data generated and used in our code (from the code/
 * mc - Contains all metacommunity simulation time series produced by 1_metacom_sim.R (for all combinations of heritability and dispersal level) and the HMSC analyses for a subset of these (produced by 3_main.R) that are used to create Figure 3c in Pantel & Hermann 2025.
 
 
-The manuscript folder contains the R Markdown .Rmd files that produced the appendices that accompany Pantel & Hermann 2025, as well as Box 1 in the main manuscript.
+The `manuscript` folder contains the R Markdown .Rmd files that produced the appendices that accompany Pantel & Hermann 2025, as well as Box 1 in the main manuscript.
 
 ```
 - |manuscript
@@ -134,7 +134,7 @@ The manuscript folder contains the R Markdown .Rmd files that produced the appen
 - | |Box1.Rmd
 ```
 
-The output folder contains the raw figures produced by figure code files in the R/code folder.
+The `output` folder contains the raw figures produced by figure code files in the R/code folder.
 
 ```
 - |output
@@ -158,9 +158,13 @@ Jelena H. Pantel
 [website](https://jhpantel.com/)
 [website](https://chrono-environnement.univ-fcomte.fr/annuaire/jelena-pantel/)
 [GitHub](https://github.com/jhpantel)
-[ORCID] (https://orcid.org/0000-0002-8139-5520)
+[ORCID](https://orcid.org/0000-0002-8139-5520)
+[OpenAlex](https://openalex.org/works?filter=authorships.author.id:a5073100633)
+[Google Scholar](https://scholar.google.com/citations?user=u1EOGhYAAAAJ&hl)
 
 Ruben J. Hermann [GitHub](https://github.com/RubenHermann) [ORCID](https://orcid.org/0000-0002-7620-5884)
+[OpenAlex](https://openalex.org/works?filter=authorships.author.id:a5012615808)
+[Google Scholar](https://scholar.google.com/citations?user=GaW0kcUAAAAJ&hl)
 
 ## Version History
 
