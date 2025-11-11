@@ -168,6 +168,8 @@ Ruben J. Hermann [GitHub](https://github.com/RubenHermann) [ORCID](https://orcid
 
 * 0.1
     * Initial Release
+* 0.1.1
+    * Manuscript Publication Release
 
 ## License
 
