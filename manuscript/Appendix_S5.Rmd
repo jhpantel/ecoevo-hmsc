@@ -1,10 +1,8 @@
 ---
 title: "Appendix S5. Heritability and HMSC"
 author:
-- "Jelena H. Pantel^[Laboratoire Chrono-environnement,UMR 6249 CNRS-UFC, 16 Route
-  de Gray, 25030 Besançon cedex, France, jelena.pantel@univ-fcomte.fr]"
-- "Ruben J. Hermann^[University of Konstanz, Universitätsstraße 10, 78464 Konstanz,
-  Germany, ruben.hermann@posteo.de]"
+  - Jelena H. Pantel^[Université Marie et Louis Pasteur, CNRS, Chrono-environnement (UMR 6249), F-25000 Besançon, France, jelena.pantel@umlp.fr]
+  - Ruben J. Hermann^[Aquatic Ecology and Evolution Group, Limnological Institute, Department of Biology, University of Konstanz, Universitaetsstrasse 10, 78464 Konstanz, Germany, ruben.hermann@posteo.de]
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   bookdown::pdf_document2:
@@ -20,8 +18,6 @@ header-includes:
 - \pagestyle{fancy}
 - \fancyhead[L]{Author Pantel and Hermann}
 - \fancyhead[R]{Detection of ecoevo dynamics}
-- \usepackage{lineno}
-- \linenumbers
 link-citations: yes
 linkcolor: blue
 csl: the-american-naturalist.csl
@@ -40,6 +36,7 @@ library(ggplot2)
 library(statgenSTA)
 library(statgenGxE)
 library(here)
+library(tinyplot)
 knitr::opts_knit$set(root.dir = here())
 ```
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}

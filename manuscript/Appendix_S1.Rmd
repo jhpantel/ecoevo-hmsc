@@ -1,16 +1,16 @@
 ---
 title: "Appendix S1. Linear regression models and non-linear population dynamics"
 author:
-  - Jelena H. Pantel^[Laboratoire Chrono-environnement,UMR 6249 CNRS-UFC, 16 Route de Gray, 25030 Besançon cedex, France, jelena.pantel@univ-fcomte.fr]
-  - Ruben J. Hermann^[University of Duisburg-Essen, Universitätsstraße 5, 45141 Essen, Germany, ruben.hermann@uni-due.de]
+  - Jelena H. Pantel^[Université Marie et Louis Pasteur, CNRS, Chrono-environnement (UMR 6249), F-25000 Besançon, France, jelena.pantel@umlp.fr]
+  - Ruben J. Hermann^[Aquatic Ecology and Evolution Group, Limnological Institute, Department of Biology, University of Konstanz, Universitaetsstrasse 10, 78464 Konstanz, Germany, ruben.hermann@posteo.de]
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
+  bookdown::html_document2: default
   bookdown::pdf_document2:
     toc: yes
     fig_caption: yes
     latex_engine: xelatex
     extra_dependencies: ["float"]
-  bookdown::html_document2: default
   word_document:
     reference_docx: docx_template.docx
 header-includes:
@@ -18,8 +18,6 @@ header-includes:
 - \pagestyle{fancy}
 - \fancyhead[L]{Author Pantel and Hermann}
 - \fancyhead[R]{Detection of ecoevo dynamics}
-- \usepackage{lineno}
-- \linenumbers
 link-citations: yes
 linkcolor: blue
 csl: the-american-naturalist.csl

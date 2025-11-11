@@ -1,10 +1,8 @@
 ---
 title: "Box 1: Interpreting the impacts of trait evolution"
 author:
-- "Jelena H. Pantel^[Laboratoire Chrono-environnement,UMR 6249 CNRS-UFC, 16 Route
-  de Gray, 25030 Besançon cedex, France, jelena.pantel@univ-fcomte.fr]"
-- "Ruben J. Hermann^[University of Konstanz, Universitätsstraße 10, 78464 Konstanz,
-  Germany, ruben.hermann@posteo.de]"
+  - Jelena H. Pantel^[Université Marie et Louis Pasteur, CNRS, Chrono-environnement (UMR 6249), F-25000 Besançon, France, jelena.pantel@umlp.fr]
+  - Ruben J. Hermann^[Aquatic Ecology and Evolution Group, Limnological Institute, Department of Biology, University of Konstanz, Universitaetsstrasse 10, 78464 Konstanz, Germany, ruben.hermann@posteo.de]
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   bookdown::pdf_document2:
@@ -14,11 +12,11 @@ output:
     extra_dependencies: float
     number_sections: yes
     keep_tex: true
-  bookdown::html_document2: default
-  pdf_document:
-    toc: no
   word_document:
     reference_docx: docx_template.docx
+  pdf_document:
+    toc: no
+  bookdown::html_document2: default
   html_document:
     toc: no
     df_print: paged
